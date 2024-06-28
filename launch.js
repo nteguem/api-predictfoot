@@ -8,7 +8,7 @@ const cookieParser = require("cookie-parser");
 const dbConnect = require('./api/config/dbConnect');
 const http = require('http');
 const socketIo = require('socket.io');
-const { initializeWhatsAppClient, handleIncomingMessages } = require('./api/helpers//whatsApp/whatappsHandler');
+const { initializeWhatsAppClient, handleIncomingMessages } = require('./api/helpers/whatsApp/whatappsHandler');
 const {ensureDefaultGroupsExist} = require("./api/services/group.service")
 const {ensureDefaultPlansExist} = require("./api/services/plan.service")
 
