@@ -1,0 +1,13 @@
+
+node_modules
+.wwebjs_auth
+.wwebjs_cache
+session
+uploads/images/*
+data/*
+!uploads/images/.gitkeep
+uploads
+.env
+.vercel
+.logger.log
+logger.log
