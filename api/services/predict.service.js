@@ -46,60 +46,89 @@ async function deletePrediction(predictionId) {
 }
 
 
-async function listPredictions(page = 1, limit = 5, date = null,isVisible = null,isVip=false) {
+
+async function listPredictions(page = 1, limit = 5, date = null, isVisible = null, isVip = false) {
   try {
+    let query = {};
+
     if (date) {
-         let query = {};
-         // Créer une plage de dates pour couvrir toute la journée
-         const startOfDay = moment(date).startOf('day').toISOString();
-         const endOfDay = moment(date).endOf('day').toISOString();
-   
-         query["fixture.event_date"] = {
-           $gte: startOfDay,
-           $lt: endOfDay
-         };
-   
-       // Ajouter la condition pour isVisible si elle est passée en paramètre
-       if (isVisible !== null) {
-         query.isVisible = isVisible;
-       }
-        // Ajouter la condition pour isVip si elle est passée en paramètre
-        if (isVip !== null) {
-          query.isVip = isVip;
-        }
+      // Valider la date
+      if (!moment(date).isValid()) {
+        throw new Error("Date invalide : " + date);
+      }
+
+      // Créer une plage de dates pour couvrir toute la journée
+      const startOfDay = moment(date).startOf('day').toISOString();
+      const endOfDay = moment(date).endOf('day').toISOString();
+
+      query["fixture.event_date"] = {
+        $gte: startOfDay,
+        $lt: endOfDay
+      };
+    }
+
+    // Ajouter la condition pour isVisible si elle est passée en paramètre
+    if (isVisible !== null) {
+      query.isVisible = isVisible;
+    }
+
+    // Ajouter la condition pour isVip si elle est passée en paramètre
+    if (isVip !== null) {
+      query.isVip = isVip;
+    }
+
+    // Si date est fourni, filtrer par cette date
+    if (date) {
       const predictions = await Predict.find(query);
       return { success: true, predictions, isFiltered: true };
-    } 
-    // Obtenir le nombre total de dates de prédiction
-    const distinctDates = await Predict.distinct("fixture.event_date");
-    
-    // Calculer le nombre total de pages
-    const totalPages = Math.ceil(distinctDates.length / limit);
+    } else {
+      // Obtenir le nombre total de dates de prédiction distinctes
+      const distinctDates = await Predict.distinct("fixture.event_date");
 
-    // Pagination
-    const skipCount = (page - 1) * limit;
+      // Filtrer les dates distinctes pour obtenir uniquement l'année, le mois et le jour
+      const distinctDatesWithoutTime = distinctDates.map(date => moment(date).format('YYYY-MM-DD'));
 
-    // Obtenir les dates de prédiction pour la page actuelle
-    const currentDates = distinctDates.slice(skipCount, skipCount + limit);
+      // Filtrer les dates sans doublons
+      const uniqueDates = [...new Set(distinctDatesWithoutTime)];
 
-    // Obtenir les prédictions pour chaque date
-    const predictions = await Promise.all(currentDates.map(async (date) => {
-      const predictionsForDate = await Predict.find({ "fixture.event_date": date });
-      return { date, predictions: predictionsForDate };
-    }));
+      // Calculer le nombre total de pages
+      const totalPages = Math.ceil(uniqueDates.length / limit);
 
-    return {
-      success: true,
-      totalPages,
-      totalDates: distinctDates.length,
-      currentPage: page,
-      groupedPredictions: predictions
-    };
+      // Pagination
+      const skipCount = (page - 1) * limit;
+
+      // Obtenir les dates de prédiction pour la page actuelle
+      const currentDates = uniqueDates.slice(skipCount, skipCount + limit);
+
+      // Obtenir les prédictions pour chaque date
+      const groupedPredictions = await Promise.all(currentDates.map(async (date) => {
+        const startOfDay = moment(date).startOf('day').toISOString();
+        const endOfDay = moment(date).endOf('day').toISOString();
+        const predictionsForDate = await Predict.find({
+          "fixture.event_date": {
+            $gte: startOfDay,
+            $lt: endOfDay
+          }
+        });
+        return { date, predictions: predictionsForDate };
+      }));
+
+      return {
+        success: true,
+        totalPages,
+        totalDates: uniqueDates.length,
+        currentPage: page,
+        groupedPredictions
+      };
+    }
   } catch (error) {
-    console.log('Error listing predictions:', error);
+    console.log('Erreur lors de la liste des prédictions:', error);
     return { success: false, error: error.message };
   }
 }
+
+
+
 
 
 
