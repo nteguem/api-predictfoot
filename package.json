@@ -32,7 +32,7 @@
     "pdf-lib": "^1.17.1",
     "socket.io": "^4.7.4",
     "to-words": "^4.0.1",
-    "whatsapp-web.js": "^1.23.0",
+    "whatsapp-web.js": "https://github.com/pedroslopez/whatsapp-web.js#webpack-exodus",
     "winston": "^3.13.0"
   }
 }

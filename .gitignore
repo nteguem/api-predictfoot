@@ -4,6 +4,7 @@ node_modules
 .wwebjs_cache
 session
 uploads/images/*
+data-football/*
 data/*
 !uploads/images/.gitkeep
 uploads

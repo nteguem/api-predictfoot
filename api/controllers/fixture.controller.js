@@ -2,7 +2,7 @@ const FixtureService = require('../services/fixture.service');
 const ResponseService = require('../services/response.service');
 
 async function getCountries(req, res) {
-    const { date } = req.body;
+    const { date } = req.query;
     try {
         const data = await FixtureService.loadFixtureData(date);
         const countries = await FixtureService.extractCountries(data);
@@ -14,7 +14,7 @@ async function getCountries(req, res) {
 }
 
 async function getLeaguesByCountry(req, res) {
-    const { date, country } = req.body;
+    const { date, country } = req.query;
     try {
         const data = await FixtureService.loadFixtureData(date);
         const leagues = await FixtureService.extractLeaguesByCountry(data, country);
@@ -26,7 +26,7 @@ async function getLeaguesByCountry(req, res) {
 }
 
 async function getMatchesByLeague(req, res) {
-    const { date, league } = req.body;
+    const { date, league } = req.query;
     try {
         const data = await FixtureService.loadFixtureData(date);
         const matches = await FixtureService.extractMatchesByLeague(data, league);

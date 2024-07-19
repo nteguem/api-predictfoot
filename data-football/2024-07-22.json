@@ -1,0 +1,2495 @@
+{
+  "results": 84,
+  "fixtures": {
+    "USA": {
+      "name": "USA",
+      "logo": "https://media.api-sports.io/flags/us.svg",
+      "leagues": {
+        "MLS Next Pro": {
+          "name": "MLS Next Pro",
+          "logo": "https://media.api-sports.io/football/leagues/909.png",
+          "fixtures": [
+            {
+              "event_date": "2024-07-22T00:00:00+00:00",
+              "status": "Not Started",
+              "venue": "SaberCats Stadium",
+              "statusShort": "NS",
+              "round": "Regular Season - 25",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 18813,
+                "team_name": "Houston Dynamo FC II",
+                "logo": "https://media.api-sports.io/football/teams/18813.png"
+              },
+              "awayTeam": {
+                "team_id": 10282,
+                "team_name": "North Texas",
+                "logo": "https://media.api-sports.io/football/teams/10282.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            },
+            {
+              "event_date": "2024-07-22T00:00:00+00:00",
+              "status": "Not Started",
+              "venue": "Saint Mary's Stadium",
+              "statusShort": "NS",
+              "round": "Regular Season - 25",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 18816,
+                "team_name": "San Jose Earthquakes II",
+                "logo": "https://media.api-sports.io/football/teams/18816.png"
+              },
+              "awayTeam": {
+                "team_id": 4012,
+                "team_name": "Real Monarchs",
+                "logo": "https://media.api-sports.io/football/teams/4012.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            },
+            {
+              "event_date": "2024-07-22T02:00:00+00:00",
+              "status": "Not Started",
+              "venue": "William Rolland Stadium",
+              "statusShort": "NS",
+              "round": "Regular Season - 25",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 3997,
+                "team_name": "LA Galaxy II",
+                "logo": "https://media.api-sports.io/football/teams/3997.png"
+              },
+              "awayTeam": {
+                "team_id": 4011,
+                "team_name": "Portland Timbers II",
+                "logo": "https://media.api-sports.io/football/teams/4011.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            }
+          ]
+        }
+      }
+    },
+    "Costa-Rica": {
+      "name": "Costa-Rica",
+      "logo": "https://media.api-sports.io/flags/cr.svg",
+      "leagues": {
+        "Primera División": {
+          "name": "Primera División",
+          "logo": "https://media.api-sports.io/football/leagues/162.png",
+          "fixtures": [
+            {
+              "event_date": "2024-07-22T00:00:00+00:00",
+              "status": "Not Started",
+              "venue": "Estadio Nacional de Costa Rica",
+              "statusShort": "NS",
+              "round": "Apertura - 1",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 822,
+                "team_name": "LD Alajuelense",
+                "logo": "https://media.api-sports.io/football/teams/822.png"
+              },
+              "awayTeam": {
+                "team_id": 824,
+                "team_name": "Santos DE Guapiles",
+                "logo": "https://media.api-sports.io/football/teams/824.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            }
+          ]
+        }
+      }
+    },
+    "World": {
+      "name": "World",
+      "logo": null,
+      "leagues": {
+        "Friendlies Clubs": {
+          "name": "Friendlies Clubs",
+          "logo": "https://media.api-sports.io/football/leagues/667.png",
+          "fixtures": [
+            {
+              "event_date": "2024-07-22T00:00:00+00:00",
+              "status": "Time to be defined",
+              "venue": "TBC",
+              "statusShort": "TBD",
+              "round": "Club Friendlies 2",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 3603,
+                "team_name": "Samsunspor",
+                "logo": "https://media.api-sports.io/football/teams/3603.png"
+              },
+              "awayTeam": {
+                "team_id": 419,
+                "team_name": "Almere City FC",
+                "logo": "https://media.api-sports.io/football/teams/419.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            },
+            {
+              "event_date": "2024-07-22T10:00:00+00:00",
+              "status": "Not Started",
+              "venue": "TBC",
+              "statusShort": "NS",
+              "round": "Club Friendlies 3",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 3498,
+                "team_name": "ŁKS Łódź",
+                "logo": "https://media.api-sports.io/football/teams/3498.png"
+              },
+              "awayTeam": {
+                "team_id": 349,
+                "team_name": "Piast Gliwice",
+                "logo": "https://media.api-sports.io/football/teams/349.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            },
+            {
+              "event_date": "2024-07-22T15:00:00+00:00",
+              "status": "Not Started",
+              "venue": "TBC",
+              "statusShort": "NS",
+              "round": "Club Friendlies 3",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 6941,
+                "team_name": "Górnik Łęczna",
+                "logo": "https://media.api-sports.io/football/teams/6941.png"
+              },
+              "awayTeam": {
+                "team_id": 4500,
+                "team_name": "Hapoel Hadera",
+                "logo": "https://media.api-sports.io/football/teams/4500.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            },
+            {
+              "event_date": "2024-07-22T17:00:00+00:00",
+              "status": "Not Started",
+              "venue": "Waldstadion Mittersill",
+              "statusShort": "NS",
+              "round": "Club Friendlies 3",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 37,
+                "team_name": "Huddersfield",
+                "logo": "https://media.api-sports.io/football/teams/37.png"
+              },
+              "awayTeam": {
+                "team_id": 3408,
+                "team_name": "Aris",
+                "logo": "https://media.api-sports.io/football/teams/3408.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            },
+            {
+              "event_date": "2024-07-22T17:30:00+00:00",
+              "status": "Not Started",
+              "venue": "Košická futbalová aréna",
+              "statusShort": "NS",
+              "round": "Club Friendlies 1",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 10534,
+                "team_name": "FK Košice",
+                "logo": "https://media.api-sports.io/football/teams/10534.png"
+              },
+              "awayTeam": {
+                "team_id": 497,
+                "team_name": "AS Roma",
+                "logo": "https://media.api-sports.io/football/teams/497.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            },
+            {
+              "event_date": "2024-07-22T18:45:00+00:00",
+              "status": "Not Started",
+              "venue": "Melbourne Stadium",
+              "statusShort": "NS",
+              "round": "Club Friendlies 3",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 4689,
+                "team_name": "Chelmsford City",
+                "logo": "https://media.api-sports.io/football/teams/4689.png"
+              },
+              "awayTeam": {
+                "team_id": 1369,
+                "team_name": "Barnet",
+                "logo": "https://media.api-sports.io/football/teams/1369.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            }
+          ]
+        },
+        "CONCACAF U20": {
+          "name": "CONCACAF U20",
+          "logo": "https://media.api-sports.io/football/leagues/537.png",
+          "fixtures": [
+            {
+              "event_date": "2024-07-22T01:06:00+00:00",
+              "status": "Not Started",
+              "venue": "Estadio Sergio León Chávez",
+              "statusShort": "NS",
+              "round": "Group Stage - 1",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 10293,
+                "team_name": "Mexico U20",
+                "logo": "https://media.api-sports.io/football/teams/10293.png"
+              },
+              "awayTeam": {
+                "team_id": 11003,
+                "team_name": "Haiti U20",
+                "logo": "https://media.api-sports.io/football/teams/11003.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            },
+            {
+              "event_date": "2024-07-22T23:06:00+00:00",
+              "status": "Not Started",
+              "venue": "Estadio Miguel Alemán Valdés",
+              "statusShort": "NS",
+              "round": "Group Stage - 2",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 11004,
+                "team_name": "Jamaica U20",
+                "logo": "https://media.api-sports.io/football/teams/11004.png"
+              },
+              "awayTeam": {
+                "team_id": 10308,
+                "team_name": "Costa Rica U20",
+                "logo": "https://media.api-sports.io/football/teams/10308.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            }
+          ]
+        },
+        "AFF U19 Championship": {
+          "name": "AFF U19 Championship",
+          "logo": "https://media.api-sports.io/football/leagues/928.png",
+          "fixtures": [
+            {
+              "event_date": "2024-07-22T08:00:00+00:00",
+              "status": "Not Started",
+              "venue": "Stadion Gelora 10 November",
+              "statusShort": "NS",
+              "round": "Group Stage - 2",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 19147,
+                "team_name": "Brunei U19",
+                "logo": "https://media.api-sports.io/football/teams/19147.png"
+              },
+              "awayTeam": {
+                "team_id": 19155,
+                "team_name": "Thailand U19",
+                "logo": "https://media.api-sports.io/football/teams/19155.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            },
+            {
+              "event_date": "2024-07-22T12:30:00+00:00",
+              "status": "Not Started",
+              "venue": "Stadion Gelora 10 November",
+              "statusShort": "NS",
+              "round": "Group Stage - 2",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 19154,
+                "team_name": "Singapore U19",
+                "logo": "https://media.api-sports.io/football/teams/19154.png"
+              },
+              "awayTeam": {
+                "team_id": 19151,
+                "team_name": "Malaysia U19",
+                "logo": "https://media.api-sports.io/football/teams/19151.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            }
+          ]
+        },
+        "UEFA U19 Championship": {
+          "name": "UEFA U19 Championship",
+          "logo": "https://media.api-sports.io/football/leagues/493.png",
+          "fixtures": [
+            {
+              "event_date": "2024-07-22T18:00:00+00:00",
+              "status": "Not Started",
+              "venue": "Seaview",
+              "statusShort": "NS",
+              "round": "Group Stage - 3",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 10351,
+                "team_name": "Turkey U19",
+                "logo": "https://media.api-sports.io/football/teams/10351.png"
+              },
+              "awayTeam": {
+                "team_id": 10331,
+                "team_name": "Denmark U19",
+                "logo": "https://media.api-sports.io/football/teams/10331.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            },
+            {
+              "event_date": "2024-07-22T18:00:00+00:00",
+              "status": "Not Started",
+              "venue": "Inver Park",
+              "statusShort": "NS",
+              "round": "Group Stage - 3",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 10349,
+                "team_name": "Spain U19",
+                "logo": "https://media.api-sports.io/football/teams/10349.png"
+              },
+              "awayTeam": {
+                "team_id": 10334,
+                "team_name": "France U19",
+                "logo": "https://media.api-sports.io/football/teams/10334.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            }
+          ]
+        },
+        "COTIF Tournament": {
+          "name": "COTIF Tournament",
+          "logo": "https://media.api-sports.io/football/leagues/940.png",
+          "fixtures": [
+            {
+              "event_date": "2024-07-22T18:00:00+00:00",
+              "status": "Not Started",
+              "venue": "Estadi Els Arcs",
+              "statusShort": "NS",
+              "round": "Group Stage - 1",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 10307,
+                "team_name": "Uruguay U20",
+                "logo": "https://media.api-sports.io/football/teams/10307.png"
+              },
+              "awayTeam": {
+                "team_id": 22012,
+                "team_name": "Elche U20",
+                "logo": "https://media.api-sports.io/football/teams/22012.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            },
+            {
+              "event_date": "2024-07-22T20:30:00+00:00",
+              "status": "Not Started",
+              "venue": "Estadi Els Arcs",
+              "statusShort": "NS",
+              "round": "Group Stage - 1",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 10301,
+                "team_name": "Saudi Arabia U20",
+                "logo": "https://media.api-sports.io/football/teams/10301.png"
+              },
+              "awayTeam": {
+                "team_id": 19927,
+                "team_name": "Villarreal U20",
+                "logo": "https://media.api-sports.io/football/teams/19927.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            }
+          ]
+        }
+      }
+    },
+    "Ecuador": {
+      "name": "Ecuador",
+      "logo": "https://media.api-sports.io/flags/ec.svg",
+      "leagues": {
+        "Copa Ecuador": {
+          "name": "Copa Ecuador",
+          "logo": "https://media.api-sports.io/football/leagues/917.png",
+          "fixtures": [
+            {
+              "event_date": "2024-07-22T00:00:00+00:00",
+              "status": "Not Started",
+              "venue": "Estadio Jocay",
+              "statusShort": "NS",
+              "round": "2nd Round",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 1980,
+                "team_name": "Manta FC",
+                "logo": "https://media.api-sports.io/football/teams/1980.png"
+              },
+              "awayTeam": {
+                "team_id": 1154,
+                "team_name": "Deportivo Cuenca",
+                "logo": "https://media.api-sports.io/football/teams/1154.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            }
+          ]
+        }
+      }
+    },
+    "Colombia": {
+      "name": "Colombia",
+      "logo": "https://media.api-sports.io/flags/co.svg",
+      "leagues": {
+        "Primera A": {
+          "name": "Primera A",
+          "logo": "https://media.api-sports.io/football/leagues/239.png",
+          "fixtures": [
+            {
+              "event_date": "2024-07-22T01:00:00+00:00",
+              "status": "Not Started",
+              "venue": "Estadio Metropolitano Roberto Meléndez",
+              "statusShort": "NS",
+              "round": "Clausura - 2",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 1135,
+                "team_name": "Junior",
+                "logo": "https://media.api-sports.io/football/teams/1135.png"
+              },
+              "awayTeam": {
+                "team_id": 1132,
+                "team_name": "Chico",
+                "logo": "https://media.api-sports.io/football/teams/1132.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            }
+          ]
+        },
+        "Primera B": {
+          "name": "Primera B",
+          "logo": "https://media.api-sports.io/football/leagues/240.png",
+          "fixtures": [
+            {
+              "event_date": "2024-07-22T19:00:00+00:00",
+              "status": "Not Started",
+              "venue": "Estadio Polideportivo Sur",
+              "statusShort": "NS",
+              "round": "Clausura - 1",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 1143,
+                "team_name": "Leones FC",
+                "logo": "https://media.api-sports.io/football/teams/1143.png"
+              },
+              "awayTeam": {
+                "team_id": 1463,
+                "team_name": "Real Santander",
+                "logo": "https://media.api-sports.io/football/teams/1463.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            },
+            {
+              "event_date": "2024-07-22T21:00:00+00:00",
+              "status": "Not Started",
+              "venue": "Estadio Enrique Olaya Herrera",
+              "statusShort": "NS",
+              "round": "Clausura - 1",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 22099,
+                "team_name": "Real Soacha",
+                "logo": "https://media.api-sports.io/football/teams/22099.png"
+              },
+              "awayTeam": {
+                "team_id": 1469,
+                "team_name": "Orsomarso",
+                "logo": "https://media.api-sports.io/football/teams/1469.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            }
+          ]
+        }
+      }
+    },
+    "Mexico": {
+      "name": "Mexico",
+      "logo": "https://media.api-sports.io/flags/mx.svg",
+      "leagues": {
+        "Liga MX": {
+          "name": "Liga MX",
+          "logo": "https://media.api-sports.io/football/leagues/262.png",
+          "fixtures": [
+            {
+              "event_date": "2024-07-22T01:05:00+00:00",
+              "status": "Not Started",
+              "venue": "Estadio León",
+              "statusShort": "NS",
+              "round": "Apertura - 4",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 2289,
+                "team_name": "Leon",
+                "logo": "https://media.api-sports.io/football/teams/2289.png"
+              },
+              "awayTeam": {
+                "team_id": 2288,
+                "team_name": "Necaxa",
+                "logo": "https://media.api-sports.io/football/teams/2288.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            }
+          ]
+        }
+      }
+    },
+    "Indonesia": {
+      "name": "Indonesia",
+      "logo": "https://media.api-sports.io/flags/id.svg",
+      "leagues": {
+        "Piala Presiden": {
+          "name": "Piala Presiden",
+          "logo": "https://media.api-sports.io/football/leagues/924.png",
+          "fixtures": [
+            {
+              "event_date": "2024-07-22T08:30:00+00:00",
+              "status": "Not Started",
+              "venue": "Stadion Si Jalak Harupat",
+              "statusShort": "NS",
+              "round": "Group Stage - 1",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 4243,
+                "team_name": "Persis Solo",
+                "logo": "https://media.api-sports.io/football/teams/4243.png"
+              },
+              "awayTeam": {
+                "team_id": 2441,
+                "team_name": "PSM Makassar",
+                "logo": "https://media.api-sports.io/football/teams/2441.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            },
+            {
+              "event_date": "2024-07-22T12:30:00+00:00",
+              "status": "Not Started",
+              "venue": "Stadion Si Jalak Harupat",
+              "statusShort": "NS",
+              "round": "Group Stage - 1",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 2445,
+                "team_name": "Persib Bandung",
+                "logo": "https://media.api-sports.io/football/teams/2445.png"
+              },
+              "awayTeam": {
+                "team_id": 2442,
+                "team_name": "Pusamania Borneo",
+                "logo": "https://media.api-sports.io/football/teams/2442.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            }
+          ]
+        }
+      }
+    },
+    "India": {
+      "name": "India",
+      "logo": "https://media.api-sports.io/flags/in.svg",
+      "leagues": {
+        "Calcutta Premier Division": {
+          "name": "Calcutta Premier Division",
+          "logo": "https://media.api-sports.io/football/leagues/1020.png",
+          "fixtures": [
+            {
+              "event_date": "2024-07-22T09:30:00+00:00",
+              "status": "Not Started",
+              "venue": null,
+              "statusShort": "NS",
+              "round": "Regular Season - 7",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 21215,
+                "team_name": "Rainbow",
+                "logo": "https://media.api-sports.io/football/teams/21215.png"
+              },
+              "awayTeam": {
+                "team_id": 24101,
+                "team_name": "Kalighat Club",
+                "logo": "https://media.api-sports.io/football/teams/24101.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            },
+            {
+              "event_date": "2024-07-22T09:30:00+00:00",
+              "status": "Not Started",
+              "venue": null,
+              "statusShort": "NS",
+              "round": "Regular Season - 7",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 21599,
+                "team_name": "Calcutta Customs",
+                "logo": "https://media.api-sports.io/football/teams/21599.png"
+              },
+              "awayTeam": {
+                "team_id": 21602,
+                "team_name": "Eastern Railway",
+                "logo": "https://media.api-sports.io/football/teams/21602.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            },
+            {
+              "event_date": "2024-07-22T09:30:00+00:00",
+              "status": "Not Started",
+              "venue": null,
+              "statusShort": "NS",
+              "round": "Regular Season - 7",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 21609,
+                "team_name": "Railway",
+                "logo": "https://media.api-sports.io/football/teams/21609.png"
+              },
+              "awayTeam": {
+                "team_id": 3463,
+                "team_name": "East Bengal",
+                "logo": "https://media.api-sports.io/football/teams/3463.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            }
+          ]
+        }
+      }
+    },
+    "Bhutan": {
+      "name": "Bhutan",
+      "logo": "https://media.api-sports.io/flags/bt.svg",
+      "leagues": {
+        "Premier League": {
+          "name": "Premier League",
+          "logo": "https://media.api-sports.io/football/leagues/1031.png",
+          "fixtures": [
+            {
+              "event_date": "2024-07-22T10:00:00+00:00",
+              "status": "Not Started",
+              "venue": "RTC Football Ground",
+              "statusShort": "NS",
+              "round": "Regular Season - 6",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 19005,
+                "team_name": "RTC",
+                "logo": "https://media.api-sports.io/football/teams/19005.png"
+              },
+              "awayTeam": {
+                "team_id": 21275,
+                "team_name": "Samtse",
+                "logo": "https://media.api-sports.io/football/teams/21275.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            }
+          ]
+        }
+      }
+    },
+    "Australia": {
+      "name": "Australia",
+      "logo": "https://media.api-sports.io/flags/au.svg",
+      "leagues": {
+        "Victoria NPL 2": {
+          "name": "Victoria NPL 2",
+          "logo": "https://media.api-sports.io/football/leagues/836.png",
+          "fixtures": [
+            {
+              "event_date": "2024-07-22T10:30:00+00:00",
+              "status": "Not Started",
+              "venue": "The Grange Reserve [Clayton South]",
+              "statusShort": "NS",
+              "round": "Regular Season - 23",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 3806,
+                "team_name": "Kingston City",
+                "logo": "https://media.api-sports.io/football/teams/3806.png"
+              },
+              "awayTeam": {
+                "team_id": 16781,
+                "team_name": "Bulleen Lions",
+                "logo": "https://media.api-sports.io/football/teams/16781.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            }
+          ]
+        }
+      }
+    },
+    "Norway": {
+      "name": "Norway",
+      "logo": "https://media.api-sports.io/flags/no.svg",
+      "leagues": {
+        "3. Division - Girone 4": {
+          "name": "3. Division - Girone 4",
+          "logo": "https://media.api-sports.io/football/leagues/777.png",
+          "fixtures": [
+            {
+              "event_date": "2024-07-22T11:00:00+00:00",
+              "status": "Not Started",
+              "venue": "LSK-hallen",
+              "statusShort": "NS",
+              "round": "Group 4 - 13",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 16207,
+                "team_name": "Lillestrøm II",
+                "logo": "https://media.api-sports.io/football/teams/16207.png"
+              },
+              "awayTeam": {
+                "team_id": 16229,
+                "team_name": "Rana",
+                "logo": "https://media.api-sports.io/football/teams/16229.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            },
+            {
+              "event_date": "2024-07-22T16:00:00+00:00",
+              "status": "Not Started",
+              "venue": "Syltøran stadion",
+              "statusShort": "NS",
+              "round": "Group 4 - 13",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 18931,
+                "team_name": "Surnadal",
+                "logo": "https://media.api-sports.io/football/teams/18931.png"
+              },
+              "awayTeam": {
+                "team_id": 10113,
+                "team_name": "Rosenborg II",
+                "logo": "https://media.api-sports.io/football/teams/10113.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            }
+          ]
+        },
+        "3. Division - Girone 6": {
+          "name": "3. Division - Girone 6",
+          "logo": "https://media.api-sports.io/football/leagues/779.png",
+          "fixtures": [
+            {
+              "event_date": "2024-07-22T13:00:00+00:00",
+              "status": "Not Started",
+              "venue": "Nye Fredrikstad Stadion",
+              "statusShort": "NS",
+              "round": "Group 6 - 13",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 16212,
+                "team_name": "Fredrikstad II",
+                "logo": "https://media.api-sports.io/football/teams/16212.png"
+              },
+              "awayTeam": {
+                "team_id": 21417,
+                "team_name": "HamKam II",
+                "logo": "https://media.api-sports.io/football/teams/21417.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            }
+          ]
+        },
+        "3. Division - Girone 5": {
+          "name": "3. Division - Girone 5",
+          "logo": "https://media.api-sports.io/football/leagues/778.png",
+          "fixtures": [
+            {
+              "event_date": "2024-07-22T16:00:00+00:00",
+              "status": "Not Started",
+              "venue": "Skedsmo stadion kunstgress",
+              "statusShort": "NS",
+              "round": "Group 5 - 13",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 19711,
+                "team_name": "Skedsmo",
+                "logo": "https://media.api-sports.io/football/teams/19711.png"
+              },
+              "awayTeam": {
+                "team_id": 12817,
+                "team_name": "Molde II",
+                "logo": "https://media.api-sports.io/football/teams/12817.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            }
+          ]
+        }
+      }
+    },
+    "China": {
+      "name": "China",
+      "logo": "https://media.api-sports.io/flags/cn.svg",
+      "leagues": {
+        "Super League": {
+          "name": "Super League",
+          "logo": "https://media.api-sports.io/football/leagues/169.png",
+          "fixtures": [
+            {
+              "event_date": "2024-07-22T11:35:00+00:00",
+              "status": "Not Started",
+              "venue": "Cangzhou Stadium",
+              "statusShort": "NS",
+              "round": "Regular Season - 24",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 849,
+                "team_name": "Shijiazhuang Y. J.",
+                "logo": "https://media.api-sports.io/football/teams/849.png"
+              },
+              "awayTeam": {
+                "team_id": 833,
+                "team_name": "Shanghai Shenhua",
+                "logo": "https://media.api-sports.io/football/teams/833.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            }
+          ]
+        }
+      }
+    },
+    "Singapore": {
+      "name": "Singapore",
+      "logo": "https://media.api-sports.io/flags/sg.svg",
+      "leagues": {
+        "Premier League": {
+          "name": "Premier League",
+          "logo": "https://media.api-sports.io/football/leagues/368.png",
+          "fixtures": [
+            {
+              "event_date": "2024-07-22T11:45:00+00:00",
+              "status": "Not Started",
+              "venue": "Jalan Besar Stadium",
+              "statusShort": "NS",
+              "round": "Regular Season - 10",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 4208,
+                "team_name": "Young Lions",
+                "logo": "https://media.api-sports.io/football/teams/4208.png"
+              },
+              "awayTeam": {
+                "team_id": 4204,
+                "team_name": "Home United",
+                "logo": "https://media.api-sports.io/football/teams/4204.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            }
+          ]
+        }
+      }
+    },
+    "Egypt": {
+      "name": "Egypt",
+      "logo": "https://media.api-sports.io/flags/eg.svg",
+      "leagues": {
+        "Premier League": {
+          "name": "Premier League",
+          "logo": "https://media.api-sports.io/football/leagues/233.png",
+          "fixtures": [
+            {
+              "event_date": "2024-07-22T14:30:00+00:00",
+              "status": "Not Started",
+              "venue": "Ismaïlia Stadium",
+              "statusShort": "NS",
+              "round": "Regular Season - 31",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 1030,
+                "team_name": "Ismaily SC",
+                "logo": "https://media.api-sports.io/football/teams/1030.png"
+              },
+              "awayTeam": {
+                "team_id": 1574,
+                "team_name": "El Gouna FC",
+                "logo": "https://media.api-sports.io/football/teams/1574.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            },
+            {
+              "event_date": "2024-07-22T18:00:00+00:00",
+              "status": "Not Started",
+              "venue": "30 June Air Defence Stadium",
+              "statusShort": "NS",
+              "round": "Regular Season - 31",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 1036,
+                "team_name": "Pyramids FC",
+                "logo": "https://media.api-sports.io/football/teams/1036.png"
+              },
+              "awayTeam": {
+                "team_id": 1577,
+                "team_name": "Al Ahly",
+                "logo": "https://media.api-sports.io/football/teams/1577.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            },
+            {
+              "event_date": "2024-07-22T18:00:00+00:00",
+              "status": "Not Started",
+              "venue": "Cairo International Stadium",
+              "statusShort": "NS",
+              "round": "Regular Season - 31",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 16431,
+                "team_name": "Future FC",
+                "logo": "https://media.api-sports.io/football/teams/16431.png"
+              },
+              "awayTeam": {
+                "team_id": 1044,
+                "team_name": "Smouha SC",
+                "logo": "https://media.api-sports.io/football/teams/1044.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            }
+          ]
+        }
+      }
+    },
+    "Finland": {
+      "name": "Finland",
+      "logo": "https://media.api-sports.io/flags/fi.svg",
+      "leagues": {
+        "Veikkausliiga": {
+          "name": "Veikkausliiga",
+          "logo": "https://media.api-sports.io/football/leagues/244.png",
+          "fixtures": [
+            {
+              "event_date": "2024-07-22T15:00:00+00:00",
+              "status": "Not Started",
+              "venue": "Veritas Stadion",
+              "statusShort": "NS",
+              "round": "Regular Season - 16",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 1164,
+                "team_name": "Inter Turku",
+                "logo": "https://media.api-sports.io/football/teams/1164.png"
+              },
+              "awayTeam": {
+                "team_id": 2082,
+                "team_name": "IF Gnistan",
+                "logo": "https://media.api-sports.io/football/teams/2082.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            }
+          ]
+        }
+      }
+    },
+    "Latvia": {
+      "name": "Latvia",
+      "logo": "https://media.api-sports.io/flags/lv.svg",
+      "leagues": {
+        "Virsliga": {
+          "name": "Virsliga",
+          "logo": "https://media.api-sports.io/football/leagues/365.png",
+          "fixtures": [
+            {
+              "event_date": "2024-07-22T15:00:00+00:00",
+              "status": "Not Started",
+              "venue": "Daugavas Stadionā",
+              "statusShort": "NS",
+              "round": "Regular Season - 23",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 4159,
+                "team_name": "Metta / LU",
+                "logo": "https://media.api-sports.io/football/teams/4159.png"
+              },
+              "awayTeam": {
+                "team_id": 4144,
+                "team_name": "Tukums",
+                "logo": "https://media.api-sports.io/football/teams/4144.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            }
+          ]
+        }
+      }
+    },
+    "Russia": {
+      "name": "Russia",
+      "logo": "https://media.api-sports.io/flags/ru.svg",
+      "leagues": {
+        "First League": {
+          "name": "First League",
+          "logo": "https://media.api-sports.io/football/leagues/236.png",
+          "fixtures": [
+            {
+              "event_date": "2024-07-22T15:00:00+00:00",
+              "status": "Not Started",
+              "venue": "Volgograd Arena",
+              "statusShort": "NS",
+              "round": "Regular Season - 2",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 2010,
+                "team_name": "Rotor Volgograd",
+                "logo": "https://media.api-sports.io/football/teams/2010.png"
+              },
+              "awayTeam": {
+                "team_id": 3985,
+                "team_name": "Torpedo Moskva",
+                "logo": "https://media.api-sports.io/football/teams/3985.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            }
+          ]
+        },
+        "Premier League": {
+          "name": "Premier League",
+          "logo": "https://media.api-sports.io/football/leagues/235.png",
+          "fixtures": [
+            {
+              "event_date": "2024-07-22T17:00:00+00:00",
+              "status": "Not Started",
+              "venue": "Stadion Nizhny Novgorod",
+              "statusShort": "NS",
+              "round": "Regular Season - 1",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 2011,
+                "team_name": "Nizhny Novgorod",
+                "logo": "https://media.api-sports.io/football/teams/2011.png"
+              },
+              "awayTeam": {
+                "team_id": 1083,
+                "team_name": "Rubin",
+                "logo": "https://media.api-sports.io/football/teams/1083.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            }
+          ]
+        }
+      }
+    },
+    "Bulgaria": {
+      "name": "Bulgaria",
+      "logo": "https://media.api-sports.io/flags/bg.svg",
+      "leagues": {
+        "Second League": {
+          "name": "Second League",
+          "logo": "https://media.api-sports.io/football/leagues/173.png",
+          "fixtures": [
+            {
+              "event_date": "2024-07-22T15:30:00+00:00",
+              "status": "Not Started",
+              "venue": "Stadion Dragalevtsi",
+              "statusShort": "NS",
+              "round": "Regular Season - 1",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 1415,
+                "team_name": "CSKA Sofia II",
+                "logo": "https://media.api-sports.io/football/teams/1415.png"
+              },
+              "awayTeam": {
+                "team_id": 1419,
+                "team_name": "Litex",
+                "logo": "https://media.api-sports.io/football/teams/1419.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            },
+            {
+              "event_date": "2024-07-22T15:30:00+00:00",
+              "status": "Not Started",
+              "venue": "Stadion Minyor",
+              "statusShort": "NS",
+              "round": "Regular Season - 1",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 6392,
+                "team_name": "FK Minyor Pernik",
+                "logo": "https://media.api-sports.io/football/teams/6392.png"
+              },
+              "awayTeam": {
+                "team_id": 16963,
+                "team_name": "Botev Plovdiv II",
+                "logo": "https://media.api-sports.io/football/teams/16963.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            },
+            {
+              "event_date": "2024-07-22T17:00:00+00:00",
+              "status": "Not Started",
+              "venue": "Sporten tsentar Ludogorets",
+              "statusShort": "NS",
+              "round": "Regular Season - 1",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 1409,
+                "team_name": "Ludogorets II",
+                "logo": "https://media.api-sports.io/football/teams/1409.png"
+              },
+              "awayTeam": {
+                "team_id": 1420,
+                "team_name": "Lokomotiv G. Oryahovitsa",
+                "logo": "https://media.api-sports.io/football/teams/1420.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            }
+          ]
+        },
+        "First League": {
+          "name": "First League",
+          "logo": "https://media.api-sports.io/football/leagues/172.png",
+          "fixtures": [
+            {
+              "event_date": "2024-07-22T16:00:00+00:00",
+              "status": "Not Started",
+              "venue": "Stadion Georgi Benkovski",
+              "statusShort": "NS",
+              "round": "Regular Season - 1",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 4659,
+                "team_name": "Hebar 1918",
+                "logo": "https://media.api-sports.io/football/teams/4659.png"
+              },
+              "awayTeam": {
+                "team_id": 4660,
+                "team_name": "Spartak Varna",
+                "logo": "https://media.api-sports.io/football/teams/4660.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            },
+            {
+              "event_date": "2024-07-22T18:15:00+00:00",
+              "status": "Not Started",
+              "venue": "Stadion Vasil Levski",
+              "statusShort": "NS",
+              "round": "Regular Season - 1",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 856,
+                "team_name": "Septemvri Sofia",
+                "logo": "https://media.api-sports.io/football/teams/856.png"
+              },
+              "awayTeam": {
+                "team_id": 857,
+                "team_name": "Beroe",
+                "logo": "https://media.api-sports.io/football/teams/857.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            }
+          ]
+        }
+      }
+    },
+    "Czech-Republic": {
+      "name": "Czech-Republic",
+      "logo": "https://media.api-sports.io/flags/cz.svg",
+      "leagues": {
+        "FNL": {
+          "name": "FNL",
+          "logo": "https://media.api-sports.io/football/leagues/346.png",
+          "fixtures": [
+            {
+              "event_date": "2024-07-22T15:30:00+00:00",
+              "status": "Not Started",
+              "venue": "Stadion v Jiráskově ulici",
+              "statusShort": "NS",
+              "round": "Regular Season - 1",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 3731,
+                "team_name": "Vysočina Jihlava",
+                "logo": "https://media.api-sports.io/football/teams/3731.png"
+              },
+              "awayTeam": {
+                "team_id": 3733,
+                "team_name": "Zbrojovka Brno",
+                "logo": "https://media.api-sports.io/football/teams/3733.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            }
+          ]
+        }
+      }
+    },
+    "Libya": {
+      "name": "Libya",
+      "logo": "https://media.api-sports.io/flags/ly.svg",
+      "leagues": {
+        "Premier League": {
+          "name": "Premier League",
+          "logo": "https://media.api-sports.io/football/leagues/584.png",
+          "fixtures": [
+            {
+              "event_date": "2024-07-22T16:00:00+00:00",
+              "status": "Not Started",
+              "venue": null,
+              "statusShort": "NS",
+              "round": "Championship Round - 5",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 12430,
+                "team_name": "Al-Madina",
+                "logo": "https://media.api-sports.io/football/teams/12430.png"
+              },
+              "awayTeam": {
+                "team_id": 12436,
+                "team_name": "Asswehly",
+                "logo": "https://media.api-sports.io/football/teams/12436.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            },
+            {
+              "event_date": "2024-07-22T16:00:00+00:00",
+              "status": "Not Started",
+              "venue": null,
+              "statusShort": "NS",
+              "round": "Championship Round - 5",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 12423,
+                "team_name": "Al Ahli Benghazi",
+                "logo": "https://media.api-sports.io/football/teams/12423.png"
+              },
+              "awayTeam": {
+                "team_id": 12424,
+                "team_name": "Al Ahli Tripoli",
+                "logo": "https://media.api-sports.io/football/teams/12424.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            },
+            {
+              "event_date": "2024-07-22T16:00:00+00:00",
+              "status": "Not Started",
+              "venue": null,
+              "statusShort": "NS",
+              "round": "Championship Round - 5",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 6410,
+                "team_name": "Al-Nasr",
+                "logo": "https://media.api-sports.io/football/teams/6410.png"
+              },
+              "awayTeam": {
+                "team_id": 8097,
+                "team_name": "Al Hilal",
+                "logo": "https://media.api-sports.io/football/teams/8097.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            }
+          ]
+        }
+      }
+    },
+    "Romania": {
+      "name": "Romania",
+      "logo": "https://media.api-sports.io/flags/ro.svg",
+      "leagues": {
+        "Liga I": {
+          "name": "Liga I",
+          "logo": "https://media.api-sports.io/football/leagues/283.png",
+          "fixtures": [
+            {
+              "event_date": "2024-07-22T16:00:00+00:00",
+              "status": "Not Started",
+              "venue": "Stadionul Gloria",
+              "statusShort": "NS",
+              "round": "Regular Season - 2",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 6232,
+                "team_name": "SCM Gloria Buzău",
+                "logo": "https://media.api-sports.io/football/teams/6232.png"
+              },
+              "awayTeam": {
+                "team_id": 2585,
+                "team_name": "Sepsi OSK Sfantu Gheorghe",
+                "logo": "https://media.api-sports.io/football/teams/2585.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            },
+            {
+              "event_date": "2024-07-22T19:00:00+00:00",
+              "status": "Not Started",
+              "venue": "Stadionul Oţelul",
+              "statusShort": "NS",
+              "round": "Regular Season - 2",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 6886,
+                "team_name": "Oţelul",
+                "logo": "https://media.api-sports.io/football/teams/6886.png"
+              },
+              "awayTeam": {
+                "team_id": 2596,
+                "team_name": "Farul Constanta",
+                "logo": "https://media.api-sports.io/football/teams/2596.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            }
+          ]
+        }
+      }
+    },
+    "Sweden": {
+      "name": "Sweden",
+      "logo": "https://media.api-sports.io/flags/se.svg",
+      "leagues": {
+        "Superettan": {
+          "name": "Superettan",
+          "logo": "https://media.api-sports.io/football/leagues/114.png",
+          "fixtures": [
+            {
+              "event_date": "2024-07-22T17:00:00+00:00",
+              "status": "Not Started",
+              "venue": "Varberg Energi Arena",
+              "statusShort": "NS",
+              "round": "Regular Season - 15",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 2171,
+                "team_name": "Varbergs BoIS FC",
+                "logo": "https://media.api-sports.io/football/teams/2171.png"
+              },
+              "awayTeam": {
+                "team_id": 2176,
+                "team_name": "Landskrona BoIS",
+                "logo": "https://media.api-sports.io/football/teams/2176.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            }
+          ]
+        },
+        "Allsvenskan": {
+          "name": "Allsvenskan",
+          "logo": "https://media.api-sports.io/football/leagues/113.png",
+          "fixtures": [
+            {
+              "event_date": "2024-07-22T17:00:00+00:00",
+              "status": "Not Started",
+              "venue": "Gamla Ullevi",
+              "statusShort": "NS",
+              "round": "Regular Season - 15",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 2170,
+                "team_name": "Gais",
+                "logo": "https://media.api-sports.io/football/teams/2170.png"
+              },
+              "awayTeam": {
+                "team_id": 377,
+                "team_name": "AIK stockholm",
+                "logo": "https://media.api-sports.io/football/teams/377.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            }
+          ]
+        }
+      }
+    },
+    "Poland": {
+      "name": "Poland",
+      "logo": "https://media.api-sports.io/flags/pl.svg",
+      "leagues": {
+        "Ekstraklasa": {
+          "name": "Ekstraklasa",
+          "logo": "https://media.api-sports.io/football/leagues/106.png",
+          "fixtures": [
+            {
+              "event_date": "2024-07-22T17:00:00+00:00",
+              "status": "Not Started",
+              "venue": "Stadion Miejski w Mielcu",
+              "statusShort": "NS",
+              "round": "Regular Season - 1",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 3493,
+                "team_name": "Stal Mielec",
+                "logo": "https://media.api-sports.io/football/teams/3493.png"
+              },
+              "awayTeam": {
+                "team_id": 6962,
+                "team_name": "Widzew Łódź",
+                "logo": "https://media.api-sports.io/football/teams/6962.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            }
+          ]
+        },
+        "I Liga": {
+          "name": "I Liga",
+          "logo": "https://media.api-sports.io/football/leagues/107.png",
+          "fixtures": [
+            {
+              "event_date": "2024-07-22T17:00:00+00:00",
+              "status": "Not Started",
+              "venue": "Stadion Stal",
+              "statusShort": "NS",
+              "round": "Regular Season - 1",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 6957,
+                "team_name": "Stal Rzeszów",
+                "logo": "https://media.api-sports.io/football/teams/6957.png"
+              },
+              "awayTeam": {
+                "team_id": 344,
+                "team_name": "Arka Gdynia",
+                "logo": "https://media.api-sports.io/football/teams/344.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            }
+          ]
+        }
+      }
+    },
+    "Denmark": {
+      "name": "Denmark",
+      "logo": "https://media.api-sports.io/flags/dk.svg",
+      "leagues": {
+        "Superliga": {
+          "name": "Superliga",
+          "logo": "https://media.api-sports.io/football/leagues/119.png",
+          "fixtures": [
+            {
+              "event_date": "2024-07-22T17:00:00+00:00",
+              "status": "Not Started",
+              "venue": "Lyngby Stadion",
+              "statusShort": "NS",
+              "round": "Regular Season - 1",
+              "referee": "J. Sundberg",
+              "homeTeam": {
+                "team_id": 625,
+                "team_name": "Lyngby",
+                "logo": "https://media.api-sports.io/football/teams/625.png"
+              },
+              "awayTeam": {
+                "team_id": 400,
+                "team_name": "FC Copenhagen",
+                "logo": "https://media.api-sports.io/football/teams/400.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            }
+          ]
+        }
+      }
+    },
+    "Argentina": {
+      "name": "Argentina",
+      "logo": "https://media.api-sports.io/flags/ar.svg",
+      "leagues": {
+        "Torneo Promocional Amateur": {
+          "name": "Torneo Promocional Amateur",
+          "logo": "https://media.api-sports.io/football/leagues/1067.png",
+          "fixtures": [
+            {
+              "event_date": "2024-07-22T18:00:00+00:00",
+              "status": "Not Started",
+              "venue": "Estadio Hugo Moyano",
+              "statusShort": "NS",
+              "round": "Clausura - 1",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 3943,
+                "team_name": "Deportivo Camioneros",
+                "logo": "https://media.api-sports.io/football/teams/3943.png"
+              },
+              "awayTeam": {
+                "team_id": 23100,
+                "team_name": "Estrella de Berisso",
+                "logo": "https://media.api-sports.io/football/teams/23100.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            }
+          ]
+        },
+        "Primera B Metropolitana": {
+          "name": "Primera B Metropolitana",
+          "logo": "https://media.api-sports.io/football/leagues/131.png",
+          "fixtures": [
+            {
+              "event_date": "2024-07-22T18:00:00+00:00",
+              "status": "Not Started",
+              "venue": "Estadio El Coliseo de Mitre y Puccini",
+              "statusShort": "NS",
+              "round": "Clausura - 6",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 481,
+                "team_name": "Villa Dalmine",
+                "logo": "https://media.api-sports.io/football/teams/481.png"
+              },
+              "awayTeam": {
+                "team_id": 1956,
+                "team_name": "UAI Urquiza",
+                "logo": "https://media.api-sports.io/football/teams/1956.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            },
+            {
+              "event_date": "2024-07-22T18:00:00+00:00",
+              "status": "Not Started",
+              "venue": "Estadio Beto Larrosa",
+              "statusShort": "NS",
+              "round": "Clausura - 6",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 1942,
+                "team_name": "Sacachispas",
+                "logo": "https://media.api-sports.io/football/teams/1942.png"
+              },
+              "awayTeam": {
+                "team_id": 8380,
+                "team_name": "Villa San Carlos",
+                "logo": "https://media.api-sports.io/football/teams/8380.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            },
+            {
+              "event_date": "2024-07-22T18:00:00+00:00",
+              "status": "Not Started",
+              "venue": "Estadio de Excursionistas",
+              "statusShort": "NS",
+              "round": "Clausura - 6",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 8385,
+                "team_name": "Excursionistas",
+                "logo": "https://media.api-sports.io/football/teams/8385.png"
+              },
+              "awayTeam": {
+                "team_id": 471,
+                "team_name": "Flandria",
+                "logo": "https://media.api-sports.io/football/teams/471.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            },
+            {
+              "event_date": "2024-07-22T18:00:00+00:00",
+              "status": "Not Started",
+              "venue": "Estadio Municipal de Pilar",
+              "statusShort": "NS",
+              "round": "Clausura - 6",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 8374,
+                "team_name": "Fénix",
+                "logo": "https://media.api-sports.io/football/teams/8374.png"
+              },
+              "awayTeam": {
+                "team_id": 8376,
+                "team_name": "Argentino Quilmes",
+                "logo": "https://media.api-sports.io/football/teams/8376.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            }
+          ]
+        },
+        "Primera Nacional": {
+          "name": "Primera Nacional",
+          "logo": "https://media.api-sports.io/football/leagues/129.png",
+          "fixtures": [
+            {
+              "event_date": "2024-07-22T18:10:00+00:00",
+              "status": "Not Started",
+              "venue": "Estadio Dr. Osvaldo Francisco Baletto",
+              "statusShort": "NS",
+              "round": "Regular Season - 24",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 1932,
+                "team_name": "San Telmo",
+                "logo": "https://media.api-sports.io/football/teams/1932.png"
+              },
+              "awayTeam": {
+                "team_id": 469,
+                "team_name": "Deportivo Moron",
+                "logo": "https://media.api-sports.io/football/teams/469.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            },
+            {
+              "event_date": "2024-07-22T20:10:00+00:00",
+              "status": "Not Started",
+              "venue": "Estadio Don León Kolbovski",
+              "statusShort": "NS",
+              "round": "Regular Season - 24",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 1948,
+                "team_name": "Atlanta",
+                "logo": "https://media.api-sports.io/football/teams/1948.png"
+              },
+              "awayTeam": {
+                "team_id": 466,
+                "team_name": "Atletico Mitre",
+                "logo": "https://media.api-sports.io/football/teams/466.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            },
+            {
+              "event_date": "2024-07-22T23:10:00+00:00",
+              "status": "Not Started",
+              "venue": "Estadio Centenario Ciudad de Quilmes",
+              "statusShort": "NS",
+              "round": "Regular Season - 24",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 480,
+                "team_name": "Quilmes",
+                "logo": "https://media.api-sports.io/football/teams/480.png"
+              },
+              "awayTeam": {
+                "team_id": 485,
+                "team_name": "San Martin Tucuman",
+                "logo": "https://media.api-sports.io/football/teams/485.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            }
+          ]
+        }
+      }
+    },
+    "Uruguay": {
+      "name": "Uruguay",
+      "logo": "https://media.api-sports.io/flags/uy.svg",
+      "leagues": {
+        "Primera División - Apertura": {
+          "name": "Primera División - Apertura",
+          "logo": "https://media.api-sports.io/football/leagues/268.png",
+          "fixtures": [
+            {
+              "event_date": "2024-07-22T18:00:00+00:00",
+              "status": "Not Started",
+              "venue": "Estadio Municipal Arquitecto Antonio Eleuterio Ubilla",
+              "statusShort": "NS",
+              "round": "Intermediate Round - 6",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 2369,
+                "team_name": "Cerro Largo",
+                "logo": "https://media.api-sports.io/football/teams/2369.png"
+              },
+              "awayTeam": {
+                "team_id": 2354,
+                "team_name": "Rampla Juniors",
+                "logo": "https://media.api-sports.io/football/teams/2354.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            }
+          ]
+        },
+        "Segunda División": {
+          "name": "Segunda División",
+          "logo": "https://media.api-sports.io/football/leagues/269.png",
+          "fixtures": [
+            {
+              "event_date": "2024-07-22T20:30:00+00:00",
+              "status": "Not Started",
+              "venue": "Parque Palermo",
+              "statusShort": "NS",
+              "round": "2nd Phase - 12",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 15628,
+                "team_name": "Colón",
+                "logo": "https://media.api-sports.io/football/teams/15628.png"
+              },
+              "awayTeam": {
+                "team_id": 16740,
+                "team_name": "Uruguay Montevideo",
+                "logo": "https://media.api-sports.io/football/teams/16740.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            },
+            {
+              "event_date": "2024-07-22T23:00:00+00:00",
+              "status": "Not Started",
+              "venue": "Parque Alfredo Víctor Viera",
+              "statusShort": "NS",
+              "round": "2nd Phase - 12",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 2365,
+                "team_name": "Atletico Torque",
+                "logo": "https://media.api-sports.io/football/teams/2365.png"
+              },
+              "awayTeam": {
+                "team_id": 19331,
+                "team_name": "Cooper",
+                "logo": "https://media.api-sports.io/football/teams/19331.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            }
+          ]
+        }
+      }
+    },
+    "Brazil": {
+      "name": "Brazil",
+      "logo": "https://media.api-sports.io/flags/br.svg",
+      "leagues": {
+        "Cearense - 3": {
+          "name": "Cearense - 3",
+          "logo": "https://media.api-sports.io/football/leagues/1124.png",
+          "fixtures": [
+            {
+              "event_date": "2024-07-22T18:00:00+00:00",
+              "status": "Not Started",
+              "venue": "Estadio Municipal João Ronaldo",
+              "statusShort": "NS",
+              "round": "1st Phase - 6",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 24096,
+                "team_name": "Aliança",
+                "logo": "https://media.api-sports.io/football/teams/24096.png"
+              },
+              "awayTeam": {
+                "team_id": 13088,
+                "team_name": "Esporte Limoeiro",
+                "logo": "https://media.api-sports.io/football/teams/13088.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            }
+          ]
+        },
+        "Pernambucano - U20": {
+          "name": "Pernambucano - U20",
+          "logo": "https://media.api-sports.io/football/leagues/1088.png",
+          "fixtures": [
+            {
+              "event_date": "2024-07-22T18:00:00+00:00",
+              "status": "Not Started",
+              "venue": "Centro de Treinamento Presidente José de Andrade Médicis",
+              "statusShort": "NS",
+              "round": "Semi-finals",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 12971,
+                "team_name": "Sport Recife U20",
+                "logo": "https://media.api-sports.io/football/teams/12971.png"
+              },
+              "awayTeam": {
+                "team_id": 13053,
+                "team_name": "Santa Cruz U20",
+                "logo": "https://media.api-sports.io/football/teams/13053.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            }
+          ]
+        },
+        "Brasileiro U17": {
+          "name": "Brasileiro U17",
+          "logo": "https://media.api-sports.io/football/leagues/1128.png",
+          "fixtures": [
+            {
+              "event_date": "2024-07-22T18:30:00+00:00",
+              "status": "Not Started",
+              "venue": "Estádio Antônio Accioly",
+              "statusShort": "NS",
+              "round": "Group Stage - 4",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 24470,
+                "team_name": "Atletico GO U17",
+                "logo": "https://media.api-sports.io/football/teams/24470.png"
+              },
+              "awayTeam": {
+                "team_id": 24475,
+                "team_name": "Corinthians U17",
+                "logo": "https://media.api-sports.io/football/teams/24475.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            },
+            {
+              "event_date": "2024-07-22T18:30:00+00:00",
+              "status": "Not Started",
+              "venue": "Arena Gregorão",
+              "statusShort": "NS",
+              "round": "Group Stage - 4",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 24471,
+                "team_name": "Atlético Mineiro U17",
+                "logo": "https://media.api-sports.io/football/teams/24471.png"
+              },
+              "awayTeam": {
+                "team_id": 24487,
+                "team_name": "Sao Paulo U17",
+                "logo": "https://media.api-sports.io/football/teams/24487.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            }
+          ]
+        },
+        "Serie B": {
+          "name": "Serie B",
+          "logo": "https://media.api-sports.io/football/leagues/72.png",
+          "fixtures": [
+            {
+              "event_date": "2024-07-22T23:00:00+00:00",
+              "status": "Not Started",
+              "venue": "Estádio Urbano Caldeira",
+              "statusShort": "NS",
+              "round": "Regular Season - 17",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 128,
+                "team_name": "Santos",
+                "logo": "https://media.api-sports.io/football/teams/128.png"
+              },
+              "awayTeam": {
+                "team_id": 147,
+                "team_name": "Coritiba",
+                "logo": "https://media.api-sports.io/football/teams/147.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            }
+          ]
+        },
+        "Serie C": {
+          "name": "Serie C",
+          "logo": "https://media.api-sports.io/football/leagues/75.png",
+          "fixtures": [
+            {
+              "event_date": "2024-07-22T23:00:00+00:00",
+              "status": "Not Started",
+              "venue": "Estádio Estadual Lourival Baptista",
+              "statusShort": "NS",
+              "round": "Regular Season - 14",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 7772,
+                "team_name": "Confiança",
+                "logo": "https://media.api-sports.io/football/teams/7772.png"
+              },
+              "awayTeam": {
+                "team_id": 1195,
+                "team_name": "Ferroviario",
+                "logo": "https://media.api-sports.io/football/teams/1195.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            },
+            {
+              "event_date": "2024-07-22T23:00:00+00:00",
+              "status": "Not Started",
+              "venue": "Estádio Estadual Jornalista Edgar Augusto Proença",
+              "statusShort": "NS",
+              "round": "Regular Season - 14",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 1198,
+                "team_name": "remo",
+                "logo": "https://media.api-sports.io/football/teams/1198.png"
+              },
+              "awayTeam": {
+                "team_id": 150,
+                "team_name": "CSA",
+                "logo": "https://media.api-sports.io/football/teams/150.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            },
+            {
+              "event_date": "2024-07-22T23:00:00+00:00",
+              "status": "Not Started",
+              "venue": "Estádio Municipal Presidente Getúlio Vargas",
+              "statusShort": "NS",
+              "round": "Regular Season - 14",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 7774,
+                "team_name": "Floresta",
+                "logo": "https://media.api-sports.io/football/teams/7774.png"
+              },
+              "awayTeam": {
+                "team_id": 155,
+                "team_name": "Sampaio Correa",
+                "logo": "https://media.api-sports.io/football/teams/155.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            }
+          ]
+        }
+      }
+    },
+    "Chile": {
+      "name": "Chile",
+      "logo": "https://media.api-sports.io/flags/cl.svg",
+      "leagues": {
+        "Primera B": {
+          "name": "Primera B",
+          "logo": "https://media.api-sports.io/football/leagues/266.png",
+          "fixtures": [
+            {
+              "event_date": "2024-07-22T19:00:00+00:00",
+              "status": "Not Started",
+              "venue": "Estadio Municipal de Recoleta",
+              "statusShort": "NS",
+              "round": "Regular Season - 17",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 5644,
+                "team_name": "Recoleta",
+                "logo": "https://media.api-sports.io/football/teams/5644.png"
+              },
+              "awayTeam": {
+                "team_id": 2340,
+                "team_name": "Union San Felipe",
+                "logo": "https://media.api-sports.io/football/teams/2340.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            },
+            {
+              "event_date": "2024-07-22T23:00:00+00:00",
+              "status": "Not Started",
+              "venue": "Estadio Bicentenario La Granja",
+              "statusShort": "NS",
+              "round": "Regular Season - 17",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 2316,
+                "team_name": "Curico Unido",
+                "logo": "https://media.api-sports.io/football/teams/2316.png"
+              },
+              "awayTeam": {
+                "team_id": 2338,
+                "team_name": "Barnechea",
+                "logo": "https://media.api-sports.io/football/teams/2338.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            }
+          ]
+        },
+        "Segunda División": {
+          "name": "Segunda División",
+          "logo": "https://media.api-sports.io/football/leagues/711.png",
+          "fixtures": [
+            {
+              "event_date": "2024-07-22T23:00:00+00:00",
+              "status": "Not Started",
+              "venue": "Estadio Bicentenario Lucio Fariña",
+              "statusShort": "NS",
+              "round": "Regular Season - 15",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 21114,
+                "team_name": "Concón National",
+                "logo": "https://media.api-sports.io/football/teams/21114.png"
+              },
+              "awayTeam": {
+                "team_id": 2339,
+                "team_name": "D. Melipilla",
+                "logo": "https://media.api-sports.io/football/teams/2339.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            }
+          ]
+        }
+      }
+    },
+    "Iceland": {
+      "name": "Iceland",
+      "logo": "https://media.api-sports.io/flags/is.svg",
+      "leagues": {
+        "Úrvalsdeild": {
+          "name": "Úrvalsdeild",
+          "logo": "https://media.api-sports.io/football/leagues/164.png",
+          "fixtures": [
+            {
+              "event_date": "2024-07-22T19:15:00+00:00",
+              "status": "Not Started",
+              "venue": "Kaplakrikavöllur",
+              "statusShort": "NS",
+              "round": "Regular Season - 15",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 270,
+                "team_name": "FH hafnarfjordur",
+                "logo": "https://media.api-sports.io/football/teams/270.png"
+              },
+              "awayTeam": {
+                "team_id": 827,
+                "team_name": "IA Akranes",
+                "logo": "https://media.api-sports.io/football/teams/827.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            }
+          ]
+        }
+      }
+    },
+    "Paraguay": {
+      "name": "Paraguay",
+      "logo": "https://media.api-sports.io/flags/py.svg",
+      "leagues": {
+        "Division Intermedia": {
+          "name": "Division Intermedia",
+          "logo": "https://media.api-sports.io/football/leagues/251.png",
+          "fixtures": [
+            {
+              "event_date": "2024-07-22T21:00:00+00:00",
+              "status": "Not Started",
+              "venue": "Estadio La Arboleda",
+              "statusShort": "NS",
+              "round": "Regular Season - 17",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 1185,
+                "team_name": "Rubio NU",
+                "logo": "https://media.api-sports.io/football/teams/1185.png"
+              },
+              "awayTeam": {
+                "team_id": 10474,
+                "team_name": "Atlético Tembetary",
+                "logo": "https://media.api-sports.io/football/teams/10474.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            },
+            {
+              "event_date": "2024-07-22T23:30:00+00:00",
+              "status": "Not Started",
+              "venue": "Estadio Ricardo Gregor",
+              "statusShort": "NS",
+              "round": "Regular Season - 17",
+              "referee": null,
+              "homeTeam": {
+                "team_id": 1186,
+                "team_name": "Independiente F.b.c.",
+                "logo": "https://media.api-sports.io/football/teams/1186.png"
+              },
+              "awayTeam": {
+                "team_id": 18311,
+                "team_name": "Pastoreo",
+                "logo": "https://media.api-sports.io/football/teams/18311.png"
+              },
+              "score": {
+                "halftime": null,
+                "fulltime": null,
+                "extratime": null,
+                "penalty": null
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}
