@@ -163,7 +163,7 @@ async function correctPrediction() {
 
 
 
-async function publishPrediction(client, date, isVip) {
+async function publishPrediction(client, date, isVip=false) {
   try {
     const predictionDate = new Date(date).toISOString().split('T')[0];
 
