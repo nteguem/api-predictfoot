@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const PredictSchema = new mongoose.Schema({
   country: {
-    flag: { type: String, required: true },
+    logo: { type: String, required: true },
     name: { type: String, required: true }
   },
   championship: {
@@ -29,11 +29,10 @@ const PredictSchema = new mongoose.Schema({
       fulltime: { type: String, default: null }
     }
   },
-  iswin: { type: Boolean, required: true }, 
+  iswin: { type: Boolean, default: false }, 
   prediction: { type: String, required: true },
   coast: { type: Number, required: true },
-  type_prediction: { type: String, required: true },
-  author: { type: String, required: true },
+  author: { type: String},
   isVisible: { type: Boolean, default: false },
   isWhatapp: { type: Boolean, default: false },
   isVip: { type: Boolean, default: false }
