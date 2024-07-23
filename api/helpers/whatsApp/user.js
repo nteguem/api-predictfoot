@@ -52,19 +52,19 @@ const UserCommander = async (user, msg, client) => {
               msg.reply("📋 Choisissez le type de pronostic :\n1-Gratuit\n2-VIP\n\n _Tapez # pour revenir au menu principal_");
               Steps[user.data.phoneNumber].currentMenu = "DailyPronoMenu";
               break;
+            // case "2":
+            //   const vipStatusExclusive = await verifyUserVip(user.data.phoneNumber);
+            //   if (vipStatusExclusive) {
+            //     await sendExclusiveTips(client, user)
+            //   } else {
+            //     await sendMessageToNumber(client, user.data.phoneNumber, `Vous n'avez pas de forfait VIP activé pour bénéficier des astuces et conseils exclusifs. Voici les options d'abonnement disponibles  :`);
+            //     await handleSubscriptionMenu(client, user);
+            //   }
+            //   break;
             case "2":
-              const vipStatusExclusive = await verifyUserVip(user.data.phoneNumber);
-              if (vipStatusExclusive) {
-                await sendExclusiveTips(client, user)
-              } else {
-                await sendMessageToNumber(client, user.data.phoneNumber, `Vous n'avez pas de forfait VIP activé pour bénéficier des astuces et conseils exclusifs. Voici les options d'abonnement disponibles  :`);
-                await handleSubscriptionMenu(client, user);
-              }
-              break;
-            case "3":
               await sendPredictionHistoryMenu(client, user);
               break;
-            case "4":
+            case "3":
               const vipStatus = await verifyUserVip(user.data.phoneNumber);
               if (vipStatus) {
                 await listSubscriptionUser(msg, user)
@@ -72,7 +72,7 @@ const UserCommander = async (user, msg, client) => {
                 await handleSubscriptionMenu(client, user);
               }
               break;
-            case "5":
+            case "4":
               let faqResponse = "Bienvenue dans la section 'Informations et Aide'. Trouvez ici toutes les réponses et informations essentielles pour utiliser notre service de pronostics :\n\n";
               faqOptions.forEach((option, index) => {
                 faqResponse += `${index + 1}. ${option.title}\n`;
@@ -82,10 +82,10 @@ const UserCommander = async (user, msg, client) => {
               Steps[user.data.phoneNumber].currentMenu = "FAQSubMenu";
               Steps[user.data.phoneNumber].faqOptions = faqOptions;
               break;
-              case '6':
+              case '5':
                 await sendAppLinks(client, user);
                 break;
-            case "7":
+            case "6":
               msg.reply("Êtes-vous sûr de vouloir ne plus recevoir les prédictions journalières via ce bot ? Répondez 'oui' pour confirmer, ou tapez # pour revenir au menu principal.");
               Steps[user.data.phoneNumber].currentMenu = "ConfirmDisableNotifications";
               break;
@@ -381,32 +381,32 @@ _Tapez # pour revenir au menu principal._`;
 };
 
 // Fonction pour envoyer les astuces et conseils exclusifs
-const sendExclusiveTips = async (client, user) => {
-  try {
+// const sendExclusiveTips = async (client, user) => {
+//   try {
    
-    const tipsData = await listTips();
-    const tips = tipsData.tips.filter(tip => tip.isVip);
+//     const tipsData = await listTips();
+//     const tips = tipsData.tips.filter(tip => tip.isVip);
     
-    if (!tips || tips.length === 0) {
-      await sendMessageToNumber(client, user.data.phoneNumber, `Aucune astuce ou conseil exclusif disponible pour le moment.\n\n_Tapez # pour revenir au menu principal._`);
-      return;
-    }
+//     if (!tips || tips.length === 0) {
+//       await sendMessageToNumber(client, user.data.phoneNumber, `Aucune astuce ou conseil exclusif disponible pour le moment.\n\n_Tapez # pour revenir au menu principal._`);
+//       return;
+//     }
 
-    let tipsResponse = `📅 Astuces et conseils exclusifs du jour :\n\n`;
+//     let tipsResponse = `📅 Astuces et conseils exclusifs du jour :\n\n`;
 
-    tips.forEach((tip, index) => {
-      const formattedDate = new Date(tip.tipDate).toLocaleDateString();
-      tipsResponse += `*****************\n${tip.title} - ${formattedDate}\n\n${tip.content}\n\n`;
-    });
+//     tips.forEach((tip, index) => {
+//       const formattedDate = new Date(tip.tipDate).toLocaleDateString();
+//       tipsResponse += `*****************\n${tip.title} - ${formattedDate}\n\n${tip.content}\n\n`;
+//     });
 
-    tipsResponse += "\n_Tapez # pour revenir au menu principal._";
-    await sendMessageToNumber(client, user.data.phoneNumber, tipsResponse);
+//     tipsResponse += "\n_Tapez # pour revenir au menu principal._";
+//     await sendMessageToNumber(client, user.data.phoneNumber, tipsResponse);
 
-  } catch (error) {
-    console.error('Error sending exclusive tips:', error);
-    await sendMessageToNumber(client, user.data.phoneNumber, `Erreur lors de l'envoi des astuces et conseils exclusifs.\n\n_Tapez # pour revenir au menu principal._`);
-  }
-};
+//   } catch (error) {
+//     console.error('Error sending exclusive tips:', error);
+//     await sendMessageToNumber(client, user.data.phoneNumber, `Erreur lors de l'envoi des astuces et conseils exclusifs.\n\n_Tapez # pour revenir au menu principal._`);
+//   }
+// };
 
 module.exports = {
   UserCommander

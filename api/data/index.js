@@ -1,11 +1,10 @@
 const menuContent = `
 1-Pronostics du jour, tapez 1
-2-Astuce et conseil exclusif du jour, tapez 2
-3-Historique des prédictions, tapez 3
-4-Abonnements et Offres tapez 4
-5-Informations et Aide tapez 5
-6-Suivre nos applications sur Playstore et Appstore, tapez 6
-7-Désabonnement aux Prédictions, tapez 7    
+2-Historique des prédictions, tapez 3
+3-Abonnements et Offres tapez 4
+4-Informations et Aide tapez 5
+5-Suivre nos applications sur Playstore et Appstore, tapez 6
+6-Désabonnement aux Prédictions, tapez 7    
 
 Pour commencer, répondez simplement avec le numéro de l'option qui vous intéresse`;
 
