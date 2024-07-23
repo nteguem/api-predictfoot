@@ -55,9 +55,9 @@ function stopAllTasks() {
 // Schedule the tasks 
 async function  scheduleAllTasks(client) {
   await scheduleTask('fetchAndSaveMatches', '25 02 * * *', fetchAndSaveMatches);
-  await scheduleTask('correctPrediction', '30 08 * * *', correctPrediction);
-  await scheduleTask('publishPrediction', '20 08 * * *', () => publishPrediction(client, todayDate));
-  await scheduleTask('publishResultPrediction', '10 08 * * *', () => publishPrediction(client, yesterdayDate));
+  await scheduleTask('correctPrediction', '25 10 * * *', correctPrediction);
+  await scheduleTask('publishPrediction', '20 10 * * *', () => publishPrediction(client, todayDate));
+  await scheduleTask('publishResultPrediction', '17 10 * * *', () => publishPrediction(client, yesterdayDate));
   await Object.keys(tasks).forEach(task => startTask(task));
 }
 
