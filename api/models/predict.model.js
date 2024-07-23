@@ -2,11 +2,11 @@ const mongoose = require('mongoose');
 
 const PredictSchema = new mongoose.Schema({
   country: {
-    logo: { type: String, default: "https://res.cloudinary.com/nwccompany/image/upload/v1721720176/l1ifhrli67xip4al5fc0.png" },
+    logo: { type: String, default: "https://media.api-sports.io/football/teams/24051.png" },
     name: { type: String, required: true }
   },
   championship: {
-    logo: { type: String, default: "https://res.cloudinary.com/nwccompany/image/upload/v1721720176/l1ifhrli67xip4al5fc0.png" },
+    logo: { type: String, default: "https://media.api-sports.io/football/teams/24051.png" },
     name: { type: String, required: true }
   },
   fixture: {
