@@ -176,11 +176,7 @@ async function publishPrediction(client, date, isVip=false) {
       user,
       isVip: await verifyUserVip(user.phoneNumber)
     })));
-
     const targetUsers = userGroups.filter(group => group.isVip === isVip).map(group => group.user);
-    console.log("users vip",targetUsers)
-    console.log("userGroups",userGroups)
-
     await sendPredictions(client, targetUsers, imageData);
 
   } catch (error) { 
