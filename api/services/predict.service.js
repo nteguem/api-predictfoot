@@ -168,8 +168,6 @@ async function publishPrediction(client, date, isVip=false) {
     const predictionDate = new Date(date).toISOString().split('T')[0];
     // Récupérer les prédictions du jour
     const { predictions } = await listPredictions(1, 15, predictionDate, true, isVip); 
-    console.log("predictions",predictions)
-
     if (predictions.length === 0) return;
     const imageData = predictions.length > 0 ? await generateImage(predictions) : null;
     // Récupérer les utilisateurs et leur statut VIP
