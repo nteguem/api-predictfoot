@@ -11,7 +11,6 @@ const socketIo = require('socket.io');
 const { initializeWhatsAppClient, handleIncomingMessages } = require('./api/helpers/whatsApp/whatappsHandler');
 const {ensureDefaultGroupsExist} = require("./api/services/group.service")
 const {ensureDefaultPlansExist} = require("./api/services/plan.service")
-
 const {scheduleAllTasks} = require("./api/services/schedule.service")
 // // Connection to MongoDB
 dbConnect(); 
@@ -81,7 +80,6 @@ scheduleAllTasks(client);
 ensureDefaultGroupsExist();
 //Ensure defaut plan exist
 ensureDefaultPlansExist(); 
-
 // App Routes
 app.use('/api/v1', appRoutes(client));   
 
