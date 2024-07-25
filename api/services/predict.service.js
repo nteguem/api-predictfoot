@@ -166,7 +166,7 @@ async function correctPrediction() {
 async function publishPrediction(client, date, isVip=false) {
   try {
     const predictionDate = new Date(date).toISOString().split('T')[0];
-
+    console.log("predictionDate",predictionDate)
     // Récupérer les prédictions du jour
     const { predictions } = await listPredictions(1, 15, predictionDate, true, isVip); 
     if (predictions.length === 0) return;
