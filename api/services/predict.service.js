@@ -90,7 +90,6 @@ async function listPredictions(page = 1, limit = 5, date = null, isVisible = nul
 
       // Filtrer les dates sans doublons
       const uniqueDates = [...new Set(distinctDatesWithoutTime)];
-
       // Calculer le nombre total de pages
       const totalPages = Math.ceil(uniqueDates.length / limit);
 
@@ -99,9 +98,10 @@ async function listPredictions(page = 1, limit = 5, date = null, isVisible = nul
 
       // Obtenir les dates de prédiction pour la page actuelle
       const currentDates = uniqueDates.slice(skipCount, skipCount + limit);
+       const filterDates = await currentDates.sort((a, b) => moment(b).diff(moment(a)));
 
       // Obtenir les prédictions pour chaque date
-      const groupedPredictions = await Promise.all(currentDates.map(async (date) => {
+      const groupedPredictions = await Promise.all(filterDates.map(async (date) => {
         const startOfDay = moment(date).startOf('day').toISOString();
         const endOfDay = moment(date).endOf('day').toISOString();
         const predictionsForDate = await Predict.find({
