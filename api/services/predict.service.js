@@ -249,14 +249,49 @@ async function listLastTenDaysPredictions(isVisible = true, isVip = false) {
   }
 }
 
+async function oldTips(isVisible = true, isVip = false) {
+  try {
+    const predictions = await Predict.find({ isVisible, isVip })
+      .sort({ "fixture.event_date": -1 }) // Trier par date de création
+      .limit(10);
+
+    console.log("predictions", predictions); // Afficher le nombre d'enregistrements récupérés
 
 
+    const recentPredictions = predictions.filter(prediction => {
+      const eventDate = moment(prediction.fixture.event_date).startOf('day');
+      return eventDate.isBetween( predictions[predictions.length-1].fixture.event_date,predictions[0].fixture.event_date, 'days', '[]');
+    });
 
+    // Obtenir les dates distinctes pour les prédictions récentes
+    const distinctDates = [...new Set(recentPredictions.map(p => moment(p.fixture.event_date).startOf('day').format('YYYY-MM-DD')))];
 
+    // Trier les dates par ordre décroissant et prendre les 7 dernières
+    const lastSevenDates = distinctDates.sort((a, b) => new Date(b) - new Date(a)).slice(0, 7);
 
+    // Regrouper les prédictions par date
+    const groupedPredictions = lastSevenDates.map(date => {
+      const startOfDay = moment(date).startOf('day').toISOString();
+      const endOfDay = moment(date).endOf('day').toISOString();
+      const predictionsForDate = recentPredictions.filter(p => {
+        const eventDate = moment(p.fixture.event_date).toISOString();
+        return eventDate >= startOfDay && eventDate < endOfDay;
+      });
+      return { date, predictions: predictionsForDate };
+    });
 
+    // Enlever les dates sans prédictions pour avoir uniquement celles avec des données
+    const result = groupedPredictions.filter(group => group.predictions.length > 0);
 
-
+    return {
+      success: true,
+      data: result
+    };
+  } catch (error) {
+    console.error('Error fetching last seven days predictions:', error);
+    return { success: false, error: error.message };
+  }
+}
 
 module.exports = {
   createPrediction,
@@ -265,5 +300,6 @@ module.exports = {
   listPredictions,
   correctPrediction,
   publishPrediction,
-  listLastTenDaysPredictions
+  listLastTenDaysPredictions,
+  oldTips
 };

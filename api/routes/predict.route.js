@@ -27,6 +27,9 @@ const setupPredict = (app, client) => {
         predictHandler.listLastTenDaysPredictions(req, res, client);
     });
 
+    router.get('/oldtips', (req, res) => {
+        predictHandler.oldTips(req, res, client);
+    });
 
     router.delete('/delete', (req, res) => {
         predictHandler.deletePrediction(req, res, client);

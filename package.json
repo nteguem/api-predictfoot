@@ -5,7 +5,8 @@
   "main": "launch.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon launch.js"
+    "start": "nodemon launch.js",
+    "prepare": "husky"
   },
   "author": "",
   "license": "ISC",
@@ -21,7 +22,6 @@
     "express": "^4.18.2",
     "fs": "^0.0.1-security",
     "http-errors": "^2.0.0",
-    "husky": "^9.1.4",
     "jsonwebtoken": "^9.0.2",
     "moment": "^2.29.4",
     "mongoose": "^7.4.3",
@@ -36,9 +36,7 @@
     "whatsapp-web.js": "https://github.com/pedroslopez/whatsapp-web.js#webpack-exodus",
     "winston": "^3.13.0"
   },
-  "husky": {
-    "hooks": {
-      "pre-commit": "pretty-quick --staged"
-    }
+  "devDependencies": {
+    "pretty-quick": "^4.0.0"
   }
 }

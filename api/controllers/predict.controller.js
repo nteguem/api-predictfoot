@@ -105,10 +105,28 @@ async function listLastTenDaysPredictions(req, res) {
   }
 }
 
+async function oldTips(req, res) {
+  try {
+    const isVisible = req.query.isVisible || null;
+    const isVip = req.query.isVip || false;
+    const response = await PredictService.oldTips(isVisible, isVip);
+    if (response.success) {
+      return ResponseService.success(res, { oldTips: response.data });
+    } else {
+      return ResponseService.internalServerError(res, { error: response.error });
+    }
+  } catch (error) {
+    console.log('Error listing old tips:', error);
+    return ResponseService.internalServerError(res, { error: 'Error listing old tips' });
+  }
+}
+
+
 module.exports = {
   createPrediction,
   updatePrediction,
   deletePrediction,
   listPredictions,
-  listLastTenDaysPredictions
+  listLastTenDaysPredictions,
+  oldTips
 };
