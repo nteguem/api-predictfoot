@@ -1,8 +1,8 @@
 const menuContent = `
 1-Pronostics du jour, tapez 1
 2-Historique des prédictions, tapez 2
-3-Abonnements et Offres tapez 3
-4-Informations et Aide tapez 4
+3-Abonnements et Offres, tapez 3
+4-Informations et Aide, tapez 4
 5-Suivre nos applications sur Playstore et Appstore, tapez 5
 6-Désabonnement aux Prédictions, tapez 6
 
