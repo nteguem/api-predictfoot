@@ -11,6 +11,7 @@ const {setupEvent} = require("./event.route");
 const {setupSubscription} = require("./subscription.route")
 const {setupPlan} = require("./plan.route")
 const {setupTip} = require("./tip.route")
+const {setupNotificationRoutes} = require("./notification.route")
 /* GET home page. */
 // Define a route for the home page ('/') that renders the 'index' template with the title 'Bibemella'.
 router.get('/', function(req, res, next) {
@@ -32,7 +33,8 @@ const setupAppRoutes = (client) => {
   setupEvent(app,client);
   setupSubscription(app,client);
   setupPlan(app);
-  setupTip(app,client)
+  setupTip(app,client);
+  setupNotificationRoutes(app)
   return app;
 }
 

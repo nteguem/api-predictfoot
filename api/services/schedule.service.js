@@ -18,6 +18,13 @@ function getYesterdayDate() {
 
 // Fonction pour planifier une tâche
 function scheduleTask(name, cronTime, taskFunction) {
+  // Si une tâche existe déjà sous ce nom, la stopper avant d'en créer une nouvelle
+  if (tasks[name]) {
+    tasks[name].stop();
+    console.log(`Existing task "${name}" stopped.`);
+  }
+
+  // Créer et planifier une nouvelle tâche
   tasks[name] = cron.schedule(cronTime, async () => {
     try {
       await taskFunction();
@@ -58,12 +65,13 @@ function stopAllTasks() {
 
 // Planifier les tâches
 async function scheduleAllTasks(client) {
-  await scheduleTask('fetchAndSaveMatches', '49 01 * * *', fetchAndSaveMatches);
-  await scheduleTask('correctPrediction', '11 13 * * *', correctPrediction);
-  await scheduleTask('publishPrediction', '12 13 * * *', () => publishPrediction(client, getTodayDate()));
-  await scheduleTask('publishResultPrediction', '32 15 * * *', () => publishPrediction(client, getYesterdayDate()));
-  await scheduleTask('publishResultPredictionVip', '51 15 * * *', () => publishPrediction(client, getYesterdayDate(), true));
-  Object.keys(tasks).forEach(task => startTask(task));
+  await scheduleTask('fetchAndSaveMatches', '30 02 * * *', fetchAndSaveMatches);
+  await scheduleTask('correctPrediction', '02 33 * * *', correctPrediction);
+  await scheduleTask('publishAllPredictions', '50 12 * * *', async () => {
+    await publishPrediction(client, getYesterdayDate());  // Envoi des résultats de la veille
+    await publishPrediction(client, getTodayDate());      // Envoi des prédictions du jour
+  });
+ Object.keys(tasks).forEach(task => startTask(task));
 }
 
 module.exports = {

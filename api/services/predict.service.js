@@ -140,7 +140,7 @@ async function correctPrediction() {
     today.setDate(today.getDate()-1);
     const yesterdayDate = today.toISOString().split('T')[0];
     const fixtureData = await loadFixtureData(yesterdayDate);
-    const { predictions } = await listPredictions(1, 15, yesterdayDate,true,true); 
+    const { predictions } = await listPredictions(1, 15, yesterdayDate,true,null); 
     const updatedPredictions = await Promise.all(predictions.map(async (prediction) => {
       const homeTeamId = prediction.fixture.homeTeam.team_id;
       const fixture = await findFixtureByTeamId(fixtureData, homeTeamId);
@@ -163,26 +163,47 @@ async function correctPrediction() {
 
 
 
-async function publishPrediction(client, date, isVip=false) {
+async function publishPrediction(client, date) {
   try {
     const predictionDate = new Date(date).toISOString().split('T')[0];
-    // Récupérer les prédictions du jour
-    const { predictions } = await listPredictions(1, 15, predictionDate, true, isVip); 
-    if (predictions.length === 0) return;
-    const imageData = predictions.length > 0 ? await generateImage(predictions) : null;
+
+    // Récupérer toutes les prédictions (VIP et non-VIP)
+    const { predictions } = await listPredictions(1, 15, predictionDate, true, null);
+
+    // Générer les images pour VIP et non-VIP
+    const images = {
+      vip: null,
+      nonVip: null,
+    };
+    
+    if (predictions.length > 0) {
+      images.vip = await generateImage(predictions.filter(p => p.isVip));
+      images.nonVip = await generateImage(predictions.filter(p => !p.isVip));
+    }
+
     // Récupérer les utilisateurs et leur statut VIP
     const users = await User.find({});
-    const userGroups = await Promise.all(users.map(async user => ({
-      user,
-      isVip: await verifyUserVip(user.phoneNumber)
-    })));
-    const targetUsers = userGroups.filter(group => group.isVip === isVip).map(group => group.user);
-    await sendPredictions(client, targetUsers, imageData);
+    const userGroups = {
+      vip: [],
+      nonVip: [],
+    };
 
-  } catch (error) { 
+    for (const user of users) {
+      const isVip = await verifyUserVip(user.phoneNumber);
+      userGroups[isVip ? 'vip' : 'nonVip'].push(user);
+    }
+    // Envoyer les prédictions aux utilisateurs VIP et non-VIP
+    for (const group in userGroups) {
+      if (userGroups[group].length > 0 && images[group]) {
+        await sendPredictions(client, userGroups[group], images[group]);
+      }
+    }
+
+  } catch (error) {
     console.log('Error daily predictions:', error);
   }
 }
+
 
 
 const sendPredictions = async (client, users, imageData) => {
