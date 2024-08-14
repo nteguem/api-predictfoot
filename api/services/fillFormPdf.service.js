@@ -1,4 +1,4 @@
-const { PDFDocument ,rgb} = require('pdf-lib');
+const { PDFDocument} = require('pdf-lib');
 const { readFile } = require('fs/promises');
 const path = require('path');
 
@@ -7,35 +7,7 @@ async function fillPdfFields(inputPath, data) {
         const resolvedInputPath = path.resolve(__dirname, inputPath);
         const pdfDoc = await PDFDocument.load(await readFile(resolvedInputPath));
         const form = pdfDoc.getForm();
-
         await fillTextFields(form, data);
-        await fillRadioFields(form, data, 'civility', ['Monsieur', 'Madame']);
-        await fillRadioFields(form, data, 'typeProfession', [
-            'Fonctionnaire/Salarié du secteur public',
-            'Etudiant',
-            'Planteur/Exploitant rural',
-            'Salarié du secteur privé',
-            'Commerçant et entrepreneur individuel',
-            'Agent d’organismes internationaux',
-            'Profession Libérale',
-            'Autre'
-        ]);
-        await fillRadioFields(form, data, 'maritalStatus', ['Célibataire', 'Marié.e', 'Divorcé.e', 'Veuf.ve']);
-        await fillRadioFields(form, data, 'typeDocument', ["Carte d'identité", 'Passeport', 'Carte de Séjour']);
-        await fillRadioFields(form, data, 'methodPaiementFCP', ['Virement', 'Mobile money (OM|MOMO)']);
-        await fillRadioFields(form, data, 'investmentObjective', [
-            'Diversification du patrimoine',
-            'Revenus complémentaires',
-            'Transmission du patrimoine',
-            'Diversification de placement',
-            'Placement de trésorerie',
-            'Rendement',
-            'Autres'
-        ]);
-        await fillRadioFields(form, data, 'financialMarketExperience', ['Oui', 'Non']);
-        await fillRadioFields(form, data, 'investmentHorizon', ['Court-terme', 'Moyen-terme', 'Long-terme']);
-        await fillRadioFields(form, data, 'capitalOrigin', ['épargne', 'crédit', 'cession d\'actifs', 'fonds propres', 'héritage familiale']);
-
         setFieldsReadOnly(form);
 
         form.flatten();
@@ -48,10 +20,6 @@ async function fillPdfFields(inputPath, data) {
 
 async function fillTextFields(form, data) {
     for (const fieldName in data) {
-        if (['civility', 'typeProfession', 'maritalStatus', 'typeDocument', 'methodPaiementFCP', 'investmentObjective', 'financialMarketExperience', 'investmentHorizon', 'capitalOrigin'].includes(fieldName)) {
-            continue;
-        }
-
         const fieldValue = data[fieldName];
         try {
             const field = form.getFieldMaybe(fieldName);
@@ -66,20 +34,6 @@ async function fillTextFields(form, data) {
     }
 }
 
-async function fillRadioFields(form, data, fieldName, validOptions) {
-    const fieldValue = data[fieldName];
-    if (validOptions.includes(fieldValue)) {
-        const radioField = form.getFieldMaybe(fieldValue);
-        if (radioField && radioField.constructor.name === 'PDFCheckBox') {
-             radioField.check();
-            radioField.defaultUpdateAppearances();
-        } else {
-            console.log(`The radio button for "${fieldValue}" does not exist or is not a checkbox.`);
-        }
-    } else {
-        console.log(`Invalid ${fieldName} value: ${fieldValue}`);
-    }
-}
 
 
 

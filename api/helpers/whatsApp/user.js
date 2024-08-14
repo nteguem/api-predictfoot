@@ -20,8 +20,9 @@ const appstoreLink = "https://apps.apple.com/app/id123456789";
 
 const replyInvalid = async (msg, client, user) => {
   reset(user);
-  msg.reply("Commande saisie incorrecte.");
-  await sendMessageToNumber(client, user.data.phoneNumber, menuData(user.data.pseudo, user.exist));
+      const menuMessage = `*${user.data.pseudo}*, veuillez choisir une option dans le menu principal ci-dessus pour continuer.`;
+      await sendMessageToNumber(client, user.data.phoneNumber, menuData(user.data.pseudo, user.exist));
+      msg.reply(menuMessage); 
 };
 
 const getTodaysDate = () => new Date().toISOString().split('T')[0];
@@ -136,8 +137,7 @@ const UserCommander = async (user, msg, client) => {
             const userPseudo = user.data.pseudo;
             const amount = selectedPlanToPay.price;
             const phonenumber = Steps[user.data.phoneNumber].mobileMoneyNumber;
-
-            const paymentResponse = await makePayment(userPseudo, amount, phonenumber);
+            const paymentResponse = await makePayment(userPseudo, amount, phonenumber,Steps[user.data.phoneNumber].selectedPlan,user.data.phoneNumber);
 
             if (paymentResponse.status === "REQUEST_ACCEPTED") {
               msg.reply(`Paiement en cours. Utilisez le code USSD ${paymentResponse.channel_ussd} pour compléter le paiement via ${paymentResponse.channel_name}.`);
@@ -245,7 +245,7 @@ const sendPrediction = async (client, isVip, user) => {
     if (predictions.length === 0) {
       reset(user);
       let predictionType = isVip ? "VIP" : "gratuite";
-      sendMessageToNumber(client, user.data.phoneNumber, `Aucune prédiction ${predictionType} n'est encore disponible, mais vous serez notifié dès qu'elle le sera.\n\n _Tapez # pour revenir au menu principal_`);
+      sendMessageToNumber(client, user.data.phoneNumber, `Aucune prédiction ${predictionType} disponible pour l'instant. Vous recevrez un message dès qu'elle sera disponible.\n\n _Tapez # pour revenir au menu principal_`);
       return;
     }
 
