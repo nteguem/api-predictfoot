@@ -67,7 +67,7 @@ function stopAllTasks() {
 async function scheduleAllTasks(client) {
   await scheduleTask('fetchAndSaveMatches', '30 02 * * *', fetchAndSaveMatches);
   await scheduleTask('correctPrediction', '33 02 * * *', correctPrediction);
-  await scheduleTask('publishAllPredictions', '10 14 * * *', async () => {
+  await scheduleTask('publishAllPredictions', '28 16 * * *', async () => {
     await publishPrediction(client, getYesterdayDate());  // Envoi des résultats de la veille
     await publishPrediction(client, getTodayDate());      // Envoi des prédictions du jour
   });
