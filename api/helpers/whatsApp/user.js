@@ -162,7 +162,7 @@ const UserCommander = async (user, msg, client) => {
             break;
           }
           const selectedSubscription = subscriptions[selectedSubscriptionIndex - 1];
-          const status = isSubscriptionActive(selectedSubscription) ? "En cours" : "Expiré";
+          const status = isSubscriptionActive(selectedSubscription) ? "✅" : "❌";
           const planDetails = selectedSubscription.plan;
           msg.reply(`*Détail du forfait*\nNom : ${planDetails.name}\nPrix : ${planDetails.price} XAF\nDurée : ${planDetails.duration} jours\nDescription : ${planDetails.description}\nStatut : ${status}\nDate de début : ${new Date(selectedSubscription.startDate).toLocaleDateString()}\nDate de fin : ${new Date(selectedSubscription.endDate).toLocaleDateString()}\n\n_Tapez # pour revenir au menu principal._`);
           Steps[user.data.phoneNumber].currentMenu = "mainMenu";
@@ -289,9 +289,9 @@ const listSubscriptionUser = async (msg, user) => {
   const { subscriptions } = await listSubscriptions(user.data.phoneNumber);
   let response = "📋 Vos abonnements :\n";
   subscriptions.forEach((subscription, index) => {
-    const status = isSubscriptionActive(subscription) ? "En cours" : "Expiré";
-    response += `${index + 1}. ${subscription.plan.name} (${status})\n`;
-  });
+    const status = isSubscriptionActive(subscription) ? "✅" : "❌";
+    response += `${index + 1}. ${subscription.plan.name} Date exp. *${moment(subscription.endDate).format("dddd DD MMMM YYYY")}* ${status}\n`;
+  }); 
   response += "\n_Sélectionnez un abonnement pour voir les détails, ou tapez # pour revenir au menu principal._";
   msg.reply(response);
   Steps[user.data.phoneNumber].currentMenu = "SubscriptionDetailsMenu";
