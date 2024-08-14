@@ -9,6 +9,8 @@ const { verifyUserVip, listSubscriptions } = require("../../services/subscriptio
 const { getAllPlans } = require("../../services/plan.service");
 const { makePayment } = require("../../services/monetbil.service");
 const { listTips } = require('../../services/tip.service');
+const moment = require("moment");
+moment.locale('fr');
 
 const Steps = {};
 let historyDates = [];
@@ -50,7 +52,7 @@ const UserCommander = async (user, msg, client) => {
         case "mainMenu":
           switch (msg.body) {
             case "1":
-              msg.reply("📋 Choisissez le type de pronostic :\n1-Gratuit\n2-VIP\n\n _Tapez # pour revenir au menu principal_");
+              msg.reply("📋 Sélectionnez le type de pronostic :\n1-Gratuit, Tapez 1\n2-VIP, Tapez 2\n\n _Tapez # pour revenir au menu principal_");
               Steps[user.data.phoneNumber].currentMenu = "DailyPronoMenu";
               break;
             // case "2":
@@ -298,7 +300,7 @@ const listSubscriptionUser = async (msg, user) => {
 
 const sendPredictionHistoryMenu = async (client, user) => {
   try {
-    await sendMessageToNumber(client, user.data.phoneNumber, "📅 Choisissez le type de pronostic pour l'historique :\n\n1-Pronostic Gratuit\n2-Pronostic VIP\n\n _Tapez # pour revenir au menu principal_");
+    await sendMessageToNumber(client, user.data.phoneNumber, "📅 Sélectionnez le type de pronostic pour consulter l'historique :\n\n1-Pronostic gratuit, Tapez 1 \n2-Pronostic VIP, Tapez 2\n\n _Tapez # pour revenir au menu principal_");
     Steps[user.data.phoneNumber].currentMenu = "HistoryPredictionType";
   } catch (error) {
     console.log('Error sending prediction history menu:', error);
@@ -314,15 +316,14 @@ const sendPredictionHistory = async (client, user, isVip) => {
       return;
     }
 
-    let historyResponse = "📅 Historique des prédictions :\n";
+    let historyResponse = `📅 Sélectionnez une journée pour explorer les détails des prédictions ${isVip ? "VIP" : "gratuites"} :\n\n`;
 
     historyDates = data.map((rate, index) => {
       return rate.date; 
     });
 
     data.forEach((rate, index) => {
-      const formattedDate = new Date(rate.date).toLocaleDateString();
-      historyResponse += `${index + 1}. ${formattedDate} • ${rate.rate}\n`;
+      historyResponse += `${index + 1}- ${moment(rate.date).format('ddd DD/MM/YYYY')} • *${rate.rate}*, Tapez ${index+1}\n`;
     });
 
     historyResponse += "\n_Tapez # pour revenir au menu principal ou sélectionnez une date pour voir les prédictions de cette journée._";
@@ -348,15 +349,15 @@ const sendDailyPredictions = async (client, user, dateIndex) => {
       reset(user);
       return;
     }
-
-    let dailyPredictionsResponse = `📅 Prédictions pour le ${new Date(dateSelected).toLocaleDateString()} :\n`;
+    
+    let dailyPredictionsResponse = `📅 Prédictions pour le *${moment(dateSelected).format("dddd DD MMMM YYYY")}* :\n\n`;
 
     predictions.forEach((prediction, index) => {
       const { prediction: predictionType, iswin } = prediction;
       const { homeTeam, awayTeam,score} = prediction.fixture
-      const outcome = iswin ? "Gagné" : "Perdu";
-      const event = `${homeTeam.team_name} vs ${awayTeam.team_name} • ${predictionType} • ${score.fulltime} (${outcome})`;
-      dailyPredictionsResponse += `${index + 1}. ${event}\n`;
+      const outcome = iswin ? "✅" : "❌";
+      const event = `${homeTeam.team_name} vs ${awayTeam.team_name} • *${predictionType}* • ${score.fulltime} ${outcome}`;
+      dailyPredictionsResponse += `▶️ ${event}\n`;
     });
 
     dailyPredictionsResponse += "\n_Tapez * pour revenir en arrière ,# pour revenir au menu principal._";
