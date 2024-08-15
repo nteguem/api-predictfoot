@@ -48,8 +48,9 @@ async function handlePaymentMonetbilSuccess(req, res, client) {
 
 async function handlePaymentMonetbilFailure(req, res, client, operatorMessage) {
   try {
+    const whatappNumberOnly = req.body.user.split('(')[0].trim();
     const failureMessage = operatorMessage || `Désolé, Votre paiement mobile pour *${req.body.first_name}* n'a pas abouti en raison d'une erreur lors de la transaction. Veuillez vérifier vos informations de paiement et réessayer. Si le problème persiste, contactez-nous pour de l'aide. Nous nous excusons pour tout désagrément.\n\nPour toute assistance, vous pouvez nous contacter sur WhatsApp au +(237)697874621 ou +(237)693505667.\n\nCordialement, L'équipe de predictfoot`;
-    await sendMessageToNumber(client,req.body.payment_ref, failureMessage);
+    await sendMessageToNumber(client,whatappNumberOnly, failureMessage);
     res.status(200).send('Failure');
   } catch (error) {
     console.log(error);
