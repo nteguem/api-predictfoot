@@ -10,12 +10,10 @@ const makePayment = async (user, amount, phonenumber,selectedPlan,whatappNumber)
     service: monetbilService,
     phonenumber,
     amount:1,
-    user,
+    user:`${whatappNumber}(Pseudo : ${user})`,
     first_name:selectedPlan.name,
     last_name:selectedPlan.description,
-    email:selectedPlan.price,
-    item_ref: moment().add(selectedPlan.duration, 'days').format('dddd D MMMM YYYY'),
-    payment_ref:whatappNumber,
+    email:selectedPlan.price
   };
 
   try {
@@ -26,8 +24,7 @@ const makePayment = async (user, amount, phonenumber,selectedPlan,whatappNumber)
       },
       body: JSON.stringify(payload)
     });
-
-    if (!response.ok) {
+    if (!response.ok) { 
       console.log(`HTTP error! status: ${response.status}`);
     }
 
