@@ -26,7 +26,7 @@ async function handlePaymentMonetbilSuccess(req, res, client) {
   try {
     const user = await User.findOne({ phoneNumber: req.body.payment_ref }).select('_id');
     const plan = await Plan.findOne({ name:req.body.first_name }).select('_id');
-    req.body.date = moment().format('YYYY-MM-DD');
+    req.body.date = moment().format('dddd D MMMM YYYY');;
     const successMessage = `Félicitations ! Votre paiement ${req.body.first_name} a été effectué avec succès. Profitez de nos services premium ! Ci-joint la facture de paiement du forfait.`;   
     const pdfBufferInvoice = await fillPdfFields(pathInvoice, req.body)
     const pdfBase64Invoice = pdfBufferInvoice.toString("base64");
