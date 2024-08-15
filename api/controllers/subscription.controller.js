@@ -24,19 +24,20 @@ async function buySubscription(req, res) {
 
 async function handlePaymentMonetbilSuccess(req, res, client) {
   try {
-    const user = await User.findOne({ phoneNumber: req.body.payment_ref }).select('_id');
+    const whatappNumberOnly = req.body.user.split('(')[0].trim();
+    const user = await User.findOne({ phoneNumber: whatappNumberOnly }).select('_id');
     const plan = await Plan.findOne({ name:req.body.first_name });
     req.body.date = moment().format('dddd D MMMM YYYY');
     req.body.date_expiration = moment().add(plan.duration, 'days').format('dddd D MMMM YYYY');
     const successMessage = `Félicitations ! Votre paiement ${req.body.first_name} a été effectué avec succès. Profitez de nos services premium ! Ci-joint la facture de paiement du forfait.`;   
     const pdfBufferInvoice = await fillPdfFields(pathInvoice, req.body)
     const pdfBase64Invoice = pdfBufferInvoice.toString("base64");
-    const pdfNameInvoice = `Invoice_${req.body.payment_ref}`;
+    const pdfNameInvoice = `Invoice_${whatappNumberOnly}`;
     const documentType = "application/pdf";
     await Promise.all([
-      sendMediaToNumber(client,req.body.payment_ref, documentType, pdfBase64Invoice, pdfNameInvoice),
+      sendMediaToNumber(client,whatappNumberOnly, documentType, pdfBase64Invoice, pdfNameInvoice),
       SubscriptionService.buySubscription(user._id, plan._id),
-      sendMessageToNumber(client,req.body.payment_ref, successMessage),
+      sendMessageToNumber(client,whatappNumberOnly, successMessage),
     ]);
     res.status(200).send('Success');
   } catch (error) {
