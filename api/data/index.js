@@ -18,7 +18,7 @@ ${adminMenuContent}`;
 
 const menuData = (name, isWelcome) => {
   return isWelcome
-    ? `🏠 Votre menu principal :\n${menuContent}`
+    ? `🏠 Votre menu principal :\n\n${menuContent}`
     : `👋 ${name}, Bienvenue sur *Predictfoot* ! ⚽,\n\n  Faites partie de notre communauté de passionnés et recevez chaque jour des pronostics ultra-précis pour gagner gros ! 🎉. \n\nVoici ce que vous pouvez faire :
 
 ${menuContent}`; 
