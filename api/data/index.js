@@ -1,4 +1,4 @@
-const menuContent = `1-Pronostics du jour, tapez 1\n2-Historique des prédictions, tapez 2\n3-Abonnements et Offres, tapez 3\n4-Informations et Aide, tapez 4\n5-Suivre nos apps, tapez 5\n6-Désabonnement, tapez 6\n\nPour commencer, répondez simplement avec le numéro de l'option qui vous intéresse`;
+const menuContent = `1. *Pronostics du jour* - tapez 1\n2. *Historique des prédictions* - tapez 2\n3. *Abonnements et Offres* - tapez 3\n4. *Informations et Aide* - tapez 4\n5. *Suivre nos apps* - tapez 5\n6. *Désabonnement* - tapez 6\n\nPour commencer, répondez simplement avec le numéro de l'option qui vous intéresse`;
 
 const adminMenuContent = `
 1️⃣ Faire une campagne, tapez 1.
