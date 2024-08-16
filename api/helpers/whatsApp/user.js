@@ -52,7 +52,7 @@ const UserCommander = async (user, msg, client) => {
         case "mainMenu":
           switch (msg.body) {
             case "1":
-              msg.reply("📋 Sélectionnez le type de pronostic :\n1-Gratuit, Tapez 1\n2-VIP, Tapez 2\n\n _Tapez # pour revenir au menu principal_");
+              msg.reply("📋 Sélectionnez le type de pronostic :\n\n1-Gratuit, Tapez 1\n2-VIP, Tapez 2\n\n _Tapez # pour revenir au menu principal_");
               Steps[user.data.phoneNumber].currentMenu = "DailyPronoMenu";
               break;
             // case "2":
