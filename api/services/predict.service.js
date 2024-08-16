@@ -170,16 +170,15 @@ async function publishPrediction(client, date) {
     // Récupérer toutes les prédictions (VIP et non-VIP)
     const { predictions } = await listPredictions(1, 15, predictionDate, true, null);
 
-    // Générer les images pour VIP et non-VIP
+    // Filtrer les prédictions VIP et non-VIP
+    const vipPredictions = predictions.filter(p => p.isVip);
+    const nonVipPredictions = predictions.filter(p => !p.isVip);
+
+    // Générer les images uniquement si des prédictions existent
     const images = {
-      vip: null,
-      nonVip: null,
+      vip: vipPredictions.length > 0 ? await generateImage(vipPredictions) : null,
+      nonVip: nonVipPredictions.length > 0 ? await generateImage(nonVipPredictions) : null,
     };
-    
-    if (predictions.length > 0) {
-      images.vip = await generateImage(predictions.filter(p => p.isVip));
-      images.nonVip = await generateImage(predictions.filter(p => !p.isVip));
-    }
 
     // Récupérer les utilisateurs et leur statut VIP
     const users = await User.find({});
@@ -192,7 +191,8 @@ async function publishPrediction(client, date) {
       const isVip = await verifyUserVip(user.phoneNumber);
       userGroups[isVip ? 'vip' : 'nonVip'].push(user);
     }
-    // Envoyer les prédictions aux utilisateurs VIP et non-VIP
+
+    // Envoyer les prédictions aux utilisateurs VIP et non-VIP uniquement si des images ont été générées
     for (const group in userGroups) {
       if (userGroups[group].length > 0 && images[group]) {
         await sendPredictions(client, userGroups[group], images[group]);
@@ -203,6 +203,7 @@ async function publishPrediction(client, date) {
     console.log('Error daily predictions:', error);
   }
 }
+
 
 
 
