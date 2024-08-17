@@ -69,10 +69,11 @@ async function extractLeaguesByCountry(data, countryName) {
     return leagues;
   }
 
-  async function extractMatchesByLeague(data, leagueName) {
+  async function extractMatchesByLeague(data, leagueName,logo) {
     for (const countryName in data.fixtures) {
         const country = data.fixtures[countryName];
-        if (country.leagues[leagueName]) {
+        console.log("country",country)
+        if (country.leagues[leagueName] && country.leagues[leagueName].logo === logo) {
             const league = country.leagues[leagueName];
             return league.fixtures;
         }

@@ -26,10 +26,10 @@ async function getLeaguesByCountry(req, res) {
 }
 
 async function getMatchesByLeague(req, res) {
-    const { date, league } = req.query;
+    const { date, league,logo } = req.query;
     try {
         const data = await FixtureService.loadFixtureData(date);
-        const matches = await FixtureService.extractMatchesByLeague(data, league);
+        const matches = await FixtureService.extractMatchesByLeague(data, league,logo);
         return ResponseService.success(res, { matches });
     } catch (error) {
         console.log('Error getting matches by league:', error);
