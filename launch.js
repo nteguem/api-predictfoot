@@ -12,6 +12,8 @@ const { initializeWhatsAppClient, handleIncomingMessages } = require('./api/help
 const {ensureDefaultGroupsExist} = require("./api/services/group.service")
 const {ensureDefaultPlansExist} = require("./api/services/plan.service")
 const {scheduleAllTasks} = require("./api/services/schedule.service")
+const {scheduleCampaignTasks} = require("./api/services/campaign.service")
+
 // // Connection to MongoDB
 dbConnect(); 
 // App initialization
@@ -76,6 +78,7 @@ io.on('connection', (socket) => {
 
 //Launch all task 
 scheduleAllTasks(client);
+scheduleCampaignTasks("start",client);
 // Ensure default groups Exist
 ensureDefaultGroupsExist();
 //Ensure defaut plan exist

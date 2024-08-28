@@ -116,10 +116,9 @@ async function sendCampaignWhatapp(client, campaign) {
                 }
                 else
                 {
-                  const content = `Salut ${targetUser.pseudo},\n\n${campaign.name} \n\n*${campaign.description?.content}* \n\n Votre avenir financier, notre expertise personnalisée 🤝`;
+                  const content = `Salut ${targetUser.pseudo},\n\n${campaign.name} \n\n ${campaign.description?.content}`;
                   await sendMessageToNumber(client,targetUser.phoneNumber, content);
                 }
-                // successfulTargets.push(targetUser); 
                 const delay = getRandomDelay(5000, 15000);
                 await new Promise(resolve => setTimeout(resolve, delay));
             } catch (error) {

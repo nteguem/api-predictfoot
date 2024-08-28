@@ -13,7 +13,7 @@ const campaignSchema = new mongoose.Schema({
     type: { type: String, required: [true, 'Type is required'], enum: Types, default: 'Instantly' },
     periodicity: { type: String, required: [true, 'periodicity is required'], enum: Periodicities, default: 'Daily' },
     groups: [{ type: mongoose.Schema.Types.ObjectId, ref: Group, required: [true, 'group is required'] }],
-}); 
+});  
 
 const Campaign = mongoose.model('Campaign', campaignSchema);
 

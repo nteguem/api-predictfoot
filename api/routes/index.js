@@ -28,7 +28,7 @@ const setupAppRoutes = (client) => {
   setupFixture(app,client);
   setupPredict(app,client);
   setupUpload(app);
-  setupCampaign(app);
+  setupCampaign(app,client);
   setupEvent(app,client);
   setupSubscription(app,client);
   setupPlan(app);

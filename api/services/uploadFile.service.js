@@ -1,10 +1,12 @@
-const cloudinary = require("cloudinary/lib/cloudinary").v2;
-          
-     
+require('dotenv').config(); 
+
+const cloudinary = require('cloudinary').v2;
+
+// Configurer Cloudinary avec les variables d'environnement
 cloudinary.config({ 
-  cloud_name: 'nwccompany', 
-  api_key: '982732848615931', 
-  api_secret: 'fs_q0-h6SIcHzBhnORmd-3AtTQc' 
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME, 
+  api_key: process.env.CLOUDINARY_API_KEY, 
+  api_secret: process.env.CLOUDINARY_API_SECRET 
 });
 
 async function uploadToCloudinary(fileName, mediaData) {
@@ -22,6 +24,4 @@ async function uploadToCloudinary(fileName, mediaData) {
   });
 }
 
-
-
-module.exports = {uploadToCloudinary};
+module.exports = { uploadToCloudinary };
