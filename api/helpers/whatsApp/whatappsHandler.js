@@ -7,7 +7,7 @@ const initializeWhatsAppClient = (io) => {
   const client = new Client({
     puppeteer: {
       args: ['--no-sandbox'],
-      // executablePath: '/usr/bin/google-chrome-stable',
+      executablePath: '/usr/bin/google-chrome-stable',
     }, 
     authStrategy: new LocalAuth(
       {
