@@ -84,10 +84,37 @@ async function generateAndDownloadCSV(req, res) {
     }
   }
 
+
+  async function listAvailableGroups(req, res) {
+    const response = await GroupService.generateAvailableGroups();
+    if (response.success) {
+      return ResponseService.success(res, { groups: response.groups });
+    } else {
+      return ResponseService.internalServerError(res, { error: response.error });
+    }
+  }
+
+  async function getUsersByGroupReference(req, res) {
+    const { reference } = req.query;
+
+    try {
+        const response = await GroupService.getUsersByGroupReference(reference);
+        if (response.success) {
+            return ResponseService.success(res, { users: response.users });
+        } else {
+            return ResponseService.internalServerError(res, { error: response.message || response.error });
+        }
+    } catch (error) {
+        return ResponseService.internalServerError(res, { error: error.message });
+    }
+}
+
 module.exports = {
   createGroup,
   updateGroup,
   deleteGroup,
   listGroups,
-  generateAndDownloadCSV
+  generateAndDownloadCSV,
+  listAvailableGroups,
+  getUsersByGroupReference
 }

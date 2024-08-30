@@ -41,13 +41,26 @@ async function deleteCampaign(req, res, client) {
 }
 
 async function listCampaigns(req, res, client) {
-  const response = await ServiceCampaign.listCampaigns(req.query, client);
-  if (response.success) {
-    return ResponseService.success(res, { campaigns: response.campaigns });
-  } else {
-    return ResponseService.internalServerError(res, { error: response.error });
+  try {
+    // Extract pagination parameters from query
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+
+    // Include pagination parameters in the data object
+    const response = await ServiceCampaign.listCampaigns({ ...req.query, page, limit }, client);
+
+    if (response.success) {
+      const { campaigns, pagination } = response;
+      return ResponseService.success(res, { campaigns, pagination });
+    } else {
+      return ResponseService.internalServerError(res, { error: response.error });
+    }
+  } catch (error) {
+    logger(client).error('Error listing campaigns:', error);
+    return ResponseService.internalServerError(res, { error: 'Error listing campaigns' });
   }
 }
+
 
 module.exports = {
   createCampaign,

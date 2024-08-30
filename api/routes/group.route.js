@@ -30,6 +30,13 @@ const setupGroup = (app, client) => {
     router.delete('/delete', (req, res) => {
         groupHandler.deleteGroup(req, res, client);
     });
+
+    router.get('/available', (req, res) => {
+        groupHandler.listAvailableGroups(req, res, client);
+    });
+    router.get('/users', (req, res) => {
+        groupHandler.getUsersByGroupReference(req, res);
+    });
 };
 
 module.exports = { setupGroup };

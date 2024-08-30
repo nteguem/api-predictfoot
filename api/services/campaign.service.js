@@ -3,7 +3,7 @@ const cron = require('node-cron');
 const {sendMessageToNumber,sendMediaToNumber} = require('../helpers/whatsApp/whatsappMessaging')
 const {list} = require('./user.service')
 const { getRandomDelay } = require("../helpers/utils")
-const {getUsersInGroup} = require("./group.service")
+const {getUsersByGroupReference} = require("./group.service")
 const logger = require("../helpers/logger")
 const fs = require('fs');
 const path = require('path');
@@ -12,7 +12,7 @@ const fetch = require('node-fetch');
 let tasks = {};
 async function createCampaign(campaignData, client) {
   try {
-    const hasDuplicates = new Set(campaignData.groups).size !== campaignData.groups.length;
+    const hasDuplicates = new Set(campaignData.ref_groups).size !== campaignData.ref_groups.length;
     const newCampaign = new Campaign(campaignData);
     if(hasDuplicates)    
     {
@@ -33,7 +33,7 @@ async function createCampaign(campaignData, client) {
 
 async function updateCampaign(campaignId, updatedData, client) {
   try {
-    const hasDuplicates = new Set(updatedData.groups).size !== updatedData.groups.length;
+    const hasDuplicates = new Set(updatedData.ref_groups).size !== updatedData.ref_groups.length;
     if(hasDuplicates)    
     {
       return { success: false, error: "La mise a jour d'une campagne avec des groupes identiques n'est pas autorisée." };
@@ -65,20 +65,44 @@ async function deleteCampaign(campaignId, client) {
   }
 }
 
-async function listCampaigns(data,client) {
+async function listCampaigns(data, client) {
   try {
-    const { type } = data;
+    const { type, page = 1, limit = 10 } = data; 
     let query = {};
+
     if (type) {
       query = { type };
     }
-    const campaigns = await Campaign.find(query, {__v:0 }).populate({ path: 'groups', select: '-members -__v' });
-    return { success: true, campaigns };
+
+    // Calculate total number of campaigns
+    const totalCampaigns = await Campaign.countDocuments(query);
+
+    // Calculate total pages
+    const totalPages = Math.ceil(totalCampaigns / limit);
+
+    // Calculate the number of documents to skip
+    const skip = (page - 1) * limit;
+
+    // Fetch campaigns with pagination
+    const campaigns = await Campaign.find(query, { __v: 0 })
+      .skip(skip)
+      .limit(limit);
+
+    return {
+      success: true,
+      campaigns,
+      pagination: {
+        totalPages,
+        totalDates:totalCampaigns,
+        currentPage: page,
+      },
+    };
   } catch (error) {
-    logger(client).error('Error list campaigns:', error);
+    logger(client).error('Error listing campaigns:', error);
     return { success: false, error: error.message };
   }
 }
+
 
 async function updateCampaignTasks(client) {
     await scheduleCampaignTasks("stop");
@@ -89,10 +113,15 @@ async function sendCampaignWhatapp(client, campaign) {
   // let successfulTargets = [];
   try {
     
-      for (const group of campaign.groups) {
-        const usersInGroup = await getUsersInGroup(group._id);
+      for (const ref_group of campaign.ref_groups) {
+        const usersInGroup = await getUsersByGroupReference(ref_group);
         for (const targetUser of usersInGroup.users) {
             try {
+              if(ref_group === "expiring_soon")
+                {
+                  const content = `Salut ${targetUser.pseudo},\n\n*Votre ${targetUser.plan.name} se termine bientôt !* \n\n Il vous reste seulement  ${targetUser.daysRemaining} jours avant l'expiration de votre forfait. Pensez à renouveler votre abonnement pour éviter toute interruption de service.`;     
+                  await sendMessageToNumber(client,targetUser.phoneNumber, content);
+                }
               if(campaign.description?.hasMedia)
                 {
                   fetch(campaign.description?.content)

@@ -4,16 +4,19 @@ const { UserCommander } = require("./user");
 const { AdminCommander } = require("./admin")
 const logger = require('../logger');
 const initializeWhatsAppClient = (io) => {
+  const puppeteerConfig = {
+    args: ['--no-sandbox'],
+  };
+  // Add executablePath only on Linux
+  if (process.platform === 'linux') {
+    puppeteerConfig.executablePath = '/usr/bin/google-chrome-stable';
+  }
+
   const client = new Client({
-    puppeteer: {
-      args: ['--no-sandbox'],
-      executablePath: '/usr/bin/google-chrome-stable',
-    }, 
-    authStrategy: new LocalAuth(
-      {
-        dataPath: '../sessions/predictfoot'
-      }
-    ),
+    puppeteer: puppeteerConfig,
+    authStrategy: new LocalAuth({
+      dataPath: '../sessions/predictfoot',
+    }),
   });
 
   client.on('qr', (qrCode) => {
