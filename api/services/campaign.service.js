@@ -119,8 +119,8 @@ async function sendCampaignWhatapp(client, campaign) {
             try {
               if(ref_group === "expiring_soon")
                 {
-                  const content = `Salut ${targetUser.pseudo},\n\n*Votre ${targetUser.plan.name} se termine bientôt !* \n\n Il vous reste seulement  ${targetUser.daysRemaining} jours avant l'expiration de votre forfait. Pensez à renouveler votre abonnement pour éviter toute interruption de service.`;     
-                  await sendMessageToNumber(client,targetUser.phoneNumber, content);
+                  const content = `Salut ${targetUser.user.pseudo},\n\n*Votre ${targetUser.plan.name} se termine bientôt !* \n\n Il vous reste seulement  ${targetUser.user.daysRemaining} jours avant l'expiration de votre forfait. Pensez à renouveler votre abonnement pour éviter toute interruption de service.`;     
+                  await sendMessageToNumber(client,targetUser.user.phoneNumber, content);
                 }
               if(campaign.description?.hasMedia)
                 {
@@ -134,7 +134,7 @@ async function sendCampaignWhatapp(client, campaign) {
                                   console.log('Erreur lors de la lecture du fichier:', err);
                                   return;
                               }
-                              sendMediaToNumber(client,targetUser.phoneNumber,res.headers.get('content-type'), data,`${campaign?.name}`, `${campaign?.name}`)
+                              sendMediaToNumber(client,targetUser.user.phoneNumber,res.headers.get('content-type'), data,`${campaign?.name}`, `${campaign?.name}`)
                               fs.unlinkSync('tempfile');
                           });
                       });
@@ -145,14 +145,13 @@ async function sendCampaignWhatapp(client, campaign) {
                 }
                 else
                 {
-                  const content = `Salut ${targetUser.pseudo},\n\n${campaign.name} \n\n ${campaign.description?.content}`;
-                  console.log('phoneNumber', targetUser)
-                  await sendMessageToNumber(client,targetUser.phoneNumber, content);
+                  const content = `Salut ${targetUser.user.pseudo},\n\n${campaign.name} \n\n ${campaign.description?.content}`;
+                  await sendMessageToNumber(client,targetUser.user.phoneNumber, content);
                 }
                 const delay = getRandomDelay(5000, 15000);
                 await new Promise(resolve => setTimeout(resolve, delay));
             } catch (error) {
-              logger(client).error(`Erreur lors de l'envoi de la campagne sur WhatsApp pour ${targetUser.pseudo}`, error);
+              logger(client).error(`Erreur lors de l'envoi de la campagne sur WhatsApp pour ${targetUser.user.pseudo}`, error);
             }
         }
     }
