@@ -7,7 +7,6 @@ const sendMessageToNumber = async (client, phoneNumber, message) => {
       await client.sendMessage(`${phoneNumber}@c.us`, message);
     } catch (error) {
       console.log('Error sending message:', error)
-      console.log('phoneNumber', phoneNumber)
       // logger(client).error('Error sending message:', error);
     }
   };

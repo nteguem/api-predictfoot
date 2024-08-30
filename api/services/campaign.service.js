@@ -146,6 +146,7 @@ async function sendCampaignWhatapp(client, campaign) {
                 else
                 {
                   const content = `Salut ${targetUser.pseudo},\n\n${campaign.name} \n\n ${campaign.description?.content}`;
+                  console.log('phoneNumber', targetUser)
                   await sendMessageToNumber(client,targetUser.phoneNumber, content);
                 }
                 const delay = getRandomDelay(5000, 15000);
