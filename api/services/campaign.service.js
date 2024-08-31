@@ -116,13 +116,7 @@ async function sendCampaignWhatapp(client, campaign) {
       for (const ref_group of campaign.ref_groups) {
         const usersInGroup = await getUsersByGroupReference(ref_group);
         for (const targetUser of usersInGroup.users) {
-          console.log("targetUser",targetUser)
             try {
-              if(ref_group === "expiring_soon")
-                {
-                  const content = `Salut ${ targetUser.user ? targetUser.user.pseudo :  targetUser.pseudo},\n\n*Votre ${targetUser.plan.name} se termine bientôt !* \n\n Il vous reste seulement  ${targetUser.user ? targetUser.user.daysRemaining :  targetUser.daysRemaining} jours avant l'expiration de votre forfait. Pensez à renouveler votre abonnement pour éviter toute interruption de service.`;     
-                  await sendMessageToNumber(client, targetUser.user ? targetUser.user.phoneNumber : targetUser.phoneNumber, content);
-                }
               if(campaign.description?.hasMedia)
                 {
                   fetch(campaign.description?.content)
@@ -144,6 +138,11 @@ async function sendCampaignWhatapp(client, campaign) {
                       console.log('Erreur lors du téléchargement du fichier:', err);
                   });
                 }
+                else if(ref_group === "expiring_soon")
+                  {
+                    const content = `Salut ${ targetUser.user ? targetUser.user.pseudo :  targetUser.pseudo},\n\n*Votre ${targetUser.plan.name} se termine bientôt !* \n\n Il vous reste seulement  ${targetUser.user ? targetUser.user.daysRemaining :  targetUser.daysRemaining} jours avant l'expiration de votre forfait. Pensez à renouveler votre abonnement pour éviter toute interruption de service.`;     
+                    await sendMessageToNumber(client, targetUser.user ? targetUser.user.phoneNumber : targetUser.phoneNumber, content);
+                  }
                 else
                 {
                   const content = `Salut ${targetUser.user ? targetUser.user.pseudo : targetUser.pseudo},\n\n${campaign.name} \n\n ${campaign.description?.content}`;
@@ -180,7 +179,7 @@ async function scheduleCampaignTasks(launch,client) {
         let cronExpression;
         switch (campaign.periodicity.toLowerCase()) {
             case "daily":
-                cronExpression = '39 10 * * *';
+                cronExpression = '50 10 * * *';
                 break;
             case "weekly":
                 cronExpression = '0 10 * * 1';
