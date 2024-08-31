@@ -116,6 +116,7 @@ async function sendCampaignWhatapp(client, campaign) {
       for (const ref_group of campaign.ref_groups) {
         const usersInGroup = await getUsersByGroupReference(ref_group);
         for (const targetUser of usersInGroup.users) {
+          console.log("target user campagin",targetUser)
             try {
               if(ref_group === "expiring_soon")
                 {
@@ -179,7 +180,7 @@ async function scheduleCampaignTasks(launch,client) {
         let cronExpression;
         switch (campaign.periodicity.toLowerCase()) {
             case "daily":
-                cronExpression = '0 10 * * *';
+                cronExpression = '21 10 * * *';
                 break;
             case "weekly":
                 cronExpression = '0 10 * * 1';
