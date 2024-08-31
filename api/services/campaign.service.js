@@ -116,12 +116,11 @@ async function sendCampaignWhatapp(client, campaign) {
       for (const ref_group of campaign.ref_groups) {
         const usersInGroup = await getUsersByGroupReference(ref_group);
         for (const targetUser of usersInGroup.users) {
-          targetUser = targetUser.user ? targetUser.user : targetUser;
             try {
               if(ref_group === "expiring_soon")
                 {
-                  const content = `Salut ${targetUser.pseudo},\n\n*Votre ${targetUser.plan.name} se termine bientôt !* \n\n Il vous reste seulement  ${targetUser.daysRemaining} jours avant l'expiration de votre forfait. Pensez à renouveler votre abonnement pour éviter toute interruption de service.`;     
-                  await sendMessageToNumber(client,targetUser.phoneNumber, content);
+                  const content = `Salut ${ targetUser.user ? targetUser.user.pseudo :  targetUser.pseudo},\n\n*Votre ${targetUser.plan.name} se termine bientôt !* \n\n Il vous reste seulement  ${targetUser.user ? targetUser.user.daysRemaining :  targetUser.daysRemaining} jours avant l'expiration de votre forfait. Pensez à renouveler votre abonnement pour éviter toute interruption de service.`;     
+                  await sendMessageToNumber(client, targetUser.user ? targetUser.user.phoneNumber : targetUser.phoneNumber, content);
                 }
               if(campaign.description?.hasMedia)
                 {
@@ -135,7 +134,7 @@ async function sendCampaignWhatapp(client, campaign) {
                                   console.log('Erreur lors de la lecture du fichier:', err);
                                   return;
                               }
-                              sendMediaToNumber(client,targetUser.phoneNumber,res.headers.get('content-type'), data,`${campaign?.name}`, `${campaign?.name}`)
+                              sendMediaToNumber(client,targetUser.user ? targetUser.user.phoneNumber : targetUser.phoneNumber,res.headers.get('content-type'), data,`${campaign?.name}`, `${campaign?.name}`)
                               fs.unlinkSync('tempfile');
                           });
                       });
@@ -146,13 +145,13 @@ async function sendCampaignWhatapp(client, campaign) {
                 }
                 else
                 {
-                  const content = `Salut ${targetUser.pseudo},\n\n${campaign.name} \n\n ${campaign.description?.content}`;
-                  await sendMessageToNumber(client,targetUser.phoneNumber, content);
+                  const content = `Salut ${targetUser.user ? targetUser.user.pseudo : targetUser.pseudo},\n\n${campaign.name} \n\n ${campaign.description?.content}`;
+                  await sendMessageToNumber(client,targetUser.user ? targetUser.user.phoneNumber : targetUser.phoneNumber, content);
                 }
                 const delay = getRandomDelay(5000, 15000);
                 await new Promise(resolve => setTimeout(resolve, delay));
             } catch (error) {
-              logger(client).error(`Erreur lors de l'envoi de la campagne sur WhatsApp pour ${targetUser.pseudo}`, error);
+              logger(client).error(`Erreur lors de l'envoi de la campagne sur WhatsApp pour ${targetUser.user ? targetUser.user.pseudo : targetUser.pseudo}`, error);
             }
         }
     }
@@ -180,7 +179,7 @@ async function scheduleCampaignTasks(launch,client) {
         let cronExpression;
         switch (campaign.periodicity.toLowerCase()) {
             case "daily":
-                cronExpression = '26 10 * * *';
+                cronExpression = '31 10 * * *';
                 break;
             case "weekly":
                 cronExpression = '0 10 * * 1';
