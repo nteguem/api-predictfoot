@@ -179,7 +179,7 @@ async function scheduleCampaignTasks(launch,client) {
         let cronExpression;
         switch (campaign.periodicity.toLowerCase()) {
             case "daily":
-                cronExpression = '50 10 * * *';
+                cronExpression = '00 09 * * *';
                 break;
             case "weekly":
                 cronExpression = '0 10 * * 1';

@@ -77,41 +77,44 @@ async function listPredictions(page = 1, limit = 5, date = null, isVisible = nul
       query.isVip = isVip;
     }
 
-    // Si date est fourni, filtrer par cette date
+    // Si une date est fournie, filtrer par cette date
     if (date) {
-      const predictions = await Predict.find(query);
+      const predictions = await Predict.find(query).sort({ "fixture.event_date": -1 });
       return { success: true, predictions, isFiltered: true };
     } else {
-      // Obtenir le nombre total de dates de prédiction distinctes
+      // Obtenir les dates de prédiction distinctes
       const distinctDates = await Predict.distinct("fixture.event_date");
 
-      // Filtrer les dates distinctes pour obtenir uniquement l'année, le mois et le jour
+      // Filtrer et formater les dates distinctes pour garder uniquement l'année, le mois, et le jour
       const distinctDatesWithoutTime = distinctDates.map(date => moment(date).format('YYYY-MM-DD'));
 
-      // Filtrer les dates sans doublons
+      // Supprimer les doublons
       const uniqueDates = [...new Set(distinctDatesWithoutTime)];
-      // Calculer le nombre total de pages
-      const totalPages = Math.ceil(uniqueDates.length / limit);
+
+      // Trier les dates par ordre décroissant (du plus récent au plus ancien)
+      const sortedDates = uniqueDates.sort((a, b) => moment(b).diff(moment(a)));
 
       // Pagination
+      const totalPages = Math.ceil(uniqueDates.length / limit);
       const skipCount = (page - 1) * limit;
 
-      // Obtenir les dates de prédiction pour la page actuelle
-      const currentDates = uniqueDates.slice(skipCount, skipCount + limit);
-       const filterDates = await currentDates.sort((a, b) => moment(b).diff(moment(a)));
+      // Obtenir les dates pour la page actuelle après pagination
+      const currentDates = sortedDates.slice(skipCount, skipCount + limit);
 
       // Obtenir les prédictions pour chaque date
-      const groupedPredictions = await Promise.all(filterDates.map(async (date) => {
-        const startOfDay = moment(date).startOf('day').toISOString();
-        const endOfDay = moment(date).endOf('day').toISOString();
-        const predictionsForDate = await Predict.find({
-          "fixture.event_date": {
-            $gte: startOfDay,
-            $lt: endOfDay
-          }
-        });
-        return { date, predictions: predictionsForDate };
-      }));
+      const groupedPredictions = await Promise.all(
+        currentDates.map(async (date) => {
+          const startOfDay = moment(date).startOf('day').toISOString();
+          const endOfDay = moment(date).endOf('day').toISOString();
+          const predictionsForDate = await Predict.find({
+            "fixture.event_date": {
+              $gte: startOfDay,
+              $lt: endOfDay
+            }
+          });
+          return { date, predictions: predictionsForDate };
+        })
+      );
 
       return {
         success: true,
@@ -126,9 +129,6 @@ async function listPredictions(page = 1, limit = 5, date = null, isVisible = nul
     return { success: false, error: error.message };
   }
 }
-
-
-
 
 
 
@@ -273,47 +273,41 @@ async function listLastTenDaysPredictions(isVisible = true, isVip = false) {
 
 async function oldTips(isVisible = true, isVip = false) {
   try {
-    const predictions = await Predict.find({ isVisible, isVip })
-      .sort({ "fixture.event_date": -1 }) // Trier par date de création
-      .limit(10);
-
-    console.log("predictions", predictions); // Afficher le nombre d'enregistrements récupérés
-
-
-    const recentPredictions = predictions.filter(prediction => {
-      const eventDate = moment(prediction.fixture.event_date).startOf('day');
-      return eventDate.isBetween( predictions[predictions.length-1].fixture.event_date,predictions[0].fixture.event_date, 'days', '[]');
-    });
-
-    // Obtenir les dates distinctes pour les prédictions récentes
-    const distinctDates = [...new Set(recentPredictions.map(p => moment(p.fixture.event_date).startOf('day').format('YYYY-MM-DD')))];
-
-    // Trier les dates par ordre décroissant et prendre les 7 dernières
-    const lastSevenDates = distinctDates.sort((a, b) => new Date(b) - new Date(a)).slice(0, 7);
-
-    // Regrouper les prédictions par date
-    const groupedPredictions = lastSevenDates.map(date => {
-      const startOfDay = moment(date).startOf('day').toISOString();
-      const endOfDay = moment(date).endOf('day').toISOString();
-      const predictionsForDate = recentPredictions.filter(p => {
-        const eventDate = moment(p.fixture.event_date).toISOString();
-        return eventDate >= startOfDay && eventDate < endOfDay;
-      });
-      return { date, predictions: predictionsForDate };
-    });
-
-    // Enlever les dates sans prédictions pour avoir uniquement celles avec des données
-    const result = groupedPredictions.filter(group => group.predictions.length > 0);
-
-    return {
+          // Récupérer toutes les prédictions
+          const allPredictions = await Predict.find({
+            isVisible: isVisible,
+            isVip: isVip
+        }).sort({ "fixture.event_date": -1 }).lean();
+  
+        // Créer une structure pour stocker les dates et leurs prédictions
+        const predictionsByDate = {};
+  
+        allPredictions.forEach(prediction => {
+            const predictionDate = new Date(prediction.fixture.event_date).toISOString().split('T')[0];
+            if (!predictionsByDate[predictionDate]) {
+                predictionsByDate[predictionDate] = [];
+            }
+            predictionsByDate[predictionDate].push(prediction);
+        });
+  
+        // Récupérer les 5 dernières dates distinctes
+        const lastFiveDates = Object.keys(predictionsByDate).sort((a, b) => new Date(b) - new Date(a)).slice(0, 5);
+  
+        // Retourner les prédictions liées aux 5 dernières dates
+        const result = lastFiveDates.map(date => ({
+            date,
+            predictions: predictionsByDate[date]
+        }));
+      return {
       success: true,
       data: result
     };
   } catch (error) {
-    console.error('Error fetching last seven days predictions:', error);
-    return { success: false, error: error.message };
-  }
+    console.log('Error fetching last seven days predictions:', error);
+    return { success: false, error: error.message }; 
+   }
 }
+
 
 module.exports = {
   createPrediction,
