@@ -52,10 +52,6 @@ checkNotificationReceipts = async (req, res) => {
 registerToken = async (req, res) => {
     try {
         const { token, userId } = req.body; // Assuming you'll send both token and userId
-        if (!token || !userId) {
-            return res.status(400).json({ message: 'Token and userId are required' });
-        }
-
         const result = await NotificationService.registerToken(token, userId);
         if (result.success) {
             res.status(200).json({ message: 'Token registered successfully' });
