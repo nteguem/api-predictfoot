@@ -6,7 +6,7 @@ const UserService = require('./user.service'); // Service pour obtenir les déta
 let expo = new Expo({});
 
 
-registerToken = async (token, userId) => {
+registerToken = async (token, userId=null) => {
     try {
         const existingToken = await Notification.findOne({ where: { token } });
 
