@@ -17,6 +17,7 @@ registerToken = async (token, userId=null) => {
         await Notification.create({ token, userId });
         return { success: true };
     } catch (error) {
+        console.log("error register token",error)
         return { success: false, message: 'Failed to register token' };
     }
 };
