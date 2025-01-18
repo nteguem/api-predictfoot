@@ -1,46 +1,38 @@
 const { Expo } = require('expo-server-sdk');
 const Notification = require('../models/notification.model');
-const UserService = require('./user.service'); // Service pour obtenir les détails des utilisateurs (VIP/non-VIP)
+const UserService = require('./user.service');
+const cron = require('node-cron');
 
-// Créez une nouvelle instance d'Expo SDK
+let notificationTasks = {};
 let expo = new Expo({});
 
-
-registerToken = async (token, userId=null) => {
-    try {
-        const existingToken = await Notification.findOne({ where: { token } });
-
-        if (existingToken) {
-            return { success: false, message: 'Token already registered' };
-        }
-
-        await Notification.create({ token, userId });
-        return { success: true };
-    } catch (error) {
-        console.log("error register token",error)
-        return { success: false, message: 'Failed to register token' };
+async function registerToken(token, userId = null) {
+  try {
+    const existingToken = await Notification.findOne({ token });
+    if (existingToken) {
+      return { success: false, message: 'Token already registered' };
     }
-};
-// Fonction pour envoyer une notification à un périphérique spécifique
+    await Notification.create({ token, userId });
+    return { success: true };
+  } catch (error) {
+    console.error('Error registering token:', error);
+    return { success: false, message: 'Failed to register token' };
+  }
+}
+
 async function sendNotificationToDevice(token, message) {
   if (!Expo.isExpoPushToken(token)) {
     console.log(`Push token ${token} is not a valid Expo push token`);
     return { success: false, message: `Invalid token: ${token}` };
   }
 
-  const messages = [{
-    to: token,
-    sound: 'default',
-    body: message.body,
-    data: message.data,
-  }];
-
+  const messages = [{ to: token, sound: 'default', body: message.body, data: message.data }];
   const chunks = expo.chunkPushNotifications(messages);
 
   try {
-    let tickets = [];
-    for (let chunk of chunks) {
-      let ticketChunk = await expo.sendPushNotificationsAsync(chunk);
+    const tickets = [];
+    for (const chunk of chunks) {
+      const ticketChunk = await expo.sendPushNotificationsAsync(chunk);
       tickets.push(...ticketChunk);
     }
     return { success: true, tickets };
@@ -50,11 +42,9 @@ async function sendNotificationToDevice(token, message) {
   }
 }
 
-// Fonction pour envoyer une notification à un groupe de périphériques
 async function sendNotificationToGroup(groupType, message) {
   try {
     let tokens = [];
-
     if (groupType === 'all') {
       tokens = await Notification.find().distinct('token');
     } else if (groupType === 'vip') {
@@ -71,7 +61,6 @@ async function sendNotificationToGroup(groupType, message) {
       return { success: false, message: 'No tokens found' };
     }
 
-    // Créez les messages à envoyer
     const messages = tokens.map(token => ({
       to: token,
       sound: 'default',
@@ -80,17 +69,15 @@ async function sendNotificationToGroup(groupType, message) {
     }));
 
     const chunks = expo.chunkPushNotifications(messages);
-
-    let tickets = [];
-    for (let chunk of chunks) {
+    const tickets = [];
+    for (const chunk of chunks) {
       try {
-        let ticketChunk = await expo.sendPushNotificationsAsync(chunk);
+        const ticketChunk = await expo.sendPushNotificationsAsync(chunk);
         tickets.push(...ticketChunk);
       } catch (error) {
         console.error('Error sending chunk:', error);
       }
     }
-
     return { success: true, tickets };
   } catch (error) {
     console.error('Error sending notification to group:', error);
@@ -98,25 +85,36 @@ async function sendNotificationToGroup(groupType, message) {
   }
 }
 
-// Fonction pour vérifier les confirmations de livraison
 async function checkNotificationReceipts(receiptIds) {
   const receiptIdChunks = expo.chunkPushNotificationReceiptIds(receiptIds);
 
   try {
-    let receipts = [];
-    for (let chunk of receiptIdChunks) {
+    const receipts = [];
+    for (const chunk of receiptIdChunks) {
       try {
-        let receiptChunk = await expo.getPushNotificationReceiptsAsync(chunk);
+        const receiptChunk = await expo.getPushNotificationReceiptsAsync(chunk);
         receipts.push(receiptChunk);
       } catch (error) {
         console.error('Error retrieving receipts:', error);
       }
     }
-
-    return receipts.flat(); // Combine all receipt chunks into a single array
+    return { success: true, receipts: receipts.flat() };
   } catch (error) {
     console.error('Error checking receipts:', error);
     return { success: false, error: error.message };
+  }
+}
+
+async function removeToken(token) {
+  try {
+    const result = await Notification.deleteOne({ token });
+    if (result.deletedCount === 0) {
+      return { success: false, message: 'Token not found' };
+    }
+    return { success: true, message: 'Token removed successfully' };
+  } catch (error) {
+    console.error('Error removing token:', error);
+    return { success: false, message: 'Failed to remove token' };
   }
 }
 
@@ -124,5 +122,6 @@ module.exports = {
   sendNotificationToDevice,
   sendNotificationToGroup,
   checkNotificationReceipts,
-  registerToken
+  registerToken,
+  removeToken
 };
