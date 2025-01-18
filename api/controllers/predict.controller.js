@@ -67,7 +67,7 @@ async function listPredictions(req, res) {
     const response = await PredictService.listPredictions(page, limit, date,isVisible,isVip);
     if (response.success) {
       if (response.isFiltered) {
-        return ResponseService.success(res, { predictions: response.predictions });
+        return ResponseService.success(res, { predictions: response.predictions , total:response.total });
       }
       else {
         const {total, groupedPredictions } = response;
