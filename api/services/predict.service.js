@@ -95,7 +95,6 @@ async function listPredictions(page = 1, limit = 5, date = null, isVisible = nul
       const sortedDates = uniqueDates.sort((a, b) => moment(b).diff(moment(a)));
 
       // Pagination
-      const totalPages = Math.ceil(uniqueDates.length / limit);
       const skipCount = (page - 1) * limit;
 
       // Obtenir les dates pour la page actuelle après pagination
@@ -117,10 +116,7 @@ async function listPredictions(page = 1, limit = 5, date = null, isVisible = nul
       );
 
       return {
-        success: true,
-        totalPages,
-        totalDates: uniqueDates.length,
-        currentPage: page,
+        total: uniqueDates.length,
         groupedPredictions
       };
     }
