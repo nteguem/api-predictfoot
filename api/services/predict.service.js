@@ -47,10 +47,19 @@ async function deletePrediction(predictionId) {
 
 
 
-async function listPredictions({ offset = 0, limit = 5, date = null, isVisible = null, isVip = false } = {}) {
+async function listPredictions({ offset = 0, limit = 5, date = null, isVisible = null, isVip = null } = {}) {
   try {
     let query = {};
+    
+    if (isVisible !== null) {
+      query.isVisible = isVisible;
+    }
+    
+    if (isVip !== null) {
+      query.isVip = isVip;
+    }
 
+    // Cas où une date spécifique est fournie
     if (date) {
       if (!moment(date).isValid()) {
         throw new Error("Date invalide : " + date);
@@ -63,42 +72,34 @@ async function listPredictions({ offset = 0, limit = 5, date = null, isVisible =
         $gte: startOfDay,
         $lt: endOfDay
       };
-    }
 
-    if (isVisible !== null) {
-      query.isVisible = isVisible;
-    }
-
-    if (isVip !== null) {
-      query.isVip = isVip;
-    }
-
-    // Si une date spécifique est fournie
-    if (date) {
+      const total = await Predict.countDocuments(query);
       const predictions = await Predict
         .find(query)
-        .sort({ "fixture.event_date": -1 });
+        .sort({ "fixture.event_date": -1 })
+        .skip(offset)
+        .limit(limit);
 
       return {
         success: true,
         data: {
           predictions,
-          total: predictions.length
+          total
         }
       };
     } 
-    // Sans date spécifique, grouper par date
+    // Cas sans date spécifique - groupement par date
     else {
-      // Obtenir les dates uniques
-      const distinctDates = await Predict.distinct("fixture.event_date");
-      const uniqueDates = [...new Set(distinctDates.map(date => 
-        moment(date).format('YYYY-MM-DD')
-      ))].sort((a, b) => moment(b).diff(moment(a)));
+      let dateQuery = { ...query };
+      const distinctDates = await Predict.distinct("fixture.event_date", dateQuery);
+      
+      const uniqueDates = [...new Set(
+        distinctDates.map(date => moment(date).format('YYYY-MM-DD'))
+      )].sort((a, b) => moment(b).diff(moment(a)));
 
       const total = uniqueDates.length;
       const paginatedDates = uniqueDates.slice(offset, offset + limit);
 
-      // Récupérer les prédictions pour chaque date paginée
       const groupedPredictions = await Promise.all(
         paginatedDates.map(async (date) => {
           const startOfDay = moment(date).startOf('day').toISOString();
@@ -129,12 +130,13 @@ async function listPredictions({ offset = 0, limit = 5, date = null, isVisible =
     }
   } catch (error) {
     console.error('Erreur lors de la liste des prédictions:', error);
-    return { 
-      success: false, 
-      error: error.message 
+    return {
+      success: false,
+      error: error.message
     };
   }
 }
+
 
 
 
