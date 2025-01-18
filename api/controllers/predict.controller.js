@@ -66,17 +66,7 @@ async function listPredictions(req, res) {
     const isVip = req.query.isVip || null;
     const response = await PredictService.listPredictions(page, limit, date,isVisible,isVip);
     if (response.success) {
-      if (response.isFiltered) {
-        return ResponseService.success(res, { predictions: response.predictions , total:response.total });
-      }
-      else {
-        const {total, groupedPredictions } = response;
-        const paginationInfo = {
-          total
-        };
-        return ResponseService.success(res, { groupedPredictions, paginationInfo });
-      }
-
+        return ResponseService.success(res, response);
     }
     else {
       return ResponseService.internalServerError(res, { error: response.error });
