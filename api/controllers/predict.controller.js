@@ -70,13 +70,12 @@ async function listPredictions(req, res) {
         return ResponseService.success(res, { predictions: response.predictions });
       }
       else {
-        const { totalPages, totalDates, currentPage, groupedPredictions } = response;
+        const {total, groupedPredictions } = response;
         const paginationInfo = {
-          totalPages,
-          totalDates,
+          total,
           currentPage
         };
-        return ResponseService.success(res, { groupedPredictions, pagination: paginationInfo });
+        return ResponseService.success(res, { groupedPredictions, paginationInfo });
       }
 
     }

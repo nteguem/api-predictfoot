@@ -81,11 +81,8 @@ async function listPredictions({ offset = 0, limit = 5, date = null, isVisible =
         .limit(limit);
 
       return {
-        success: true,
-        data: {
           predictions,
           total
-        }
       };
     } 
     // Cas sans date spécifique - groupement par date
