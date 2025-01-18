@@ -116,6 +116,7 @@ async function listPredictions(page = 1, limit = 5, date = null, isVisible = nul
       );
 
       return {
+        success: true,
         total: uniqueDates.length,
         groupedPredictions
       };
