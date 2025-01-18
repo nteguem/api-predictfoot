@@ -72,8 +72,7 @@ async function listPredictions(req, res) {
       else {
         const {total, groupedPredictions } = response;
         const paginationInfo = {
-          total,
-          currentPage
+          total
         };
         return ResponseService.success(res, { groupedPredictions, paginationInfo });
       }
