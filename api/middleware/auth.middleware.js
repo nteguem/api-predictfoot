@@ -1,23 +1,27 @@
-require('dotenv').config(); // Load environment variables from the .env file
 const jwt = require('jsonwebtoken');
-const JWT_SECRET = process.env.JWT_SECRET; // Utilisez la même clé secrète que dans le service
+const ResponseService = require('../services/response.service'); 
 
-function authenticateToken(req, res, next) {
-  const token = req.headers['authorization'];
+/**
+ * Middleware pour vérifier le token JWT.
+ */
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers.authorization;
 
-  if (token == null) {
-    return res.sendStatus(401);
+  // Vérifie si le token est fourni
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return ResponseService.unauthorized(res, { message: "Access denied, token missing." });
   }
 
-  jwt.verify(token, JWT_SECRET, (err, user) => {
-    if (err) {
-      return res.sendStatus(403);
-    }
-    req.user = user;
-    next();
-  });
-}
+  const token = authHeader.split(' ')[1]; 
 
-module.exports = {
-  authenticateToken,
+  try {
+    // Vérifie et décode le token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded; 
+    next(); // Passe au middleware suivant ou au contrôleur
+  } catch (error) {
+    return ResponseService.unauthorized(res, { message: "Invalid or expired token." });
+  }
 };
+
+module.exports = authenticateToken;

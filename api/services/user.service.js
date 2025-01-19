@@ -58,7 +58,7 @@ async function login(phoneNumber, password,client) {
       return { success: false, error: 'Invalid credentials' };
     }
 
-    const token = jwt.sign({ userId: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '24h' });
+    const token = jwt.sign({ userId: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
     return { success: true, token, user };
   } catch (error) {
     logger(client).error('Error login user:', error);
@@ -172,10 +172,22 @@ async function deleteUser(phoneNumber, client) {
   }
 }
 
+async function addUser(req, res) {
+  try {
+    const dataUser = req.body;
+    const newUser = new User(dataUser);
+    await newUser.save();
+    return ResponseService.created(res, { message: 'User créée avec succès' });
+  } catch (error) {
+    return ResponseService.internalServerError(res, { error: error.message });
+  }
+}
+
 module.exports = {
   save,
   login,
   list,
   update,
-  deleteUser
+  deleteUser,
+  addUser
 };

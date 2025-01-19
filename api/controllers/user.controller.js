@@ -28,13 +28,24 @@ const login = async (req, res,client) => {
   const response = await userService.login(phoneNumber, password,client);
   if (response.success) {
     return ResponseService.success(res, { token: response.token , user:response.user });
-  } else {
-    return ResponseService.unauthorized(res, { error: response.error });
+  }  
+ else if(response.error === "Invalid credentials" || response.error === "Access denied")
+ {
+  return ResponseService.unauthorized(res, { error: response.error });
+ }
+  else { 
+    return ResponseService.notFound(res, { error: response.error });
   }
 };
+
+async function addUser(req, res) {
+  const response = await userService.addUser(req, res);
+  return response;
+}
 
 module.exports = {
   getAllUser,
   login,
-  updateUser
+  updateUser,
+  addUser
 };

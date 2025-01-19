@@ -23,6 +23,7 @@ function generateReferralCode() {
   return code;
 }
 
+
 userSchema.pre('save', async function (next) {
   if (this.isNew) {
     let code;
@@ -42,6 +43,18 @@ userSchema.pre('save', async function (next) {
 
   next();
 });
+
+userSchema.pre('findOneAndUpdate', async function (next) {
+  const update = this.getUpdate();
+
+  if (update.$set && update.$set.password) {
+    const salt = await bcrypt.genSalt(10);
+    update.$set.password = await bcrypt.hash(update.$set.password, salt);
+    this.setUpdate(update);
+  }
+  next();
+});
+
 
 const User = mongoose.model('User', userSchema);
 
