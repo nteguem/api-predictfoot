@@ -2,11 +2,9 @@ require("dotenv").config();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const User = require("../models/user.model");
-const {addUserToGroupByPhoneNumber} = require("./group.service")
-const {DefaultGroupNames} = require("../data/defaultGroups");
-const logger = require("../helpers/logger")
+const logService = require('./log.service');
 
-async function save(phoneNumber, contactName,client) {
+async function save(phoneNumber, contactName, client) {
   try {
     const user = await User.findOne({ phoneNumber: phoneNumber });
     if (!user) {
@@ -18,9 +16,8 @@ async function save(phoneNumber, contactName,client) {
       });
 
       const user = await newUser.save();
-      await addUserToGroupByPhoneNumber(DefaultGroupNames.GROUPE_TOUS_LES_UTILISATEURS,phoneNumber)
       return {
-        exist: false, 
+        exist: false,
         data: user,
         message: "User created successfully.",
       };
@@ -35,7 +32,11 @@ async function save(phoneNumber, contactName,client) {
       }
     }
   } catch (error) {
-    logger(client).error('Error create user:', error);
+    await logService.addLog(
+      `${error.message}`,
+      'save',
+      'error'
+    );
     return {
       error: error,
       message: "We're sorry, but an internal server error has occurred. Our team has been alerted and is working to resolve the issue. Please try again later.",
@@ -72,7 +73,7 @@ async function update(phoneNumber, updatedData,client) {
     const updatedUser = await User.findOneAndUpdate(
       { phoneNumber: phoneNumber },
       { $set: updatedData },
-      { new: true } // Ceci renvoie le document mis à jour plutôt que l'ancien
+      { new: true }  
     );
     if (updatedUser) {
       return {
@@ -92,22 +93,31 @@ async function update(phoneNumber, updatedData,client) {
   }
 }
 
-async function getOne(referralCode) {
+async function getOne(phoneNumber) {
   try {
-    const user = await User.findOne({ referralCode })
+    const user = await User.findOne({ phoneNumber: phoneNumber })
     if (user) {
       return { success: true, user };
     } else {
       return { success: false, message: "User not found" };
     }
   } catch (error) {
+    await logService.addLog(
+      `${error.message}`,
+      'getOne',
+      'error'
+    );
     return { success: false, error: error.message };
   }
 }
 
-async function list(role,client) {
+// Liste des utilisateurs avec pagination
+async function list(role, limit = 10, offset = 0) {
   try {
     const matchStage = role ? { role } : {};
+
+    // Comptez le total des utilisateurs qui correspondent aux critères
+    const totalCount = await User.countDocuments(matchStage);
 
     const users = await User.aggregate([
       { $match: matchStage },
@@ -131,20 +141,24 @@ async function list(role,client) {
           referralCode: 1,
           createdAt: 1,
           updatedAt: 1,
-          groups: { $map: { input: "$groups", as: "group", in: "$$group.name" } } // Map to get group names
+          groups: { $map: { input: "$groups", as: "group", in: "$$group.name" } } // Map pour obtenir les noms des groupes
         }
-      }
+      },
+      { $skip: offset }, // Sauter les utilisateurs selon l'offset
+      { $limit: limit }  // Limiter le nombre d'utilisateurs récupérés
     ]);
-    if (users.length > 0) {
-      return { success: true, total: users.length, users: users };
-    } else {
-      return { success: true, total: 0, users: [] };
-    }
+
+    return { success: true, total: totalCount, users };
   } catch (error) {
-    logger(client).error('Error list user:', error);
+    await logService.addLog(
+      `${error.message}`,
+      'list',
+      'error'
+    );
     return { success: false, error: error.message };
   }
 }
+
 
 async function deleteUser(phoneNumber, client) {
   try {
@@ -163,7 +177,11 @@ async function deleteUser(phoneNumber, client) {
       };
     }
   } catch (error) {
-    logger(client).error('Error delete user:', error);
+    await logService.addLog(
+      `${error.message}`,
+      'deleteUser',
+      'error'
+    );
     return {
       success: false,
       message: "An error occurred while deleting the user",
@@ -189,5 +207,6 @@ module.exports = {
   list,
   update,
   deleteUser,
+  getOne,
   addUser
 };
