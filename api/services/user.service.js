@@ -2,6 +2,7 @@ require("dotenv").config();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const User = require("../models/user.model");
+const ResponseService = require('./response.service');
 
 async function save(phoneNumber, contactName, client) {
   try {
@@ -194,7 +195,7 @@ async function addUser(req, res) {
     const dataUser = req.body;
     const newUser = new User(dataUser);
     await newUser.save();
-    return ResponseService.created(res, { message: 'User créée avec succès' });
+    return ResponseService.created(res, { message: 'utilisateur créée avec succès' });
   } catch (error) {
     return ResponseService.internalServerError(res, { error: error.message });
   }
