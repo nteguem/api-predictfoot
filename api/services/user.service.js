@@ -2,7 +2,6 @@ require("dotenv").config();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const User = require("../models/user.model");
-const logService = require('./log.service');
 
 async function save(phoneNumber, contactName, client) {
   try {
@@ -32,11 +31,11 @@ async function save(phoneNumber, contactName, client) {
       }
     }
   } catch (error) {
-    await logService.addLog(
-      `${error.message}`,
-      'save',
-      'error'
-    );
+    // await logService.addLog(
+    //   `${error.message}`,
+    //   'save',
+    //   'error'
+    // );
     return {
       error: error,
       message: "We're sorry, but an internal server error has occurred. Our team has been alerted and is working to resolve the issue. Please try again later.",
@@ -102,11 +101,11 @@ async function getOne(phoneNumber) {
       return { success: false, message: "User not found" };
     }
   } catch (error) {
-    await logService.addLog(
-      `${error.message}`,
-      'getOne',
-      'error'
-    );
+    // await logService.addLog(
+    //   `${error.message}`,
+    //   'getOne',
+    //   'error'
+    // );
     return { success: false, error: error.message };
   }
 }
@@ -150,11 +149,11 @@ async function list(role, limit = 10, offset = 0) {
 
     return { success: true, total: totalCount, users };
   } catch (error) {
-    await logService.addLog(
-      `${error.message}`,
-      'list',
-      'error'
-    );
+    // await logService.addLog(
+    //   `${error.message}`,
+    //   'list',
+    //   'error'
+    // );
     return { success: false, error: error.message };
   }
 }
@@ -177,11 +176,11 @@ async function deleteUser(phoneNumber, client) {
       };
     }
   } catch (error) {
-    await logService.addLog(
-      `${error.message}`,
-      'deleteUser',
-      'error'
-    );
+    // await logService.addLog(
+    //   `${error.message}`,
+    //   'deleteUser',
+    //   'error'
+    // );
     return {
       success: false,
       message: "An error occurred while deleting the user",
