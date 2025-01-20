@@ -63,11 +63,29 @@ const getOneUser = async (req, res) => {
   }
 };
 
+const deleteUser = async (req, res, client) => {
+  const phoneNumber = req.query.phoneNumber; 
+
+  if (!phoneNumber) {
+    return ResponseService.badRequest(res, { message: "Le numéro de téléphone est requis." });
+  }
+
+  const response = await userService.deleteUser(phoneNumber, client);
+
+  if (response.success) {
+    return ResponseService.success(res, { message: response.message, user: response.user });
+  } else {
+    return ResponseService.notFound(res, { message: response.message });
+  }
+};
+
+
 module.exports = {
   getAllUser,
   login,
   updateUser,
   login,
   addUser,
-  getOneUser
+  getOneUser,
+  deleteUser
 };

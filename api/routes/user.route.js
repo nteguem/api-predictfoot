@@ -32,5 +32,9 @@ router.get('/getOne', (req, res) => {
     userHandler.getOneUser(req, res);
 });
 
+router.delete('/delete', (req, res) => {
+    userHandler.deleteUser(req, res, client); 
+  });
+
 
 module.exports = { setupUserRoutes };
