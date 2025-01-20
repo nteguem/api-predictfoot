@@ -21,7 +21,7 @@ const PredictSchema = new mongoose.Schema({
       logo: { type: String, required: true }
     },
     event_date: { type: Date, required: true },
-    venue: { type: String, required: true },
+    venue: { type: String },
     status: { type: String, required: true },
     statusShort: { type: String, required: true },
     score: {
