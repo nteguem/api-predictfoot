@@ -160,7 +160,7 @@ async function list(role, limit = 10, offset = 0) {
 }
 
 
-async function deleteUser(phoneNumber, client) {
+async function deleteUser(phoneNumber) {
   try {
     const deletedUser = await User.findOneAndDelete({ phoneNumber });
 

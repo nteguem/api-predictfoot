@@ -63,14 +63,14 @@ const getOneUser = async (req, res) => {
   }
 };
 
-const deleteUser = async (req, res, client) => {
+const deleteUser = async (req, res) => {
   const phoneNumber = req.query.phoneNumber; 
 
   if (!phoneNumber) {
     return ResponseService.badRequest(res, { message: "Le numéro de téléphone est requis." });
   }
 
-  const response = await userService.deleteUser(phoneNumber, client);
+  const response = await userService.deleteUser(phoneNumber);
 
   if (response.success) {
     return ResponseService.success(res, { message: response.message, user: response.user });
