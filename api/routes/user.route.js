@@ -33,7 +33,7 @@ router.get('/getOne', (req, res) => {
 });
 
 router.delete('/delete', (req, res) => {
-    userHandler.deleteUser(req, res, client); 
+    userHandler.deleteUser(req, res); 
   });
 
 
