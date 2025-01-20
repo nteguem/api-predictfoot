@@ -47,7 +47,7 @@ async function addUser(req, res) {
   return response;
 }
 
-const getOneUser = async (req, res, client) => {
+const getOneUser = async (req, res) => {
   const phoneNumber = req.query.phoneNumber; // Récupère le numéro de téléphone depuis les paramètres de la requête.
 
   if (!phoneNumber) {

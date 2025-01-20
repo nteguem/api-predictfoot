@@ -29,7 +29,7 @@ const setupUserRoutes = (app, client) => {
 };
 
 router.get('/getOne', (req, res) => {
-    userHandler.getOneUser(req, res, client);
+    userHandler.getOneUser(req, res);
 });
 
 
