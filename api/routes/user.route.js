@@ -28,4 +28,9 @@ const setupUserRoutes = (app, client) => {
     });
 };
 
+router.get('/getOne', (req, res) => {
+    userHandler.getOneUser(req, res, client);
+});
+
+
 module.exports = { setupUserRoutes };
