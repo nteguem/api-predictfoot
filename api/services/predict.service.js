@@ -75,6 +75,7 @@ async function listPredictions(page = 1, limit = 5, date = null, isVisible = nul
     // Ajouter la condition pour isVip si elle est passée en paramètre
     if (isVip !== null) {
       query.isVip = isVip;
+      query.isPlatinum = false;
     }
 
     if (isPlatinum !== null) {
