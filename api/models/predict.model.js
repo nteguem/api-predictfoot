@@ -35,7 +35,9 @@ const PredictSchema = new mongoose.Schema({
   author: { type: String},
   isVisible: { type: Boolean, default: false },
   isWhatapp: { type: Boolean, default: false },
-  isVip: { type: Boolean, default: false }
+  isVip: { type: Boolean, default: false },
+  isPlatinum: { type: Boolean, default: false }
+
 }, {
   timestamps: true
 });

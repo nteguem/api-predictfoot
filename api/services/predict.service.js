@@ -47,7 +47,7 @@ async function deletePrediction(predictionId) {
 
 
 
-async function listPredictions(page = 1, limit = 5, date = null, isVisible = null, isVip = false) {
+async function listPredictions(page = 1, limit = 5, date = null, isVisible = null, isVip = false,isPlatinum = null) {
   try {
     let query = {};
 
@@ -75,6 +75,10 @@ async function listPredictions(page = 1, limit = 5, date = null, isVisible = nul
     // Ajouter la condition pour isVip si elle est passée en paramètre
     if (isVip !== null) {
       query.isVip = isVip;
+    }
+
+    if (isPlatinum !== null) {
+      query.isPlatinum = isPlatinum;
     }
 
     // Si une date est fournie, filtrer par cette date

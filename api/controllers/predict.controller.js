@@ -57,25 +57,34 @@ async function deletePrediction(req, res) {
 
 
 
-async function listPredictions(req, res) {
-  try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 5;
-    const date = req.query.date || null;
-    const isVisible = req.query.isVisible || null;
+async function listPredictions(req, res) {   
+  try {     
+    const page = parseInt(req.query.page) || 1;     
+    const limit = parseInt(req.query.limit) || 5;     
+    const date = req.query.date || null;     
+    const isVisible = req.query.isVisible || null;     
     const isVip = req.query.isVip || null;
-    const response = await PredictService.listPredictions(page, limit, date,isVisible,isVip);
-    if (response.success) {
-        return ResponseService.success(res, response);
-    }
-    else {
-      return ResponseService.internalServerError(res, { error: response.error });
-    }
-  } catch (error) {
-    console.log('Error listing predictions:', error);
-    return ResponseService.internalServerError(res, { error: 'Error listing predictions' });
-  }
-}
+    const isPlatinum = req.query.isPlatinum || null;  
+
+    const response = await PredictService.listPredictions(
+      page, 
+      limit, 
+      date, 
+      isVisible, 
+      isVip, 
+      isPlatinum  
+    );     
+
+    if (response.success) {         
+      return ResponseService.success(res, response);     
+    } else {       
+      return ResponseService.internalServerError(res, { error: response.error });     
+    }   
+  } catch (error) {     
+    console.log('Error listing predictions:', error);     
+    return ResponseService.internalServerError(res, { error: 'Error listing predictions' });   
+  } 
+} 
 
 async function listLastTenDaysPredictions(req, res) {
   try {
