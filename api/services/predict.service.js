@@ -47,32 +47,22 @@ async function deletePrediction(predictionId) {
 
 
 
-async function listPredictions(page = 1, limit = 5, date = null, isVisible = null, isVip = false,isPlatinum = null) {
+async function listPredictions(
+  page = 1, 
+  limit = 5, 
+  date = null, 
+  isVisible = null, 
+  isVip = null,  
+  isPlatinum = null
+) {
   try {
     let query = {};
 
-    if (date) {
-      // Valider la date
-      if (!moment(date).isValid()) {
-        throw new Error("Date invalide : " + date);
-      }
-
-      // Créer une plage de dates pour couvrir toute la journée
-      const startOfDay = moment(date).startOf('day').toISOString();
-      const endOfDay = moment(date).endOf('day').toISOString();
-
-      query["fixture.event_date"] = {
-        $gte: startOfDay,
-        $lt: endOfDay
-      };
-    }
-
-    // Ajouter la condition pour isVisible si elle est passée en paramètre
+    // Filtres conditionnels
     if (isVisible !== null) {
       query.isVisible = isVisible;
     }
 
-    // Ajouter la condition pour isVip si elle est passée en paramètre
     if (isVip !== null) {
       query.isVip = isVip;
       query.isPlatinum = false;
@@ -82,50 +72,57 @@ async function listPredictions(page = 1, limit = 5, date = null, isVisible = nul
       query.isPlatinum = isPlatinum;
     }
 
-    // Si une date est fournie, filtrer par cette date
+    // Logique de date identique à précédemment
     if (date) {
+      if (!moment(date).isValid()) {
+        throw new Error("Date invalide : " + date);
+      }
+
+      const startOfDay = moment(date).startOf('day').toISOString();
+      const endOfDay = moment(date).endOf('day').toISOString();
+
+      query["fixture.event_date"] = {
+        $gte: startOfDay,
+        $lt: endOfDay
+      };
+
       const predictions = await Predict.find(query).sort({ "fixture.event_date": -1 });
       return { success: true, predictions };
-    } else {
-      // Obtenir les dates de prédiction distinctes
-      const distinctDates = await Predict.distinct("fixture.event_date");
-
-      // Filtrer et formater les dates distinctes pour garder uniquement l'année, le mois, et le jour
-      const distinctDatesWithoutTime = distinctDates.map(date => moment(date).format('YYYY-MM-DD'));
-
-      // Supprimer les doublons
-      const uniqueDates = [...new Set(distinctDatesWithoutTime)];
-
-      // Trier les dates par ordre décroissant (du plus récent au plus ancien)
-      const sortedDates = uniqueDates.sort((a, b) => moment(b).diff(moment(a)));
-
-      // Pagination
-      const skipCount = (page - 1) * limit;
-
-      // Obtenir les dates pour la page actuelle après pagination
-      const currentDates = sortedDates.slice(skipCount, skipCount + limit);
-
-      // Obtenir les prédictions pour chaque date
-      const groupedPredictions = await Promise.all(
-        currentDates.map(async (date) => {
-          const startOfDay = moment(date).startOf('day').toISOString();
-          const endOfDay = moment(date).endOf('day').toISOString();
-          const predictionsForDate = await Predict.find({
-            "fixture.event_date": {
-              $gte: startOfDay,
-              $lt: endOfDay
-            }
-          });
-          return { date, predictions: predictionsForDate };
-        })
-      );
-
-      return {
-        success: true,
-        total: uniqueDates.length,
-        groupedPredictions
-      };
     }
+
+    // Reste de la fonction identique
+    const distinctDates = await Predict.distinct("fixture.event_date", query);
+    const distinctDatesWithoutTime = distinctDates.map(date => moment(date).format('YYYY-MM-DD'));
+    const uniqueDates = [...new Set(distinctDatesWithoutTime)];
+    const sortedDates = uniqueDates.sort((a, b) => moment(b).diff(moment(a)));
+
+    const skipCount = (page - 1) * limit;
+    const currentDates = sortedDates.slice(skipCount, skipCount + limit);
+
+    const groupedPredictions = await Promise.all(
+      currentDates.map(async (date) => {
+        const startOfDay = moment(date).startOf('day').toISOString();
+        const endOfDay = moment(date).endOf('day').toISOString();
+        
+        const dateQuery = {
+          ...query,
+          "fixture.event_date": {
+            $gte: startOfDay,
+            $lt: endOfDay
+          }
+        };
+
+        const predictionsForDate = await Predict.find(dateQuery);
+        return { date, predictions: predictionsForDate };
+      })
+    );
+
+    return {
+      success: true,
+      total: uniqueDates.length,
+      groupedPredictions
+    };
+
   } catch (error) {
     console.log('Erreur lors de la liste des prédictions:', error);
     return { success: false, error: error.message };
