@@ -12,4 +12,4 @@ uploads
 .vercel
 .logger.log
 logger.log
-.firebase-credentials.json
+firebase-credentials.json
