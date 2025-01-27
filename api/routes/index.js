@@ -12,7 +12,7 @@ const { setupEvent } = require('./event.route');
 const { setupSubscription } = require('./subscription.route');
 const { setupPlan } = require('./plan.route');
 const { setupTip } = require('./tip.route');
-
+const {setupNotification} = require("./notification.route")
 /* GET home page. */
 // Define a route for the home page ('/') that renders the 'index' template with the title 'Predictfoot'.
 router.get('/', function (req, res, next) {
@@ -53,6 +53,7 @@ const setupAppRoutes = (client) => {
   setupSubscription(app, client);
   setupPlan(app);
   setupTip(app, client);
+  setupNotification(app,client);
 
   return app;
 };

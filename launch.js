@@ -13,6 +13,8 @@ const {ensureDefaultGroupsExist} = require("./api/services/group.service")
 const {ensureDefaultPlansExist} = require("./api/services/plan.service")
 const {scheduleAllTasks} = require("./api/services/schedule.service")
 const {scheduleCampaignTasks} = require("./api/services/campaign.service")
+const admin = require('firebase-admin');
+const pathFcm = require('path');
 
 // // Connection to MongoDB
 dbConnect(); 
@@ -100,6 +102,17 @@ app.use((err, req, res, next) => {
     },
   });
 });
+
+try {
+  const firebaseCredentials = pathFcm.join(__dirname, 'firebase-credentials.json');
+  
+  admin.initializeApp({
+    credential: admin.credential.cert(firebaseCredentials)
+  });
+  console.log('Firebase Admin initialisé avec succès');
+} catch (error) {
+  console.error('Erreur lors de l\'initialisation Firebase:', error);
+}  
 
 // Start the app
 server.listen(3001, () => {
