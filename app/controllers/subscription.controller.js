@@ -13,7 +13,6 @@ const pathInvoice = "../templates-pdf/invoice.pdf"
 async function handlePaymentMonetbilSuccess(req, res, client) {
   try {
     const { item_ref, transaction_id,amount,operator_transaction_id} = req.body;
-    console.log("req.body;",req.body)
     const dataItemRef = JSON.parse(item_ref);
     const {user,plan} = dataItemRef;
     const currentDate = moment().format('dddd D MMMM YYYY à HH:mm:ss');
@@ -35,7 +34,7 @@ async function handlePaymentMonetbilSuccess(req, res, client) {
     // Envoi de la notification , generation de facture client et mise a jour de la transaction
     await Promise.all([
       sendMediaToNumber(client, user.phoneNumber, documentType, pdfBase64Invoice, pdfNameInvoice,successMessage),
-      transactionService.updateTransaction(transaction.id,transactionData)
+      updateTransaction(transaction.id,transactionData)
     ]);
 
     // Notification aux administrateurs
@@ -80,7 +79,6 @@ async function handlePaymentMonetbilSuccess(req, res, client) {
   
   async function handlePaymentMonetbilNotification(req, res, client) {
     try {
-      console.log("req.NOTIRICATION",req.body)
       if (req.body.message.toLowerCase() === 'failed') {
         await handlePaymentMonetbilFailure(req, res, client);
       } else if (req.body.message.toLowerCase() === 'internal_processing_error') {
