@@ -17,7 +17,6 @@ async function handlePaymentMonetbilSuccess(req, res, client) {
     const {user,plan} = dataItemRef;
     const currentDate = moment().format('dddd D MMMM YYYY à HH:mm:ss');
     req.body = { ...req.body,date: currentDate, pseudo:user?.pseudo,phoneNumber:user.phoneNumber.toString()  };
-    const {transaction} = await transactionService.getTransactionById(transaction_id)
        // Préparation des données de mise a jour de la transaction
        const transactionData = {
         operatorTransactionId: operator_transaction_id,
@@ -34,7 +33,7 @@ async function handlePaymentMonetbilSuccess(req, res, client) {
     // Envoi de la notification , generation de facture client et mise a jour de la transaction
     await Promise.all([
       sendMediaToNumber(client, user.phoneNumber, documentType, pdfBase64Invoice, pdfNameInvoice,successMessage),
-      updateTransaction(transaction.id,transactionData)
+      updateTransaction(transaction_id,transactionData)
     ]);
 
     // Notification aux administrateurs
