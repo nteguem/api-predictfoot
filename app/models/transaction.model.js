@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const Wallet = require('./wallet.model');
-const Subscription = require('./subscription.model'); 
+const Subscription = require('./subscription.model');
 const Plan = require('./plan.model');
 const User = require('./user.model');
 
@@ -24,19 +24,19 @@ const transactionSchema = new mongoose.Schema({
     description: { type: String, default: null },
     notifyUrl: { type: String, default: null },
     type: { type: String, enum: ['MONETBIL'], default: null },
-    user: { type: mongoose.Schema.Types.ObjectId, ref: User, required: true },
-    plan: { type: mongoose.Schema.Types.ObjectId, ref: Plan, required: true },
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    plan: { type: mongoose.Schema.Types.ObjectId, ref: 'Plan', required: true },
     createdAt: { type: Date, default: Date.now }
 });
 
 // Middleware Post-Save pour la mise à jour du portefeuille et création de l'abonnement
-transactionSchema.post('findOneAndUpdate', async function (doc, next) {
+transactionSchema.post('findOneAndUpdate', async function(doc, next) {
     try {
         if (!doc) return next();
 
         if (doc.status === 'COMPLETED') {
             const { paymentMethod, amount, user, plan } = doc;
-            console.log("doc",doc)
+            console.log("doc", doc)
 
             // 🔹 Mise à jour du portefeuille
             let wallet = await Wallet.findOne({ operator: paymentMethod });
@@ -47,22 +47,21 @@ transactionSchema.post('findOneAndUpdate', async function (doc, next) {
             wallet.lastUpdated = Date.now();
             await wallet.save();
 
-         
-
             // 🔹 Création de la période de l'abonnement
             const startDate = new Date();
             const endDate = new Date(startDate);
             endDate.setDate(startDate.getDate() + plan.duration); // Ajout des jours du plan
 
             // 🔹 Création de l'abonnement
-            const subscription = new Subscription({
-                user:user._id,
-                plan:plan._id,
+            const SubscriptionModel = mongoose.model('Subscription');
+            const subscription = new SubscriptionModel({
+                user: user,
+                plan: plan,
                 transaction: doc._id,
                 startDate,
                 endDate
             });
-console.log("subscription",subscription)
+            console.log("subscription", subscription)
             await subscription.save();
             console.log(`✅ Abonnement créé pour l'utilisateur ${user} avec le plan ${plan} jours)`);
         }
