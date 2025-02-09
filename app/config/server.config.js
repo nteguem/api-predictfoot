@@ -1,5 +1,5 @@
 const corsOptions = {
-    origin: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : '*',
+    origin: '*',
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
@@ -9,7 +9,7 @@ const corsOptions = {
   
   const socketConfig = {
     cors: {
-      origin: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : '*',
+      origin:'*',
       methods: ['GET', 'POST'],
       credentials: true
     },

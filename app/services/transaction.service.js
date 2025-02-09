@@ -5,7 +5,6 @@ async function createTransaction(transactionData) {
   try {
     const newTransaction = new Transaction(transactionData);
     const transaction = await newTransaction.save();
-    console.log("create transactions",transaction)
     return { success: true, transaction, message: "Transaction created successfully." };
   } catch (error) {
     await logService.addLog(`${error.message}`, 'createTransaction', 'error');
