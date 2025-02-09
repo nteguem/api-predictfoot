@@ -61,7 +61,7 @@ transactionSchema.post('findOneAndUpdate', async function (doc, next) {
                 startDate,
                 endDate
             });
-
+console.log("subscription",subscription)
             await subscription.save();
             console.log(`✅ Abonnement créé pour l'utilisateur ${user} avec le plan ${plan} (durée : ${planData.duration} jours)`);
         }
