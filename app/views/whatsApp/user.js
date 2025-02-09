@@ -1,0 +1,287 @@
+const {
+  getMainMenu,
+  getDailyPredictionsMenu,
+  getOldPredictionsMenu,
+  getAccountMenu,
+  getInvalidInputMessage
+} = require('../../data');
+const { replyToMessage, sendMessageToNumber, sendMediaToNumber } = require('./whatsappMessaging');
+const logService = require('../../services/log.service');
+const userService = require('../../services/user.service');
+const { listPredictions, listLastTenDaysPredictions } = require("../../services/predict.service");
+const { generateImage } = require("../../services/generateImagePredict.service");
+const { verifyUserVip, listSubscriptions } = require("../../services/subscription.service");
+const { orderCommander,sendStepMessage } = require("./Order");
+const moment = require("moment");
+moment.locale('fr');
+const Steps = {};
+
+const reset = (user) => {
+  Steps[user.data.phoneNumber] = {
+    currentMenu: 'mainMenu',
+    isFirstContact: !user.exist
+  };
+};
+
+const getTodaysDate = () => new Date().toISOString().split('T')[0];
+
+const sendPrediction = async (client, isVip, user) => {
+  try {
+    const isVisible = true;
+    const { predictions } = await listPredictions(1, 15, getTodaysDate(), isVisible, isVip);
+
+    if (predictions.length === 0) {
+      reset(user);
+      let predictionType = isVip ? "VIP" : "gratuite";
+      sendMessageToNumber(client, user.data.phoneNumber, `Aucune prédiction ${predictionType} disponible pour l'instant. Vous recevrez un message dès qu'elle sera disponible.\n\n _Tapez # pour revenir au menu principal_`);
+      return;
+    }
+
+    if (isVip) {
+      const vipStatus = await verifyUserVip(user.data.phoneNumber);
+      if (vipStatus) {
+        const imageData = await generateImage(predictions);
+        await sendMediaToNumber(client, user.data.phoneNumber, "image/png", imageData.toString("base64"), "nameMedia");
+      } else {
+        sendMessageToNumber(client, user.data.phoneNumber, `Vous n'avez pas de forfait VIP activé. Voici les options d'abonnement disponibles :`);
+        await handleSubscriptionMenu(client, user);
+      }
+    } else {
+      const imageData = await generateImage(predictions);
+      await sendMediaToNumber(client, user.data.phoneNumber, "image/png", imageData.toString("base64"), "nameMedia");
+    }
+  } catch (error) {
+    console.log('Error sending predictions:', error);
+  }
+};
+
+const sendPredictionHistory = async (client, user, isVip) => {
+  try {
+    const { data } = await listLastTenDaysPredictions(isVisible = true, isVip);
+    if (data.length === 0) {
+      reset(user);
+      await sendMessageToNumber(client, user.data.phoneNumber, `Aucun historique de prédictions disponible pour le moment.\n\n _Tapez # pour revenir au menu principal_`);
+      return;
+    }
+
+    let historyResponse = `📋 Sélectionnez une journée pour explorer les détails des prédictions ${isVip ? "VIP" : "gratuites"} :\n\n`;
+
+    historyDates = data.map((rate, index) => {
+      return rate.date;
+    });
+
+    data.forEach((rate, index) => {
+      historyResponse += `${index + 1}- ${moment(rate.date).format('ddd DD/MM/YYYY')} • *${rate.rate}*, Tapez ${index + 1}\n`;
+    });
+
+    historyResponse += "\n_Tapez # pour revenir au menu principal ou sélectionnez une date pour voir les prédictions de cette journée._";
+    await sendMessageToNumber(client, user.data.phoneNumber, historyResponse);
+    Steps[user.data.phoneNumber].currentMenu = "SelectDateForPredictions";
+    Steps[user.data.phoneNumber].predictions = data; // Stocke les prédictions pour la sélection ultérieure
+
+  } catch (error) {
+    console.log('Error sending prediction history:', error);
+  }
+};
+
+const sendDailyPredictions = async (client, user, dateIndex) => {
+  const dateSelected = historyDates[dateIndex - 1]
+  try {
+    const userSteps = Steps[user.data.phoneNumber];
+    const isVip = userSteps.isVipSelected;
+    // Appel à listPredictions avec la date sélectionnée et isVip
+    const isVisible = true;
+    const { predictions } = await listPredictions(1, 15, dateSelected, isVisible, isVip);
+    if (!predictions || predictions.length === 0) {
+      await sendMessageToNumber(client, user.data.phoneNumber, `Aucune prédiction disponible pour cette date.\n\n_Tapez # pour revenir au menu principal_`);
+      reset(user);
+      return;
+    }
+
+    let dailyPredictionsResponse = `📅 *${moment(dateSelected).format("dddd DD MMMM YYYY")}* :\n\n`;
+
+    predictions.forEach((prediction, index) => {
+      const { prediction: predictionType, iswin } = prediction;
+      const { homeTeam, awayTeam, score } = prediction.fixture
+      const outcome = iswin ? "✅" : "❌";
+      const event = `${homeTeam.team_name} vs ${awayTeam.team_name} • *${predictionType}* • ${score.fulltime} ${outcome}`;
+      dailyPredictionsResponse += `▶️ ${event}\n`;
+    });
+
+    dailyPredictionsResponse += "\n_Tapez * pour revenir en arrière ,# pour revenir au menu principal._";
+    await sendMessageToNumber(client, user.data.phoneNumber, dailyPredictionsResponse);
+    // reset(user);
+
+  } catch (error) {
+    console.error('Error sending daily predictions:', error);
+    await sendMessageToNumber(client, user.data.phoneNumber, `Erreur lors de l'envoi des prédictions journalières.\n\n_Tapez # pour revenir au menu principal_`);
+    reset(user);
+  }
+};
+
+const sendPredictionHistoryMenu = async (client, user) => {
+  try {
+    await sendMessageToNumber(client, user.data.phoneNumber, "📅 Sélectionnez le type de pronostic pour consulter l'historique :\n\n1-Pronostic gratuit, Tapez 1 \n2-Pronostic VIP, Tapez 2\n\n _Tapez # pour revenir au menu principal_");
+    Steps[user.data.phoneNumber].currentMenu = "oldPredictions";
+  } catch (error) {
+    console.log('Error sending prediction history menu:', error);
+  }
+};
+
+const UserCommander = async (user, msg, client) => {
+  try {
+    if (!msg.isGroup && !msg.isStatus) {
+      // Initialize steps if not exists
+      if (!Steps[user.data.phoneNumber]) {
+        reset(user);
+      }
+
+      // Handle bot status
+      if (user.data.botStatus === "off") {
+        if (msg.body.toLowerCase() === "on") {
+          const updateResult = await userService.update(user.data.phoneNumber, { botStatus: "on" });
+          if (updateResult.success) {
+            await replyToMessage(client, msg, "🤖 Assistant activé");
+            user.data.botStatus = "on";
+            reset(user);
+            await replyToMessage(client, msg, getMainMenu(Steps[user.data.phoneNumber].isFirstContact, user.data.pseudo));
+          }
+        }
+        return;
+      }
+
+      // Handle reset command
+      if (msg.body === "#") {
+        reset(user);
+        await replyToMessage(client, msg, getMainMenu(false, user.data.pseudo));
+        return;
+      }
+
+      // Handle bot deactivation
+      if (msg.body.toLowerCase() === "off") {
+        const updateResult = await userService.update(user.data.phoneNumber, { botStatus: "off" });
+        if (updateResult.success) {
+          await replyToMessage(client, msg, "🤖 Assistant désactivé. Tapez 'on' pour le réactiver.");
+          reset(user);
+        }
+        return;
+      }
+
+      const { currentMenu, isFirstContact } = Steps[user.data.phoneNumber];
+
+      // Handle first contact
+      if (isFirstContact) {
+        // Send welcome message and wait for next input
+        await replyToMessage(client, msg, getMainMenu(true, user.data.pseudo));
+        Steps[user.data.phoneNumber].isFirstContact = false;
+        return;
+      }
+
+      // Handle menu navigation
+      switch (currentMenu) {
+        case "mainMenu":
+          switch (msg.body) {
+            case "1":
+              Steps[user.data.phoneNumber].currentMenu = "dailyPredictions";
+              await replyToMessage(client, msg, getDailyPredictionsMenu());
+              break;
+            case "2":
+              await sendPredictionHistoryMenu(client, user);
+              break;
+            case "3":
+              Steps[user.data.phoneNumber].currentMenu = "account";
+              const vipStatus = await verifyUserVip(user.data.phoneNumber);
+              await replyToMessage(client, msg, getAccountMenu(user.data, vipStatus));
+              break;
+            case "4":
+              await replyToMessage(client, msg,
+                `📱 *Suivez notre application sur la Play Store !*\n\n` +
+                `Découvrez une expérience de prédictions football plus fluide et diversifiée directement depuis votre mobile !\n\n` +
+                `⚡️ Profitez d'une interface intuitive et d'une variété de pronostics pour tous les goûts. Que vous soyez novice ou expert, notre application est faite pour vous !\n\n` +
+                `💳 *Paiements sécurisés* : Effectuez vos paiements facilement via carte bancaire ou PayPal, pour une expérience sans tracas et rapide !\n\n` +
+                `🔥 *Téléchargez maintenant* et commencez à maximiser vos gains dès aujourd'hui !\n\n` +
+                `[*Télécharger sur Play Store*](https://play.google.com/store/apps/details?id=com.bigwin.application)\n\n` +
+                `_*Tapez # pour revenir au menu principal.*_`
+              );
+
+              break;
+            default:
+              await replyToMessage(client, msg, getInvalidInputMessage(msg.body, "Veuillez choisir un numéro entre 1 et 4"));
+              await replyToMessage(client, msg, getMainMenu(false, user.data.pseudo));
+          }
+          break;
+
+        case "dailyPredictions":
+          const vipStatus = await verifyUserVip(user.data.phoneNumber);
+          const isVip = msg.body === "2";
+          if (msg.body === "1") {
+            await sendPrediction(client, isVip, user);
+          }
+          else if (msg.body === "2") {
+            if (vipStatus) {
+              await sendPrediction(client, isVip, user);
+            }
+            else { 
+              await sendStepMessage(client, user.data.phoneNumber);
+              Steps[user.data.phoneNumber].currentMenu = "orderMenu";
+
+            } 
+          }
+          else {
+            await replyToMessage(client, msg, getInvalidInputMessage(msg.body, "Veuillez choisir un numéro entre 1 et 2"));
+          }
+          break;
+        case "oldPredictions":
+          if (msg.body === "1" || msg.body === "2") {
+            const isVip = msg.body === "2";
+            Steps[user.data.phoneNumber].isVipSelected = isVip; // Stocker le choix de l'utilisateur
+            await sendPredictionHistory(client, user, isVip);
+          } else {
+            await replyToMessage(client, msg, getInvalidInputMessage(msg.body, "Veuillez choisir un numéro entre 1 et 2"));
+          }
+          break;
+        case "SelectDateForPredictions":
+          const dateIndex = parseInt(msg.body);
+          if (!isNaN(dateIndex) && dateIndex > 0 && dateIndex <= Steps[user.data.phoneNumber].predictions.length) {
+            await sendDailyPredictions(client, user, dateIndex);
+          }
+          else if (msg.body == "*") {
+            await sendPredictionHistory(client, user, Steps[user.data.phoneNumber].isVipSelected);
+          }
+          else {
+            await replyToMessage(client, msg, getInvalidInputMessage(msg.body, `Veuillez choisir un numéro entre 1 et ${Steps[user.data.phoneNumber].predictions.length}`));
+
+          }
+          break;
+        case "orderMenu":
+          if(msg.body.toLowerCase() === "non")
+          {
+            reset(user);
+            await replyToMessage(client, msg, getMainMenu(false, user.data.pseudo));
+          }
+          else
+          {
+            await orderCommander(user, msg, client);
+          }
+          break;
+        case "account":
+          // Return to main menu for any input in sub-menus
+          reset(user);
+          await replyToMessage(client, msg, getMainMenu(false, user.data.pseudo));
+          break;
+
+        default:
+          await replyToMessage(client, msg, getInvalidInputMessage(msg.body, "Veuillez choisir un numéro entre 1 et 4"));
+          await replyToMessage(client, msg, getMainMenu(false, user.data.pseudo));
+      }
+    }
+  } catch (error) {
+    await logService.addLog(`${error.message}`, 'UserCommander', 'error');
+    await replyToMessage(client, msg, "Une erreur est survenue. Tapez # pour revenir au menu principal.");
+  }
+};
+
+
+module.exports = {
+  UserCommander
+};

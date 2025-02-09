@@ -1,120 +1,210 @@
 require('dotenv').config();
+
 const express = require('express');
-const appRoutes = require("./api/routes/index");
-const bodyParser = require("body-parser");
-const cors = require('cors');
-const createError = require("http-errors");
-const cookieParser = require("cookie-parser");
-const dbConnect = require('./api/config/dbConnect');
 const http = require('http');
 const socketIo = require('socket.io');
-const { initializeWhatsAppClient, handleIncomingMessages } = require('./api/helpers/whatsApp/whatappsHandler');
-const {ensureDefaultGroupsExist} = require("./api/services/group.service")
-const {ensureDefaultPlansExist} = require("./api/services/plan.service")
-const {scheduleAllTasks} = require("./api/services/schedule.service")
-const {scheduleCampaignTasks} = require("./api/services/campaign.service")
+const cors = require('cors');
+const cookieParser = require('cookie-parser');
+const bodyParser = require('body-parser');
+const createError = require('http-errors');
 const admin = require('firebase-admin');
-const pathFcm = require('path');
+const path = require('path');
 
-// // Connection to MongoDB
-dbConnect(); 
-// App initialization
-const app = express();
-const server = http.createServer(app);
-const io = socketIo(server);
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-app.use(cors());
-app.use(cookieParser());
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
- 
-// Middleware pour gérer les requêtes CORS
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
-  res.header('Access-Control-Allow-Headers', 'Content-Type');
-  next();
-}); 
+const dbConnect = require('./app/config/dbConnect');
+const appRoutes = require('./app/routes');
+const { initializeWhatsAppClient, handleIncomingMessages } = require('./app/views/whatsApp/whatappsHandler');
+const { ensureDefaultGroupsExist } = require('./app/services/group.service');
+const { ensureDefaultPlansExist } = require('./app/services/plan.service');
+const { scheduleAllTasks } = require('./app/services/schedule.service');
+const { scheduleCampaignTasks } = require('./app/services/campaign.service');
+const { corsOptions, socketConfig } = require('./app/config/server.config');
 
-// Create instance whatapp
-const client = initializeWhatsAppClient(io);
-
-//Handle incoming messages from the chatbot using the modular function.
-handleIncomingMessages(client);
-
-// Launch WhatsApp client
-client.initialize();
- 
-//socket io for qrCode
-io.on('connection', (socket) => {
-  console.log('Client connected');
-
-  socket.on('message', (data) => { 
-    console.log('Message from client:', data);
-  });
-
-  socket.on('disconnectClient', () => {
-    console.log('Received disconnect request from client');
-    if (client) {
-      io.emit('qrCode', "disconnected");
-      io.emit('numberBot', "");
-      client.logout(); // Déconnecter le client WhatsApp
-      client.initialize();
-
-    }
-  });
-
-  socket.on('disconnect', () => {
-    console.log('Client disconnected');
-  });
-
-  socket.on('error', (error) => {
-    console.error('WebSocket error:', error);
-  });
-  if (client.hasOwnProperty('info')) {
-    socket.emit('numberBot', `${client.info?.wid?.user} (${client.info?.pushname})`);
-    socket.emit('qrCode', "connected"); 
+class Application {
+  constructor() {
+    this.app = express();
+    this.server = http.createServer(this.app);
+    this.io = socketIo(this.server);
+    this.whatsAppClient = null;
   }
+
+  async initialize() {
+    try {
+      // Initialize database connection
+      await dbConnect();
+      console.log('Database connected successfully');
+
+      // Initialize Firebase Admin
+      await this.initializeFirebase();
+
+      // Configure middleware
+      this.setupMiddleware();
+
+      // Initialize WhatsApp client
+      this.initializeWhatsApp();
+
+      // Setup socket connections
+      this.setupSocketConnections();
+
+      // Initialize services
+      await this.initializeServices();
+
+      // Setup routes and error handling
+      this.setupRoutes();
+      this.setupErrorHandling();
+
+      return this;
+    } catch (error) {
+      console.error('Application initialization failed:', error);
+      throw error;
+    }
+  }
+
+  setupMiddleware() {
+    // Security middleware
+    this.app.use(cors(corsOptions));
+    this.app.use(express.json({ limit: '10mb' }));
+    this.app.use(express.urlencoded({ extended: false }));
+    this.app.use(cookieParser());
+    this.app.use(bodyParser.json());
+    this.app.use(bodyParser.urlencoded({ extended: false }));
+
+    // Request logging middleware
+    this.app.use((req, res, next) => {
+      console.log(`${req.method} ${req.url}`);
+      next();
+    });
+  }
+
+  async initializeFirebase() {
+    try {
+      const firebaseCredentials = path.join(__dirname, 'firebase-credentials.json');
+      admin.initializeApp({
+        credential: admin.credential.cert(firebaseCredentials)
+      });
+      console.log('Firebase Admin initialized successfully');
+    } catch (error) {
+      console.error('Firebase initialization failed:', error);
+      throw error;
+    }
+  }
+
+  initializeWhatsApp() {
+    this.whatsAppClient = initializeWhatsAppClient(this.io);
+    handleIncomingMessages(this.whatsAppClient);
+    this.whatsAppClient.initialize();
+  }
+
+  setupSocketConnections() {
+    this.io.on('connection', (socket) => {
+      console.log('Client connected:', socket.id);
+
+      // Handle client messages
+      socket.on('message', (data) => {
+        console.log('Message from client:', data);
+      });
+
+      // Handle client disconnect request
+      socket.on('disconnectClient', () => {
+        if (this.whatsAppClient) {
+          this.io.emit('qrCode', 'disconnected');
+          this.io.emit('numberBot', '');
+          this.whatsAppClient.logout();
+          this.whatsAppClient.initialize();
+        }
+      });
+
+      // Handle socket disconnect
+      socket.on('disconnect', () => {
+        console.log('Client disconnected:', socket.id);
+      });
+
+      // Handle socket errors
+      socket.on('error', (error) => {
+        console.error('WebSocket error:', error);
+      });
+
+      // Send initial client info if available
+      if (this.whatsAppClient?.info) {
+        const { user, pushname } = this.whatsAppClient.info?.wid || {};
+        socket.emit('numberBot', `${user} (${pushname})`);
+        socket.emit('qrCode', 'connected');
+      }
+    });
+  }
+
+  async initializeServices() {
+    try {
+      await Promise.all([
+        ensureDefaultGroupsExist(),
+        ensureDefaultPlansExist(),
+        scheduleAllTasks(this.whatsAppClient),
+        scheduleCampaignTasks('start', this.whatsAppClient)
+      ]);
+      console.log('Services initialized successfully');
+    } catch (error) {
+      console.error('Service initialization failed:', error);
+      throw error;
+    }
+  }
+
+  setupRoutes() {
+    this.app.use('/api/v1', appRoutes(this.whatsAppClient));
+    
+    // Handle 404 errors
+    this.app.use((req, res, next) => {
+      next(createError(404, 'Route not found'));
+    });
+  }
+
+  setupErrorHandling() {
+    this.app.use((err, req, res, next) => {
+      const status = err.status || 500;
+      const message = err.message || 'Internal Server Error';
+
+      console.error(`Error ${status}: ${message}`);
+
+      res.status(status).json({
+        error: {
+          status,
+          message,
+          ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+        }
+      });
+    });
+  }
+
+  async start() {
+    const port = process.env.PORT || 3001;
+    
+    return new Promise((resolve) => {
+      this.server.listen(port, () => {
+        console.log(`Server started on port ${port}`);
+        resolve();
+      });
+    });
+  }
+}
+
+// Application bootstrap
+const startApplication = async () => {
+  try {
+    const app = await new Application().initialize();
+    await app.start();
+  } catch (error) {
+    console.error('Failed to start application:', error);
+    process.exit(1);
+  }
+};
+
+// Handle uncaught exceptions and rejections
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error);
+  process.exit(1);
 });
 
-//Launch all task 
-scheduleAllTasks(client);
-scheduleCampaignTasks("start",client);
-// Ensure default groups Exist
-ensureDefaultGroupsExist();
-//Ensure defaut plan exist
-ensureDefaultPlansExist(); 
-// App Routes
-app.use('/api/v1', appRoutes(client));   
-
-// Custom 404 error handler 
-app.use((req, res, next) => {
-  next(createError(404, 'Route not found'));
+process.on('unhandledRejection', (error) => {
+  console.error('Unhandled Rejection:', error);
+  process.exit(1);
 });
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  res.status(err.status || 500).json({
-    error: {
-      status: err.status || 500,
-      message: err.message || 'Internal Server Error',
-    },
-  });
-});
-
-try {
-  const firebaseCredentials = pathFcm.join(__dirname, 'firebase-credentials.json');
-  
-  admin.initializeApp({
-    credential: admin.credential.cert(firebaseCredentials)
-  });
-  console.log('Firebase Admin initialisé avec succès');
-} catch (error) {
-  console.error('Erreur lors de l\'initialisation Firebase:', error);
-}  
-
-// Start the app
-server.listen(3001, () => {
-  console.log("Server started");
-});
+startApplication();
