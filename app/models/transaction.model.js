@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 const Wallet = require('./wallet.model');
-const Subscription = require('./subscription.model');
 const Plan = require('./plan.model');
 const User = require('./user.model');
 
@@ -47,10 +46,16 @@ transactionSchema.post('findOneAndUpdate', async function(doc, next) {
             wallet.lastUpdated = Date.now();
             await wallet.save();
 
+            // 🔹 Récupération du plan pour avoir sa durée
+            const planDoc = await Plan.findById(plan);
+            if (!planDoc) {
+                throw new Error('Plan not found');
+            }
+
             // 🔹 Création de la période de l'abonnement
             const startDate = new Date();
             const endDate = new Date(startDate);
-            endDate.setDate(startDate.getDate() + plan.duration); // Ajout des jours du plan
+            endDate.setDate(startDate.getDate() + planDoc.duration); // Utilisation de la durée du plan récupéré
 
             // 🔹 Création de l'abonnement
             const SubscriptionModel = mongoose.model('Subscription');
