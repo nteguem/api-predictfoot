@@ -36,6 +36,7 @@ transactionSchema.post('findOneAndUpdate', async function (doc, next) {
 
         if (doc.status === 'COMPLETED') {
             const { paymentMethod, amount, user, plan } = doc;
+            console.log("doc",doc)
 
             // 🔹 Mise à jour du portefeuille
             let wallet = await Wallet.findOne({ operator: paymentMethod });
