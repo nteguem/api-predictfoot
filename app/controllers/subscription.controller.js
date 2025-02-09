@@ -80,6 +80,7 @@ async function handlePaymentMonetbilSuccess(req, res, client) {
   
   async function handlePaymentMonetbilNotification(req, res, client) {
     try {
+      console.log("req.NOTIRICATION",req.body)
       if (req.body.message.toLowerCase() === 'failed') {
         await handlePaymentMonetbilFailure(req, res, client);
       } else if (req.body.message.toLowerCase() === 'internal_processing_error') {
