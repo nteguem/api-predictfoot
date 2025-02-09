@@ -51,7 +51,7 @@ transactionSchema.post('findOneAndUpdate', async function (doc, next) {
             // 🔹 Création de la période de l'abonnement
             const startDate = new Date();
             const endDate = new Date(startDate);
-            endDate.setDate(startDate.getDate() + planData.duration); // Ajout des jours du plan
+            endDate.setDate(startDate.getDate() + plan.duration); // Ajout des jours du plan
 
             // 🔹 Création de l'abonnement
             const subscription = new Subscription({
@@ -63,7 +63,7 @@ transactionSchema.post('findOneAndUpdate', async function (doc, next) {
             });
 console.log("subscription",subscription)
             await subscription.save();
-            console.log(`✅ Abonnement créé pour l'utilisateur ${user} avec le plan ${plan} (durée : ${planData.duration} jours)`);
+            console.log(`✅ Abonnement créé pour l'utilisateur ${user} avec le plan ${plan} jours)`);
         }
 
         next();
