@@ -23,7 +23,6 @@ async function handlePaymentMonetbilSuccess(req, res, client) {
        date:currentDate,
        heure:currentTime,
        expire,
-       phonenumber:phonenumber.toString(),
        transaction_id: operator_transaction_id,
        transaction_id: operator_transaction_id,
        prix: plan?.price.toString(),
