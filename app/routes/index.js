@@ -11,8 +11,10 @@ const { setupCampaign } = require('./campaign.route');
 const { setupEvent } = require('./event.route');
 const { setupSubscription } = require('./subscription.route');
 const { setupPlan } = require('./plan.route');
-const {setupNotification} = require("./notification.route")
-const {setupLogRoutes} = require('./log.route')
+const {setupNotification} = require("./notification.route");
+const {setupLogRoutes} = require('./log.route');
+const {setupTransactionRoutes} = require('./transaction.route');
+const {setupWalletRoutes} = require('./wallet.route')
 /* GET home page. */
 // Define a route for the home page ('/') that renders the 'index' template with the title 'Predictfoot'.
 router.get('/', function (req, res, next) {
@@ -54,7 +56,8 @@ const setupAppRoutes = (client) => {
   setupPlan(app);
   setupNotification(app,client);
   setupLogRoutes(app);
-
+  setupTransactionRoutes(app,client);
+  setupWalletRoutes(app,client);
   return app;
 };
 
