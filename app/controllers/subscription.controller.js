@@ -128,13 +128,13 @@ async function handlePaymentMonetbilNotification(req, res, client) {
 async function isVip(req, res) {
   const { phoneNumber } = req.params;
   try {
-    const vipStatus = await SubscriptionService.verifyUserVip(phoneNumber);
-    return ResponseService.success(res, { isVip: vipStatus });
+    const vipResult = await SubscriptionService.verifyUserVip(phoneNumber);
+    return ResponseService.success(res, vipResult);
   } catch (error) {
     console.log('Error checking VIP status:', error);
     return ResponseService.internalServerError(res, { error: 'Error checking VIP status' });
   }
-}
+} 
 
 async function listSubscriptions(req, res) {
   const { phoneNumber } = req.params;

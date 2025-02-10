@@ -25,21 +25,21 @@ const reset = (user) => {
 
 const getTodaysDate = () => new Date().toISOString().split('T')[0];
 
-const sendPrediction = async (client, isVip, user) => {
+const sendPrediction = async (client, vipChoice, user) => {
   try {
     const isVisible = true;
-    const { predictions } = await listPredictions(1, 15, getTodaysDate(), isVisible, isVip);
+    const { predictions } = await listPredictions(1, 15, getTodaysDate(), isVisible, vipChoice);
 
     if (predictions.length === 0) {
       reset(user);
-      let predictionType = isVip ? "VIP" : "gratuite";
+      let predictionType = vipChoice ? "VIP" : "gratuite";
       sendMessageToNumber(client, user.data.phoneNumber, `Aucune prédiction ${predictionType} disponible pour l'instant. Vous recevrez un message dès qu'elle sera disponible.\n\n _Tapez # pour revenir au menu principal_`);
       return;
     }
 
-    if (isVip) {
-      const vipStatus = await verifyUserVip(user.data.phoneNumber);
-      if (vipStatus) {
+    if (vipChoice) {
+      const {isVip} = await verifyUserVip(user.data.phoneNumber);
+      if (isVip) {
         const imageData = await generateImage(predictions);
         await sendMediaToNumber(client, user.data.phoneNumber, "image/png", imageData.toString("base64"), "nameMedia");
       } else {
@@ -55,16 +55,16 @@ const sendPrediction = async (client, isVip, user) => {
   }
 };
 
-const sendPredictionHistory = async (client, user, isVip) => {
+const sendPredictionHistory = async (client, user, vipChoice) => {
   try {
-    const { data } = await listLastTenDaysPredictions(isVisible = true, isVip);
+    const { data } = await listLastTenDaysPredictions(isVisible = true, vipChoice);
     if (data.length === 0) {
       reset(user);
       await sendMessageToNumber(client, user.data.phoneNumber, `Aucun historique de prédictions disponible pour le moment.\n\n _Tapez # pour revenir au menu principal_`);
       return;
     }
 
-    let historyResponse = `📋 Sélectionnez une journée pour explorer les détails des prédictions ${isVip ? "VIP" : "gratuites"} :\n\n`;
+    let historyResponse = `📋 Sélectionnez une journée pour explorer les détails des prédictions ${vipChoice ? "VIP" : "gratuites"} :\n\n`;
 
     historyDates = data.map((rate, index) => {
       return rate.date;
@@ -88,10 +88,10 @@ const sendDailyPredictions = async (client, user, dateIndex) => {
   const dateSelected = historyDates[dateIndex - 1]
   try {
     const userSteps = Steps[user.data.phoneNumber];
-    const isVip = userSteps.isVipSelected;
-    // Appel à listPredictions avec la date sélectionnée et isVip
+    const vipChoice = userSteps.isVipSelected;
+    // Appel à listPredictions avec la date sélectionnée et vipChoice
     const isVisible = true;
-    const { predictions } = await listPredictions(1, 15, dateSelected, isVisible, isVip);
+    const { predictions } = await listPredictions(1, 15, dateSelected, isVisible, vipChoice);
     if (!predictions || predictions.length === 0) {
       await sendMessageToNumber(client, user.data.phoneNumber, `Aucune prédiction disponible pour cette date.\n\n_Tapez # pour revenir au menu principal_`);
       reset(user);
@@ -190,8 +190,8 @@ const UserCommander = async (user, msg, client) => {
               break;
             case "3":
               Steps[user.data.phoneNumber].currentMenu = "account";
-              const vipStatus = await verifyUserVip(user.data.phoneNumber);
-              await replyToMessage(client, msg, getAccountMenu(user.data, vipStatus));
+              const {isVip,subscription} = await verifyUserVip(user.data.phoneNumber);
+              await replyToMessage(client, msg, getAccountMenu(user.data, isVip,subscription));
               break;
             case "4":
               await replyToMessage(client, msg,
@@ -212,14 +212,14 @@ const UserCommander = async (user, msg, client) => {
           break;
 
         case "dailyPredictions":
-          const vipStatus = await verifyUserVip(user.data.phoneNumber);
-          const isVip = msg.body === "2";
+          const {isVip} = await verifyUserVip(user.data.phoneNumber);
+          const vipChoice = msg.body === "2";
           if (msg.body === "1") {
-            await sendPrediction(client, isVip, user);
+            await sendPrediction(client, vipChoice, user);
           }
           else if (msg.body === "2") {
-            if (vipStatus) {
-              await sendPrediction(client, isVip, user);
+            if (isVip) {
+              await sendPrediction(client, vipChoice, user);
             }
             else { 
               await sendStepMessage(client, user.data.phoneNumber);
@@ -233,9 +233,9 @@ const UserCommander = async (user, msg, client) => {
           break;
         case "oldPredictions":
           if (msg.body === "1" || msg.body === "2") {
-            const isVip = msg.body === "2";
-            Steps[user.data.phoneNumber].isVipSelected = isVip; // Stocker le choix de l'utilisateur
-            await sendPredictionHistory(client, user, isVip);
+            const vipChoice = msg.body === "2";
+            Steps[user.data.phoneNumber].isVipSelected = vipChoice; // Stocker le choix de l'utilisateur
+            await sendPredictionHistory(client, user, vipChoice);
           } else {
             await replyToMessage(client, msg, getInvalidInputMessage(msg.body, "Veuillez choisir un numéro entre 1 et 2"));
           }

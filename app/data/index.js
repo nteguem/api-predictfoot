@@ -35,14 +35,22 @@ const getOldPredictionsMenu = () => {
          `_*Tapez # pour revenir au menu principal*_`;
 };
 
-const getAccountMenu = (user,isVip) => {
-  return `👤 *Mon Compte*\n\n` +
-  `*Pseudo :* ${user.pseudo}\n` +
-  `*Statut :* ${isVip ? "Utilisateur VIP 💎" : "Utilisateur Standard 🆓"}\n`+
-  `📅 *Inscrit le :* ${new Date(user.createdAt).toLocaleDateString()}\n\n` +
-  `_*Tapez # pour revenir au menu principal*_`;
-
-};
+const getAccountMenu = (user, isVip, subscription) => {  
+  let accountInfo = `👤 *Mon Compte*\n\n` +
+    `*Pseudo :* ${user.pseudo}\n` +
+    `*Statut :* ${isVip ? "Utilisateur VIP 💎" : "Utilisateur Standard 🆓"}\n` +
+    `📅 *Inscrit le :* ${new Date(user.createdAt).toLocaleDateString()}\n`;
+ 
+  if (subscription) {
+    accountInfo += `\n*Plan actif :* ${subscription.plan.name} (${subscription.plan.price}€)\n` +
+      `*Début :* ${new Date(subscription.startDate).toLocaleDateString()}\n` +
+      `*Expiration :* ${new Date(subscription.endDate).toLocaleDateString()}\n`;
+  }
+ 
+  accountInfo += `\n_*Tapez # pour revenir au menu principal*_`;
+ 
+  return accountInfo;
+ };
 
 const getInvalidInputMessage = (invalidInput,message) => {
   return `❌ *Option non valide :* "${invalidInput}"\n` +

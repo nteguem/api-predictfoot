@@ -187,7 +187,7 @@ async function publishPrediction(client, date) {
     };
 
     for (const user of users) {
-      const isVip = await verifyUserVip(user.phoneNumber);
+      const {isVip} = await verifyUserVip(user.phoneNumber);
       userGroups[isVip ? 'vip' : 'nonVip'].push(user);
     }
 

@@ -41,20 +41,23 @@ async function verifyUserVip(phoneNumber) {
     const user = await User.findOne({ phoneNumber });
     if (!user) {
       console.log('User not found with phone number:', phoneNumber);
-      return false;
+      return { isVip: false, subscription: null };
     }
 
-    // Trouver un abonnement valide pour cet utilisateur
+    // Trouver un abonnement valide pour cet utilisateur avec le plan populé
     const subscription = await Subscription.findOne({
       user: user._id,
-      endDate: { $gte: new Date() } // Assurez-vous que l'abonnement n'est pas expiré
+      endDate: { $gte: new Date() }
     }).populate('plan');
 
-    // Vérifiez si un abonnement valide a été trouvé
-    return subscription !== null;
+    // Retourner le statut VIP et la souscription complète
+    return {
+      isVip: subscription !== null,
+      subscription: subscription
+    };
   } catch (error) {
     console.log('Error checking VIP status:', error);
-    return false;
+    return { isVip: false, subscription: null };
   }
 }
 

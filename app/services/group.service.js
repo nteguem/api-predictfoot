@@ -4,7 +4,6 @@ const Subscription = require("../models/subscription.model");
 const Plan = require("../models/plan.model");
 const { generateAndDownloadCSV } = require('./generateCsv.service');
 const {defaultGroups} = require("../data/defaultGroups");
-const { verifyUserVip } = require("./subscription.service");
 
 async function createGroup(groupData,client) {
   try {
