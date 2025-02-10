@@ -11,7 +11,7 @@ const pathInvoice = "../templates-pdf/invoice.pdf"
 
 async function handlePaymentMonetbilSuccess(req, res, client) {
   try {
-    const { item_ref, transaction_id, amount, operator_transaction_id } = req.body;
+    const { item_ref, transaction_id, phonenumber, operator_transaction_id } = req.body;
     const dataItemRef = JSON.parse(item_ref);
     const { user, plan } = dataItemRef;
     const currentDate = moment().format('dddd D MMMM YYYY');
@@ -23,6 +23,7 @@ async function handlePaymentMonetbilSuccess(req, res, client) {
        date:currentDate,
        heure:currentTime,
        expire,
+       phonenumber:phonenumber.toString(),
        transaction_id: operator_transaction_id,
        transaction_id: operator_transaction_id,
        prix: plan?.price.toString(),
