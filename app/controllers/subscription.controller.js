@@ -156,8 +156,21 @@ async function listSubscriptions(req, res) {
   }
 }
 
+
+
+const listSub = async (req, res) => {
+  const { limit, offset } = req.query;
+  const response = await SubscriptionService.listSub(limit, offset);
+  if (response.success) {
+    return ResponseService.success(res, { subscriptions: response.subscription, total: response.total });
+  } else {
+    return ResponseService.internalServerError(res, { error: response.message });
+  }
+};
+
 module.exports = {
   isVip,
   listSubscriptions,
-  handlePaymentMonetbilNotification
+  handlePaymentMonetbilNotification,
+  listSub
 };

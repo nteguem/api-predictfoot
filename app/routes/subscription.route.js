@@ -15,8 +15,12 @@ const setupSubscription = (app,client) => {
     subscriptionHandler.isVip(req, res);
   });
 
-  router.get('/list/:phoneNumber', (req, res) => {
+  router.get('/list-user/:phoneNumber', (req, res) => {
     subscriptionHandler.listSubscriptions(req, res);
+  });
+
+  router.get('/list', (req, res) => {
+    subscriptionHandler.listSub(req, res);
   });
 
   router.post('/notification-payment', (req, res) => {

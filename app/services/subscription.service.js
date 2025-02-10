@@ -85,8 +85,32 @@ async function listSubscriptions(phoneNumber, page = 1, limit = 5) {
   }
 }
 
+
+async function listSub(limit = 10, offset = 0) {
+  try {
+    limit = Math.max(1, parseInt(limit, 10));
+    offset = Math.max(0, parseInt(offset, 10));
+
+    const totalCount = await Subscription.countDocuments();
+    const subscription = await Subscription.find()
+      .limit(limit)
+      .skip(offset)
+      .exec();
+
+    return { success: true, total: totalCount, subscription };
+  } catch (error) {
+    await logService.addLog(`${error.message}`, 'listSub', 'error');
+    return {
+      success: false,
+      message: "An error occurred while fetching the transaction list.",
+      error: error.message,
+    };
+  }
+}
+
 module.exports = {
   buySubscription,
   verifyUserVip,
-  listSubscriptions
+  listSubscriptions,
+  listSub
 };
