@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const Wallet = require('./wallet.model');
 const Plan = require('./plan.model');
 const User = require('./user.model');
+const {addLog} = require('../services/log.service')
 
 const transactionSchema = new mongoose.Schema({
     paymentId: { type: String, required: true },
@@ -35,7 +36,6 @@ transactionSchema.post('findOneAndUpdate', async function(doc, next) {
 
         if (doc.status === 'COMPLETED') {
             const { paymentMethod, amount, user, plan } = doc;
-            console.log("doc", doc)
 
             // 🔹 Mise à jour du portefeuille
             let wallet = await Wallet.findOne({ operator: paymentMethod });
@@ -55,7 +55,7 @@ transactionSchema.post('findOneAndUpdate', async function(doc, next) {
             // 🔹 Création de la période de l'abonnement
             const startDate = new Date();
             const endDate = new Date(startDate);
-            endDate.setDate(startDate.getDate() + planDoc.duration); // Utilisation de la durée du plan récupéré
+            endDate.setDate(startDate.getDate() + planDoc.duration);
 
             // 🔹 Création de l'abonnement
             const SubscriptionModel = mongoose.model('Subscription');
@@ -66,14 +66,23 @@ transactionSchema.post('findOneAndUpdate', async function(doc, next) {
                 startDate,
                 endDate
             });
-            console.log("subscription", subscription)
             await subscription.save();
-            console.log(`✅ Abonnement créé pour l'utilisateur ${user} avec le plan ${plan} jours)`);
+        } else {
+            // Pour tous les autres cas, mise à jour simple du statut
+            await Transaction.findByIdAndUpdate(
+                doc._id,
+                { status: doc.status },
+                { new: true }
+            );
         }
 
         next();
     } catch (error) {
-        console.error('❌ Erreur lors de la mise à jour après transaction:', error);
+            await addLog(
+              `${error.message}`,
+              'findOneAndUpdate transaction',
+              'error'
+            );
         next(error);
     }
 });
