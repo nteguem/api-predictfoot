@@ -3,6 +3,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const User = require("../models/user.model");
 const ResponseService = require('./response.service');
+const {addLog} = require('./log.service');
 
 async function save(phoneNumber, contactName, client) {
   try {
@@ -32,15 +33,15 @@ async function save(phoneNumber, contactName, client) {
       }
     }
   } catch (error) {
-    // await logService.addLog(
-    //   `${error.message}`,
-    //   'save',
-    //   'error'
-    // );
-    return {
-      error: error,
-      message: "We're sorry, but an internal server error has occurred. Our team has been alerted and is working to resolve the issue. Please try again later.",
-    }
+    await addLog(
+      `${error.message}`,
+      'save',
+      'error'
+    );
+    // return {
+    //   error: error,
+    //   message: "We're sorry, but an internal server error has occurred. Our team has been alerted and is working to resolve the issue. Please try again later.",
+    // }
   }
 }
 

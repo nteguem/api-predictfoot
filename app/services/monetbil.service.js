@@ -66,9 +66,9 @@ const requestPaiement = async (user ,mobileMoneyPhone, plan) => {
 
   try {
       if (paymentResponse.status === "REQUEST_ACCEPTED") {
-          return `Paiement en cours. Utilisez le code USSD ${paymentResponse.channel_ussd} pour compléter le paiement via ${paymentResponse.channel_name}.`;
+          return `Paiement en cours. Utilisez le code USSD ${paymentResponse.channel_ussd} pour compléter le paiement via ${paymentResponse.channel_name}.\n\n_Tapez # pour revenir au menu principal._`;
       } else {
-          return `Erreur lors de l'initiation du paiement : ${paymentResponse.message}`;
+          return `Erreur lors de l'initiation du paiement : ${paymentResponse.message} \n\n_Tapez * pour revenir en arrière, # pour revenir au menu principal._`;
       }
   }
   catch (error) {

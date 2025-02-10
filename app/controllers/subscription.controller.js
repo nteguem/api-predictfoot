@@ -7,12 +7,11 @@ const { fillPdfFields } = require("../services/fillFormPdf.service");
 const moment = require("moment");
 const pathInvoice = "../templates-pdf/invoice.pdf"
 
-
+const NAVIGATION_SUFFIX = "\n\n_Tapez * pour revenir en arrière, # pour revenir au menu principal._";
 
 async function handlePaymentMonetbilSuccess(req, res, client) {
   try {
-    const { item_ref, transaction_id, phonenumber,phone, operator_transaction_id } = req.body;
-    console.log("req.body",req.body)
+    const { item_ref, transaction_id, phonenumber, phone, operator_transaction_id } = req.body;
     const dataItemRef = JSON.parse(item_ref);
     const { user, plan } = dataItemRef;
     const currentDate = moment().format('dddd D MMMM YYYY');
@@ -36,7 +35,7 @@ async function handlePaymentMonetbilSuccess(req, res, client) {
     };
 
     // Preparation de la facture pdf du client
-    const successMessage = `Félicitations, ${user.pseudo} ! Votre paiement de ${plan.price} pour le forfait ${plan.name} a été validé avec succès. Vous trouverez ci-joint votre facture.`;
+    const successMessage = `Félicitations, ${user.pseudo} ! Votre paiement de ${plan.price} pour le forfait ${plan.name} a été validé avec succès. Vous trouverez ci-joint votre facture.${NAVIGATION_SUFFIX}`;
     const pdfBufferInvoice = await fillPdfFields(pathInvoice, req.body);
     const pdfBase64Invoice = pdfBufferInvoice.toString('base64');
     const pdfNameInvoice = `Invoice_${user.phoneNumber}`;
@@ -49,9 +48,8 @@ async function handlePaymentMonetbilSuccess(req, res, client) {
     ]);
 
     // Notification aux administrateurs
-
     const { users: admins } = await userService.list("admin");
-    const adminMessage = `Un client (${user.pseudo || user.phoneNumber}) a effectué un achat de ${plan.price} pour le forfait ${plan.name}. Veuillez trouver la facture en pièce jointe.`;
+    const adminMessage = `Un client (${user.pseudo || user.phoneNumber}) a effectué un achat de ${plan.price} pour le forfait ${plan.name}. Veuillez trouver la facture en pièce jointe.${NAVIGATION_SUFFIX}`;
 
     for (const admin of admins) {
       await sendMediaToNumber(client, admin.phoneNumber, documentType, pdfBase64Invoice, pdfNameInvoice);
@@ -69,13 +67,13 @@ async function handlePaymentMonetbilSuccess(req, res, client) {
   }
 }
 
-
 async function handlePaymentMonetbilFailure(req, res, client, operatorMessage) {
   try {
     const { item_ref, transaction_id } = req.body;
     const dataItemRef = JSON.parse(item_ref);
     const { user, plan } = dataItemRef;
-    const failureMessage = operatorMessage || `Désolé, Votre paiement  de ${plan.price} pour le forfait ${plan.name} n'a pas abouti en raison d'une erreur lors de la transaction. Veuillez vérifier vos informations de paiement et réessayer. Si le problème persiste, contactez-nous pour de l'aide. Nous nous excusons pour tout désagrément.\n\nPour toute assistance conctater le numéro 697874621.\n\nCordialement,\n\n L'équipe de bigwin`;
+    const failureMessage = (operatorMessage || `Désolé, Votre paiement  de ${plan.price} pour le forfait ${plan.name} n'a pas abouti en raison d'une erreur lors de la transaction. Veuillez vérifier vos informations de paiement et réessayer. Si le problème persiste, contactez-nous pour de l'aide. Nous nous excusons pour tout désagrément.\n\nPour toute assistance conctater le numéro 697874621.\n\nCordialement,\n\n L'équipe de bigwin`) + NAVIGATION_SUFFIX;
+    
     // Préparation des données de mise a jour de la transaction
     const transactionData = {
       status
@@ -101,14 +99,13 @@ async function handlePaymentMonetbilNotification(req, res, client) {
     if (req.body.message.toLowerCase() === 'failed') {
       await handlePaymentMonetbilFailure(req, res, client);
     } else if (req.body.message.toLowerCase() === 'internal_processing_error') {
-      const operatorMessage = `Désolé, Votre paiement mobile a rencontré une erreur due à un problème technique avec le service *${req.body.operator}*. Nous travaillons sur la résolution de ce problème. En attendant, nous vous recommandons d'essayer à nouveau plus tard. Désolé pour le dérangement.\n\nPour toute assistance,conctater le numéro 697874621.\n\n L'équipe  bigwin`;
+      const operatorMessage = `Désolé, Votre paiement mobile a rencontré une erreur due à un problème technique avec le service *${req.body.operator}*. Nous travaillons sur la résolution de ce problème. En attendant, nous vous recommandons d'essayer à nouveau plus tard. Désolé pour le dérangement.\n\nPour toute assistance,conctater le numéro 697874621.\n\n L'équipe  bigwin${NAVIGATION_SUFFIX}`;
       await handlePaymentMonetbilFailure(req, res, client, operatorMessage);
     }
     else if (req.body.message.toLowerCase() === 'expired') {
-      const operatorMessage = `Désolé, votre transaction a expiré car le paiement n'a pas été validé dans les délais impartis. Cela peut être dû à une connexion lente ou à un retard dans la validation. Veuillez réessayer à nouveau pour compléter votre achat.\n\nSi vous avez besoin d'assistance,conctater le numéro 697874621 .\n\nMerci de votre compréhension, L'équipe bigwin.`;
+      const operatorMessage = `Désolé, votre transaction a expiré car le paiement n'a pas été validé dans les délais impartis. Cela peut être dû à une connexion lente ou à un retard dans la validation. Veuillez réessayer à nouveau pour compléter votre achat.\n\nSi vous avez besoin d'assistance,conctater le numéro 697874621 .\n\nMerci de votre compréhension, L'équipe bigwin.${NAVIGATION_SUFFIX}`;
       await handlePaymentMonetbilFailure(req, res, client, operatorMessage);
     }
-
     else if (req.body.message.toLowerCase() === 'successfull' || req.body.message.toLowerCase() === 'successful') {
       await handlePaymentMonetbilSuccess(req, res, client);
     }
