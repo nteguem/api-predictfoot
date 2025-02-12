@@ -46,12 +46,9 @@ const countryConfigs = {
 };
 
 const generatePaymentMessage = (userPhoneNumber) => {
-    // Extraire l'indicatif (les 2 ou 3 premiers chiffres après le +)
-    const countryCode = Object.keys(countryConfigs).find(code => 
-        userPhoneNumber.includes(code)
-    );
-
-    if (countryCode && countryConfigs[countryCode]) {
+    // Extraire l'indicatif (les 3 premiers chiffres après le +)
+    const countryCode = userPhoneNumber.substring(0, 3);
+    if (countryConfigs[countryCode]) {
         return countryConfigs[countryCode].message;
     }
 
