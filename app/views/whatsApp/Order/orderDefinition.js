@@ -1,4 +1,5 @@
 const {getAllPlans } = require('../../../services/plan.service');
+const { parsePhoneNumber } = require('libphonenumber-js');
 
 const countryConfigs = {
     '237': {  // Cameroun
@@ -52,13 +53,24 @@ const generatePaymentMessage = (userPhoneNumber) => {
         return countryConfigs[countryCode].message;
     }
 
-    // Si l'indicatif n'est pas reconnu, lister tous les pays disponibles
-    let message = "Veuillez fournir votre numéro Mobile Money pour le paiement.\n\n";
-    message += "Pays et opérateurs disponibles:\n";
+    // Identifier le pays
+    try {
+        const phoneInfo = parsePhoneNumber(userPhoneNumber);
+        if (phoneInfo && phoneInfo.country) {
+            countryName = new Intl.DisplayNames(['fr'], { type: 'region' }).of(phoneInfo.country);
+        }
+    } catch (error) {
+        // Silently handle error
+    }
+
+    // Message avec invitation à continuer
+    let message = 
+        `Le numéro WhatsApp que vous avez utilisé (${countryName}) n'est pas éligible. Cependant, vous pouvez utiliser un numéro Mobile Money d'un des opérateurs suivants :\n\n`;
+
     Object.values(countryConfigs).forEach(country => {
         message += `- ${country.name} (${country.operators})\n`;
     });
-    message += "\nSi vous avez un moyen de paiement dans l'un de ces pays, entrez simplement votre numéro.";
+    message += "\nEntrez votre numéro Mobile Money d'un de ces operateurs pour continuer.";
     
     return message;
 };
