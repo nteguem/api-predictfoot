@@ -12,7 +12,7 @@ const makePayment = async (user, mobileMoneyPhone, plan) => {
     service: monetbilService,
     user:user?.pseudo.slice(0,30),
     phonenumber: mobileMoneyPhone,
-    amount:1,
+    amount:plan.price,
     item_ref: JSON.stringify({
        plan,
        user
