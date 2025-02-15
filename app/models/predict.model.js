@@ -43,6 +43,19 @@ const PredictSchema = new mongoose.Schema({
   timestamps: true
 });
 
+// Fonction utilitaire pour formater le texte de la notification
+function formatMatchNotification(fixture) {
+  return [
+    `🏆 ${fixture.homeTeam.team_name} vs ${fixture.awayTeam.team_name}`,
+    `⚽ ${fixture.venue || 'Venue TBD'}`,
+    `🕒 ${new Date(fixture.event_date).toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    })}`,
+    '\n👉 Tap to see prediction details!'
+  ].join('\n');
+}
 
 // Middleware pre-save pour gérer les prédictions live
 PredictSchema.pre('save', async function(next) {
@@ -50,14 +63,17 @@ PredictSchema.pre('save', async function(next) {
     this.isVip = true;
     this.isPlatinum = true;
     
-    // Envoyer une notification pour la prédiction live
     try {
       const notificationData = {
-        title: '🔥 New Live Prediction Available!',
-        body: `${this.fixture.homeTeam.team_name} ${this.fixture.homeTeam.logo} vs ${this.fixture.awayTeam.logo} ${this.fixture.awayTeam.team_name}\nClick to see the prediction!`,
+        title: '🔥 LIVE PREDICTION ALERT!',
+        body: formatMatchNotification(this.fixture),
         data: {
           predictId: this._id.toString(),
-          type: 'live_prediction'
+          type: 'live_prediction',
+          homeTeam: this.fixture.homeTeam.team_name,
+          awayTeam: this.fixture.awayTeam.team_name,
+          matchTime: this.fixture.event_date,
+          venue: this.fixture.venue
         }
       };
 
