@@ -68,12 +68,14 @@ PredictSchema.pre('save', async function(next) {
         title: '🔥 LIVE PREDICTION ALERT!',
         body: formatMatchNotification(this.fixture),
         data: {
-          predictId: this._id.toString(),
+          predictId: this._id.toString(), // Conversion explicite en string
           type: 'live_prediction',
           homeTeam: this.fixture.homeTeam.team_name,
           awayTeam: this.fixture.awayTeam.team_name,
-          matchTime: this.fixture.event_date,
-          venue: this.fixture.venue
+          matchTime: this.fixture.event_date.toISOString(), // Conversion de la date en string
+          venue: this.fixture.venue || '',
+          isLive: 'true', // Booléen converti en string
+          status: this.fixture.status || ''
         }
       };
 
