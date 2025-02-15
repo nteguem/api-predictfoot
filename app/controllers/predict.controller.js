@@ -65,14 +65,15 @@ async function listPredictions(req, res) {
     const isVisible = req.query.isVisible || null;     
     const isVip = req.query.isVip || null;
     const isPlatinum = req.query.isPlatinum || null;  
-
+    const isLive = req.query.isLive || null;
     const response = await PredictService.listPredictions(
       page, 
       limit, 
       date, 
       isVisible, 
       isVip, 
-      isPlatinum  
+      isPlatinum ,
+      isLive 
     );     
 
     if (response.success) {         

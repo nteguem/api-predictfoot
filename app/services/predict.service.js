@@ -53,7 +53,8 @@ async function listPredictions(
   date = null, 
   isVisible = null, 
   isVip = null,  
-  isPlatinum = null
+  isPlatinum = null,
+  isLive = null
 ) {
   try {
     let query = {};

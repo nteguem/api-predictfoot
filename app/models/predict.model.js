@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-
+const NotificationService = require('../services/notification.service')
 const PredictSchema = new mongoose.Schema({
   country: {
     logo: { type: String, default: "https://media.api-sports.io/football/teams/24051.png" },
@@ -36,10 +36,38 @@ const PredictSchema = new mongoose.Schema({
   isVisible: { type: Boolean, default: false },
   isWhatapp: { type: Boolean, default: false },
   isVip: { type: Boolean, default: false },
-  isPlatinum: { type: Boolean, default: false }
+  isPlatinum: { type: Boolean, default: false },
+  isLive: { type: Boolean, default: false }
 
 }, {
   timestamps: true
+});
+
+
+// Middleware pre-save pour gérer les prédictions live
+PredictSchema.pre('save', async function(next) {
+  if (this.isLive) {
+    this.isVip = true;
+    this.isPlatinum = true;
+    
+    // Envoyer une notification pour la prédiction live
+    try {
+      const notificationData = {
+        title: '🔥 New Live Prediction Available!',
+        body: `${this.fixture.homeTeam.team_name} ${this.fixture.homeTeam.logo} vs ${this.fixture.awayTeam.logo} ${this.fixture.awayTeam.team_name}\nClick to see the prediction!`,
+        data: {
+          predictId: this._id.toString(),
+          type: 'live_prediction'
+        }
+      };
+
+      await NotificationService.sendGeneralNotification(notificationData);
+    } catch (error) {
+      console.error('Error sending live prediction notification:', error);
+      // On continue même si la notification échoue
+    }
+  }
+  next();
 });
 
 // Fonction pour vérifier et définir isWin en fonction de la prédiction
