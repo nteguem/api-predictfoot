@@ -47,12 +47,6 @@ const PredictSchema = new mongoose.Schema({
 function formatMatchNotification(fixture) {
   return [
     `🏆 ${fixture.homeTeam.team_name} vs ${fixture.awayTeam.team_name}`,
-    `⚽ ${fixture.venue || 'Venue TBD'}`,
-    `🕒 ${new Date(fixture.event_date).toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true
-    })}`,
     '\n👉 Tap to see prediction details!'
   ].join('\n');
 }
