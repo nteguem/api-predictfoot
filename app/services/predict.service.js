@@ -106,6 +106,10 @@ async function listPredictions(
       query.isPlatinum = isPlatinum;
     }
 
+    if (isLive !== null) {
+      query.isLive = isLive;
+    }
+
     // Logique de date identique à précédemment
     if (date) {
       if (!moment(date).isValid()) {
