@@ -20,12 +20,74 @@ async function createPrediction(predictionData, client) {
     // 3. Si c'est un live et que WhatsApp est activé, envoyer le message
     if (savedPrediction.isLive ) {
       try {
-        const messageText = [
-          `🔴 PRÉDICTION EN DIRECT (_match en cours_)\n\n`,
-          `*${savedPrediction.fixture.homeTeam.team_name} 🆚 ${savedPrediction.fixture.awayTeam.team_name}*`,
-          `\n Prédiction : *${savedPrediction.prediction}*`,
-          '\n⚡️ Placez votre pari maintenant!'
-        ].join('\n');
+        async function createPrediction(predictionData, client) {
+          try {
+            // 1. Créer et sauvegarder la prédiction
+            const newPrediction = new Predict(predictionData);
+            const savedPrediction = await newPrediction.save();
+        
+            // 2. Si c'est un live et WhatsApp est activé
+            if (savedPrediction.isLive && savedPrediction.isWhatapp) {
+              // Préparer le message
+              const messageText = [
+                `🔴 PRÉDICTION EN DIRECT (_match en cours_)\n\n`,
+                `*${savedPrediction.fixture.homeTeam.team_name} 🆚 ${savedPrediction.fixture.awayTeam.team_name}*`,
+                `\n Prédiction : *${savedPrediction.prediction}*`,
+                '\n⚡️ Placez votre pari maintenant!'
+              ].join('\n');
+        
+              // Récupérer les utilisateurs VIP par lots
+              const batchSize = 50; // Nombre d'utilisateurs traités en même temps
+              const users = await User.find({});
+              const vipUsers = [];
+        
+              // Filtrer les utilisateurs VIP
+              for (const user of users) {
+                const {isVip} = await verifyUserVip(user.phoneNumber);
+                if (isVip) {
+                  vipUsers.push(user);
+                }
+              }
+        
+              // Traiter les utilisateurs par lots
+              for (let i = 0; i < vipUsers.length; i += batchSize) {
+                const batch = vipUsers.slice(i, i + batchSize);
+                
+                // Envoi en parallèle pour le lot avec un délai entre chaque message
+                await Promise.all(
+                  batch.map(async (user, index) => {
+                    try {
+                      // Délai progressif basé sur l'index dans le lot
+                      const delayTime = index * 1000; // 1 seconde entre chaque message du lot
+                      await new Promise(resolve => setTimeout(resolve, delayTime));
+                      
+                      await sendMessageToNumber(client, user.phoneNumber, messageText);
+                    } catch (error) {
+                      console.error(`Erreur d'envoi à ${user.phoneNumber}:`, error);
+                    }
+                  })
+                );
+        
+                // Délai entre les lots pour éviter la surcharge
+                if (i + batchSize < vipUsers.length) {
+                  await new Promise(resolve => setTimeout(resolve, 5000)); // 5 secondes entre les lots
+                }
+              }
+        
+              console.log(`Messages envoyés à ${vipUsers.length} utilisateurs VIP`);
+            }
+        
+            return { 
+              success: true, 
+              message: 'Prediction created successfully', 
+              prediction: savedPrediction 
+            };
+        
+          } catch (error) {
+            console.log('Error creating prediction:', error);
+            return { success: false, error: error.message };
+          }
+        }
 
         const users = await User.find({});
         for (const user of users) {
