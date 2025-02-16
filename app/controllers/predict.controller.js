@@ -5,7 +5,6 @@ async function createPrediction(req, res,client) {
   const predictionData = req.body;
   try {
     const response = await PredictService.createPrediction(predictionData,client);
-    console.log("response",response);
     if (response.success) {
       return ResponseService.created(res, { message: response.message, prediction: response.prediction });
     } else {

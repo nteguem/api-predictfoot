@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 const NotificationService = require('../services/notification.service');
-const WhatsAppService = require('../services/whatsapp.service');
 
 const PredictSchema = new mongoose.Schema({
   country: {
@@ -43,7 +42,6 @@ const PredictSchema = new mongoose.Schema({
   expiresAt: { type: Date } 
 }, {
   timestamps: true,
-  strict: false 
 });
 
 // Fonction pour vérifier et définir isWin en fonction de la prédiction
@@ -178,10 +176,6 @@ function formatMatchNotification(fixture) {
   ].join('\n');
 }
 
-// Fonction pour définir le client WhatsApp
-PredictSchema.statics.setWhatsappClient = function(client) {
-  tempWhatsappClient = client;
-};
 
 // Middleware pre-save modifié
 PredictSchema.pre('save', async function(next) {
@@ -208,40 +202,6 @@ PredictSchema.pre('save', async function(next) {
       };
 
       await NotificationService.sendGeneralNotification(notificationData);
-
-      // Gestion de WhatsApp
-      if ( this._whatsappClient) {
-
-        // Formatage du message WhatsApp directement
-        const messageText = [
-          `🎯 *NOUVELLE PRÉDICTION* 🔴 LIVE\n`,
-          `🏆 ${this.championship.name}`,
-          `⏰ En cours`,
-          `\n${this.fixture.homeTeam.team_name} 🆚 ${this.fixture.awayTeam.team_name}`,
-          `📍 ${this.fixture.venue || 'Stade à confirmer'}`,
-          `\n💫 Notre Prédiction: ${this.prediction}`,
-          '\n⚡️ Ne tardez pas! Les cotes peuvent baisser rapidement!',
-          '\n⚠️ PRÉDICTION LIVE: Placez votre pari maintenant!',
-          '\nBonne chance à tous! 🍀'
-        ].join('\n');
-
-        try {
-          const User = mongoose.model('User');
-          const { verifyUserVip } = require('../services/subscription.service');
-          const { sendMessageToNumber } = require('../views/whatsApp/whatsappMessaging');
-          const users = await User.find({});
-          
-          for (const user of users) {
-            const {isVip} = await verifyUserVip(user.phoneNumber);
-            if (isVip) {
-              await sendMessageToNumber(this._whatsappClient, user.phoneNumber, messageText);
-              await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1000));
-            }
-          }
-        } catch (whatsappError) {
-          console.error('Error sending WhatsApp messages:', whatsappError);
-        }
-      }
     } catch (error) {
       console.error('Error sending notifications:', error);
     }

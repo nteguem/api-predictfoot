@@ -2,20 +2,55 @@ const Predict = require('../models/predict.model');
 const {loadFixtureData,findFixtureByTeamId} = require("./fixture.service");
 const moment = require('moment');
 const { getRandomDelay } = require("../helpers/utils")
-const {sendMediaToNumber} = require('../views/whatsApp/whatsappMessaging');
+const {sendMediaToNumber,sendMessageToNumber} = require('../views/whatsApp/whatsappMessaging');
 const {generateImage} = require('./generateImagePredict.service');
 const User = require('../models/user.model');
 const { verifyUserVip } = require('./subscription.service');
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-async function createPrediction(predictionData,client) {
+
+async function createPrediction(predictionData, client) {
   try {
-    const newPrediction = new Predict({
-      ...predictionData,
-      _whatsappClient: client // Le préfixe _ indique que c'est une donnée temporaire
-    });
-    await newPrediction.save();
-    return { success: true, message: 'Prediction created successfully', prediction: newPrediction };
+    // 1. Créer la prédiction sans le client WhatsApp
+    const newPrediction = new Predict(predictionData);
+    
+    // 2. Sauvegarder la prédiction
+    const savedPrediction = await newPrediction.save();
+    
+    // 3. Si c'est un live et que WhatsApp est activé, envoyer le message
+    if (savedPrediction.isLive ) {
+      try {
+        const messageText = [
+          `🎯 *NOUVELLE PRÉDICTION* 🔴 LIVE\n`,
+          `🏆 ${savedPrediction.championship.name}`,
+          `⏰ En cours`,
+          `\n${savedPrediction.fixture.homeTeam.team_name} 🆚 ${savedPrediction.fixture.awayTeam.team_name}`,
+          `📍 ${savedPrediction.fixture.venue || 'Stade à confirmer'}`,
+          `\n💫 Notre Prédiction: ${savedPrediction.prediction}`,
+          '\n⚡️ Ne tardez pas! Les cotes peuvent baisser rapidement!',
+          '\n⚠️ PRÉDICTION LIVE: Placez votre pari maintenant!',
+          '\nBonne chance à tous! 🍀'
+        ].join('\n');
+
+        const users = await User.find({});
+        for (const user of users) {
+          const {isVip} = await verifyUserVip(user.phoneNumber);
+          if (isVip) {
+            await sendMessageToNumber(client, user.phoneNumber, messageText);
+            await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1000));
+          }
+        }
+      } catch (whatsappError) {
+        console.error('Error sending WhatsApp messages:', whatsappError);
+        // On continue même si l'envoi WhatsApp échoue
+      }
+    }
+
+    return { 
+      success: true, 
+      message: 'Prediction created successfully', 
+      prediction: savedPrediction 
+    };
   } catch (error) {
     console.log('Error creating prediction:', error);
     return { success: false, error: error.message };
