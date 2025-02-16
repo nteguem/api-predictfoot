@@ -1,10 +1,10 @@
 const PredictService = require('../services/predict.service');
 const ResponseService = require('../services/response.service');
 
-async function createPrediction(req, res) {
+async function createPrediction(req, res,client) {
   const predictionData = req.body;
   try {
-    const response = await PredictService.createPrediction(predictionData);
+    const response = await PredictService.createPrediction(predictionData,client);
     if (response.success) {
       return ResponseService.created(res, { message: response.message, prediction: response.prediction });
     } else {

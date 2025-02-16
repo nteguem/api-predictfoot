@@ -1,5 +1,7 @@
 const mongoose = require('mongoose');
-const NotificationService = require('../services/notification.service')
+const NotificationService = require('../services/notification.service');
+const { publishPredictionText } = require('../services/predict.service');
+
 const PredictSchema = new mongoose.Schema({
   country: {
     logo: { type: String, default: "https://media.api-sports.io/football/teams/24051.png" },
@@ -29,165 +31,80 @@ const PredictSchema = new mongoose.Schema({
       fulltime: { type: String, default: null }
     }
   },
-  iswin: { type: Boolean, default: false }, 
+  iswin: { type: Boolean, default: false },
   prediction: { type: String, required: true },
   coast: { type: Number, required: true },
-  author: { type: String},
+  author: { type: String },
   isVisible: { type: Boolean, default: false },
   isWhatapp: { type: Boolean, default: false },
   isVip: { type: Boolean, default: false },
   isPlatinum: { type: Boolean, default: false },
-  isLive: { type: Boolean, default: false }
-
+  isLive: { type: Boolean, default: false },
+  expiresAt: { type: Date } 
 }, {
-  timestamps: true
+  timestamps: true,
+  strict: false 
 });
 
-// Fonction utilitaire pour formater le texte de la notification
-function formatMatchNotification(fixture) {
-  return [
-    `🏆 ${fixture.homeTeam.team_name} vs ${fixture.awayTeam.team_name}`,
-    '\n👉 Tap to see prediction details!'
-  ].join('\n');
+// Création de l'index TTL sur le champ expiresAt
+PredictSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+
+// Fonction pour calculer la date d'expiration (match time + durée estimée + 15 minutes)
+function calculateExpirationDate(matchDate) {
+  const MATCH_DURATION = 90 * 60 * 1000; // 90 minutes en millisecondes
+  const EXTRA_TIME = 15 * 60 * 1000; // 15 minutes supplémentaires en millisecondes
+  
+  return new Date(matchDate.getTime() + MATCH_DURATION + EXTRA_TIME);
 }
 
-// Middleware pre-save pour gérer les prédictions live
+// Middleware pre-save modifié
 PredictSchema.pre('save', async function(next) {
   if (this.isLive) {
     this.isVip = true;
     this.isPlatinum = true;
+    
+    // Définir la date d'expiration pour les prédictions live
+    this.expiresAt = calculateExpirationDate(this.fixture.event_date);
     
     try {
       const notificationData = {
         title: '🔥 LIVE PREDICTION ALERT!',
         body: formatMatchNotification(this.fixture),
         data: {
-          predictId: this._id.toString(), // Conversion explicite en string
+          predictId: this._id.toString(),
           type: 'live_prediction',
           homeTeam: this.fixture.homeTeam.team_name,
           awayTeam: this.fixture.awayTeam.team_name,
-          matchTime: this.fixture.event_date.toISOString(), // Conversion de la date en string
+          matchTime: this.fixture.event_date.toISOString(),
           venue: this.fixture.venue || '',
-          isLive: 'true', // Booléen converti en string
+          isLive: 'true',
           status: this.fixture.status || ''
         }
       };
 
       await NotificationService.sendGeneralNotification(notificationData);
+      await publishPredictionText(this, this._whatsappClient);
+      delete this._whatsappClient;
     } catch (error) {
       console.error('Error sending live prediction notification:', error);
-      // On continue même si la notification échoue
     }
   }
   next();
 });
 
-// Fonction pour vérifier et définir isWin en fonction de la prédiction
-PredictSchema.post('findOneAndUpdate', async function(doc) {
-  const { fixture,prediction } = doc; // Obtenir le document mis à jour
-  const { score } = fixture || {}; // Accéder à score et prediction
-  if (!score || !score.fulltime) {
-    return; // Si fulltime n'est pas défini, ne rien faire
-  }
-
-  const { halftime, fulltime } = score;
-  const [halftimeHome, halftimeAway] = halftime ? halftime.split('-').map(Number) : [0, 0];
-  const [fulltimeHome, fulltimeAway] = fulltime ? fulltime.split('-').map(Number) : [0, 0];
-  // Conditions basées sur les valeurs de buts
-  switch (prediction) {
-    case 'Home Win':
-      iswin = fulltimeHome > fulltimeAway;
-      break;
-    case 'Away Win':
-      iswin = fulltimeHome < fulltimeAway;
-      break;
-    case 'Draw':
-      iswin = fulltimeHome === fulltimeAway;
-      break;
-    case 'Double Chance Home':
-      iswin = fulltimeHome >= fulltimeAway;
-      break;
-    case 'Double Chance Away':
-      iswin = fulltimeHome <= fulltimeAway;
-      break;
-    case 'Two Teams Goals':
-      iswin = halftimeHome > 0 && halftimeAway > 0 && fulltimeHome > 0 && fulltimeAway > 0;
-      break;
-    case 'Two Teams Don\'t Goals':
-      iswin = (halftimeHome === 0 || halftimeAway === 0) && (fulltimeHome === 0 || fulltimeAway === 0);
-      break;
-    case 'Over 0.5':
-      iswin = fulltimeHome + fulltimeAway > 0;
-      break;
-    case 'Under 0.5':
-      iswin = fulltimeHome + fulltimeAway === 0;
-      break;
-    case 'Over 1.5':
-      iswin = fulltimeHome + fulltimeAway > 1;
-      break;
-    case 'Under 1.5':
-      iswin = fulltimeHome + fulltimeAway <= 1;
-      break;
-    case 'Over 2.5':
-      iswin = fulltimeHome + fulltimeAway > 2;
-      break;
-    case 'Under 2.5':
-      iswin = fulltimeHome + fulltimeAway <= 2;
-      break;
-    case 'Over 3.5':
-      iswin = fulltimeHome + fulltimeAway > 3;
-      break;
-    case 'Under 3.5':
-      iswin = fulltimeHome + fulltimeAway <= 3;
-      break;
-    case 'Home Team Scores':
-      iswin = fulltimeHome > 0;
-      break;
-    case 'Away Team Scores':
-      iswin = fulltimeAway > 0;
-      break;
-    case 'Home Team Doesn\'t Score':
-      iswin = fulltimeHome === 0;
-      break;
-    case 'Away Team Doesn\'t Score':
-      iswin = fulltimeAway === 0;
-      break;
-    case 'Clean Sheet Home Team':
-      iswin = fulltimeHome === 0 && fulltimeAway > 0;
-      break;
-    case 'Clean Sheet Away Team':
-      iswin = fulltimeAway === 0 && fulltimeHome > 0;
-      break;
-    case 'First Half Goals Over 0.5':
-      iswin = halftimeHome + halftimeAway > 0;
-      break;
-    case 'First Half Goals Under 0.5':
-      iswin = halftimeHome + halftimeAway === 0;
-      break;
-    case 'First Half Goals Over 1.5':
-      iswin = halftimeHome + halftimeAway > 1;
-      break;
-    case 'First Half Goals Under 1.5':
-      iswin = halftimeHome + halftimeAway <= 1;
-      break;
-    case 'Second Half Goals Over 0.5':
-      iswin = fulltimeHome + fulltimeAway - (halftimeHome + halftimeAway) > 0;
-      break;
-    case 'Second Half Goals Under 0.5':
-      iswin = fulltimeHome + fulltimeAway - (halftimeHome + halftimeAway) === 0;
-      break;
-    case 'Second Half Goals Over 1.5':
-      iswin = fulltimeHome + fulltimeAway - (halftimeHome + halftimeAway) > 1;
-      break;
-    case 'Second Half Goals Under 1.5':
-      iswin = fulltimeHome + fulltimeAway - (halftimeHome + halftimeAway) <= 1;
-      break;
-    // Ajoute d'autres cas ici...
-    default:
-      iswin = false;
-  }
-  await doc.updateOne({ iswin });
-});
+// Fonction utilitaire pour le formatage des notifications
+function formatMatchNotification(fixture) {
+  return [
+    `🏆 ${fixture.homeTeam.team_name} vs ${fixture.awayTeam.team_name}`,
+    `⚽ ${fixture.venue || 'Venue TBD'}`,
+    `🕒 ${new Date(fixture.event_date).toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    })}`,
+    '\n👉 Tap to see prediction details!'
+  ].join('\n');
+}
 
 const Predict = mongoose.model('Predict', PredictSchema);
 
