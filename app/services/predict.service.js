@@ -21,15 +21,10 @@ async function createPrediction(predictionData, client) {
     if (savedPrediction.isLive ) {
       try {
         const messageText = [
-          `🎯 *NOUVELLE PRÉDICTION* 🔴 LIVE\n`,
-          `🏆 ${savedPrediction.championship.name}`,
-          `⏰ En cours`,
-          `\n${savedPrediction.fixture.homeTeam.team_name} 🆚 ${savedPrediction.fixture.awayTeam.team_name}`,
-          `📍 ${savedPrediction.fixture.venue || 'Stade à confirmer'}`,
-          `\n💫 Notre Prédiction: ${savedPrediction.prediction}`,
-          '\n⚡️ Ne tardez pas! Les cotes peuvent baisser rapidement!',
-          '\n⚠️ PRÉDICTION LIVE: Placez votre pari maintenant!',
-          '\nBonne chance à tous! 🍀'
+          `🔴 *PRÉDICTION LIVE*`,
+          `*${savedPrediction.fixture.homeTeam.team_name} 🆚 ${savedPrediction.fixture.awayTeam.team_name}*`,
+          `\n Prédiction : *${savedPrediction.prediction}*`,
+          '\n⚡️ Placez votre pari maintenant!'
         ].join('\n');
 
         const users = await User.find({});
