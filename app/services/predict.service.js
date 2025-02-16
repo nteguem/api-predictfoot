@@ -10,7 +10,7 @@ const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 async function createPrediction(predictionData,client) {
   try {
-    const newPrediction = new Predict({strict: false 
+    const newPrediction = new Predict({
       ...predictionData,
       _whatsappClient: client // Le préfixe _ indique que c'est une donnée temporaire
     });
@@ -330,51 +330,43 @@ async function formatPredictionText(prediction) {
 
 async function publishPredictionText(prediction, client) {
   try {
-    // Formatter le message
     const messageText = await formatPredictionText(prediction);
 
     // Récupérer tous les utilisateurs
     const users = await User.find({});
-    const userGroups = {
-      vip: [],
-      nonVip: []
-    };
+    const vipUsers = [];
 
-    // Répartir les utilisateurs selon leur statut VIP
+    // Ne garder que les utilisateurs VIP
     for (const user of users) {
       const {isVip} = await verifyUserVip(user.phoneNumber);
-      userGroups[isVip ? 'vip' : 'nonVip'].push(user);
+      if (isVip) {
+        vipUsers.push(user);
+      }
     }
 
-    // Déterminer quels utilisateurs doivent recevoir la prédiction
-    let targetUsers = [];
-    if (prediction.isPlatinum || prediction.isVip) {
-      // Seulement les utilisateurs VIP reçoivent les prédictions VIP/Platinum
-      targetUsers = userGroups.vip;
-    } else {
-      // Tous les utilisateurs reçoivent les prédictions normales
-      targetUsers = [...userGroups.vip, ...userGroups.nonVip];
-    }
+    let successCount = 0;
+    let errorCount = 0;
 
-    // Envoyer le message à chaque utilisateur
-    for (const user of targetUsers) {
+    // Envoyer le message uniquement aux VIP
+    for (const user of vipUsers) {
       try {
         await sendMessageToNumber(client, user.phoneNumber, messageText);
-        // Délai aléatoire entre chaque envoi pour éviter les blocages
+        successCount++;
         await delay(getRandomDelay(1000, 2000));
       } catch (error) {
-        console.error(`Error sending message to ${user.phoneNumber}:`, error);
-        continue; // Continuer avec le prochain utilisateur même si erreur
+        console.error(`Erreur d'envoi à ${user.phoneNumber}:`, error);
+        errorCount++;
+        continue;
       }
     }
 
     return {
       success: true,
-      message: `Prediction sent to ${targetUsers.length} users`
+      message: `Prédiction envoyée à ${successCount} utilisateurs VIP (${errorCount} échecs)`
     };
 
   } catch (error) {
-    console.error('Error publishing prediction text:', error);
+    console.error('Erreur lors de la publication de la prédiction:', error);
     return {
       success: false,
       error: error.message
