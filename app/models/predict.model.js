@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const NotificationService = require('../services/notification.service');
-const { publishPredictionText } = require('../services/predict.service');
+const WhatsAppService = require('../services/whatsapp.service');
 
 const PredictSchema = new mongoose.Schema({
   country: {
@@ -211,11 +211,9 @@ PredictSchema.pre('save', async function(next) {
 
       await NotificationService.sendGeneralNotification(notificationData);
 
-      // Envoi WhatsApp si activé et client disponible
-      if (this.isWhatapp && tempWhatsappClient) {
+      if (this._whatsappClient) {
         const predictionData = this.toObject();
-        await PredictService.publishPredictionText(predictionData, tempWhatsappClient);
-        tempWhatsappClient = null; // Nettoyage après utilisation
+        await WhatsAppService.sendPredictionToVipUsers(predictionData, this._whatsappClient);
       }
     } catch (error) {
       console.error('Error sending live prediction notification:', error);
