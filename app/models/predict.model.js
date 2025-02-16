@@ -1,4 +1,6 @@
 const mongoose = require('mongoose');
+const NotificationService = require('../services/notification.service');
+const { publishPredictionText } = require('../services/predict.service');
 
 const PredictSchema = new mongoose.Schema({
   country: {
