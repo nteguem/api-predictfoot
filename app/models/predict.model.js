@@ -155,29 +155,47 @@ PredictSchema.post('findOneAndUpdate', async function(doc) {
 
 
 
-// Création de l'index TTL sur le champ expiresAt
+// Création de l'index TTL
 PredictSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
-// Fonction pour calculer la date d'expiration (match time + durée estimée + 15 minutes)
 function calculateExpirationDate(matchDate) {
-  const MATCH_DURATION = 90 * 60 * 1000; // 90 minutes en millisecondes
-  const EXTRA_TIME = 15 * 60 * 1000; // 15 minutes supplémentaires en millisecondes
-  
+  const MATCH_DURATION = 90 * 60 * 1000;
+  const EXTRA_TIME = 15 * 60 * 1000;
   return new Date(matchDate.getTime() + MATCH_DURATION + EXTRA_TIME);
 }
+
+function formatMatchNotification(fixture) {
+  return [
+    `🔴 LIVE PREDICTION!`,
+    `\n🏆 ${fixture.homeTeam.team_name} vs ${fixture.awayTeam.team_name}`,
+    `📍 ${fixture.venue || 'Venue TBD'}`,
+    `⏰ ${new Date(fixture.event_date).toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    })}`,
+    '\n👉 Tap to see prediction details!'
+  ].join('\n');
+}
+
+// Variable pour stocker temporairement le client WhatsApp
+let tempWhatsappClient = null;
+
+// Fonction pour définir le client WhatsApp
+PredictSchema.statics.setWhatsappClient = function(client) {
+  tempWhatsappClient = client;
+};
 
 // Middleware pre-save modifié
 PredictSchema.pre('save', async function(next) {
   if (this.isLive) {
     this.isVip = true;
     this.isPlatinum = true;
-    
-    // Définir la date d'expiration pour les prédictions live
     this.expiresAt = calculateExpirationDate(this.fixture.event_date);
     
     try {
       const notificationData = {
-        title: '🔴 LIVE PREDICTION ALERT!',
+        title: '🔴 LIVE PREDICTION!',
         body: formatMatchNotification(this.fixture),
         data: {
           predictId: this._id.toString(),
@@ -192,28 +210,19 @@ PredictSchema.pre('save', async function(next) {
       };
 
       await NotificationService.sendGeneralNotification(notificationData);
-      await publishPredictionText(this, this._whatsappClient);
-      delete this._whatsappClient;
+
+      // Envoi WhatsApp si activé et client disponible
+      if (this.isWhatapp && tempWhatsappClient) {
+        const predictionData = this.toObject();
+        await PredictService.publishPredictionText(predictionData, tempWhatsappClient);
+        tempWhatsappClient = null; // Nettoyage après utilisation
+      }
     } catch (error) {
       console.error('Error sending live prediction notification:', error);
     }
   }
   next();
 });
-
-// Fonction utilitaire pour le formatage des notifications
-function formatMatchNotification(fixture) {
-  return [
-    `🔥 ${fixture.homeTeam.team_name} vs ${fixture.awayTeam.team_name}`,
-    `⚽ ${fixture.venue || 'Venue TBD'}`,
-    `🕒 ${new Date(fixture.event_date).toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true
-    })}`,
-    '\n👉 Tap to see prediction details!'
-  ].join('\n');
-}
 
 const Predict = mongoose.model('Predict', PredictSchema);
 
