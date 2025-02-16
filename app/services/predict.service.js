@@ -328,51 +328,6 @@ async function formatPredictionText(prediction) {
   return message;
 }
 
-async function publishPredictionText(prediction, client) {
-  try {
-    const messageText = await formatPredictionText(prediction);
-
-    // Récupérer tous les utilisateurs
-    const users = await User.find({});
-    const vipUsers = [];
-
-    // Ne garder que les utilisateurs VIP
-    for (const user of users) {
-      const {isVip} = await verifyUserVip(user.phoneNumber);
-      if (isVip) {
-        vipUsers.push(user);
-      }
-    }
-
-    let successCount = 0;
-    let errorCount = 0;
-
-    // Envoyer le message uniquement aux VIP
-    for (const user of vipUsers) {
-      try {
-        await sendMessageToNumber(client, user.phoneNumber, messageText);
-        successCount++;
-        await delay(getRandomDelay(1000, 2000));
-      } catch (error) {
-        console.error(`Erreur d'envoi à ${user.phoneNumber}:`, error);
-        errorCount++;
-        continue;
-      }
-    }
-
-    return {
-      success: true,
-      message: `Prédiction envoyée à ${successCount} utilisateurs VIP (${errorCount} échecs)`
-    };
-
-  } catch (error) {
-    console.error('Erreur lors de la publication de la prédiction:', error);
-    return {
-      success: false,
-      error: error.message
-    };
-  }
-}
 
 module.exports = {
   createPrediction,
@@ -383,5 +338,4 @@ module.exports = {
   publishPrediction,
   listLastTenDaysPredictions,
   oldTips,
-  publishPredictionText
 };
