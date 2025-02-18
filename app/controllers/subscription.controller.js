@@ -69,7 +69,7 @@ async function handlePaymentMonetbilSuccess(req, res, client) {
 
 async function handlePaymentMonetbilFailure(req, res, client, operatorMessage) {
   try {
-    const { item_ref, transaction_id } = req.body;
+    const { item_ref, transaction_id,status } = req.body;
     const dataItemRef = JSON.parse(item_ref);
     const { user, plan } = dataItemRef;
     const failureMessage = (operatorMessage || `Désolé, Votre paiement  de ${plan.price} pour le forfait ${plan.name} n'a pas abouti en raison d'une erreur lors de la transaction. Veuillez vérifier vos informations de paiement et réessayer. Si le problème persiste, contactez-nous pour de l'aide. Nous nous excusons pour tout désagrément.\n\nPour toute assistance conctater le numéro 697874621.\n\nCordialement,\n\n L'équipe de bigwin`) + NAVIGATION_SUFFIX;

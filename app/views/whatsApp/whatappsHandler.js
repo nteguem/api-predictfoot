@@ -63,7 +63,7 @@ const handleIncomingMessages = (client) => {
       } else if (response?.data?.role === "admin") {
         await AdminCommander(response, msg, client);
       } else { 
-        msg.reply(response.message);
+        msg.reply(response?.message);
       }
     } catch (error) {
       await logService.addLog(
