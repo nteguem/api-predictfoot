@@ -169,7 +169,6 @@ if (msg.body.startsWith("commande-")) {
           "_Tapez # pour revenir au menu principal_"
         );
         reset(user);
-        await replyToMessage(client, msg, getMainMenu(false, user.data.pseudo));
         return;
       }
 
