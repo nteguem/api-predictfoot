@@ -157,7 +157,17 @@ const UserCommander = async (user, msg, client) => {
         const encodedData = msg.body.replace("commande-", "");
         const decodedData = Buffer.from(encodedData, 'base64').toString('utf8');
         const orderData = JSON.parse(decodedData);
-
+  // Vérifier si orderData a la bonne structure
+    if (!orderData || !orderData.plan || !orderData.mobileMoneyPhone) {
+      await sendMessageToNumber(client, user.data.phoneNumber,
+        "❌ Commande invalide.\n\n" +
+        "Veuillez refaire la commande dans votre application et renvoyer le code tel que envoyé à partir de l'application.\n\n" +
+        "_Tapez # pour revenir au menu principal_"
+      );
+      reset(user);
+      await replyToMessage(client, msg, getMainMenu(false, user.data.pseudo));
+      return;
+    }
         const welcomeMessage =
           `👋 Salut ${user.data.pseudo} !\n` +
           `✨ *Bienvenue sur BIGWIN* – Votre assistant de prédictions football !\n` +
