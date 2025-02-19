@@ -12,11 +12,14 @@ const { listPredictions, listLastTenDaysPredictions } = require("../../services/
 const { generateImage } = require("../../services/generateImagePredict.service");
 const { verifyUserVip, listSubscriptions } = require("../../services/subscription.service");
 const { orderCommander, sendStepMessage } = require("./Order");
-const moment = require("moment");
 const { requestPaiement } = require('../../services/monetbil.service');
+const moment = require("moment");
 moment.locale('fr');
+
+// Global state for tracking user steps
 const Steps = {};
 
+// Utility functions
 const reset = (user) => {
   Steps[user.data.phoneNumber] = {
     currentMenu: 'mainMenu',
@@ -26,6 +29,7 @@ const reset = (user) => {
 
 const getTodaysDate = () => new Date().toISOString().split('T')[0];
 
+// Prediction handling functions
 const sendPrediction = async (client, vipChoice, user) => {
   try {
     const isVisible = true;
@@ -78,19 +82,17 @@ const sendPredictionHistory = async (client, user, vipChoice) => {
     historyResponse += "\n_Tapez # pour revenir au menu principal ou sélectionnez une date pour voir les prédictions de cette journée._";
     await sendMessageToNumber(client, user.data.phoneNumber, historyResponse);
     Steps[user.data.phoneNumber].currentMenu = "SelectDateForPredictions";
-    Steps[user.data.phoneNumber].predictions = data; // Stocke les prédictions pour la sélection ultérieure
-
+    Steps[user.data.phoneNumber].predictions = data;
   } catch (error) {
     console.log('Error sending prediction history:', error);
   }
 };
 
 const sendDailyPredictions = async (client, user, dateIndex) => {
-  const dateSelected = historyDates[dateIndex - 1]
+  const dateSelected = historyDates[dateIndex - 1];
   try {
     const userSteps = Steps[user.data.phoneNumber];
     const vipChoice = userSteps.isVipSelected;
-    // Appel à listPredictions avec la date sélectionnée et vipChoice
     const isVisible = true;
     const { predictions } = await listPredictions(1, 15, dateSelected, isVisible, vipChoice);
     if (!predictions || predictions.length === 0) {
@@ -101,18 +103,16 @@ const sendDailyPredictions = async (client, user, dateIndex) => {
 
     let dailyPredictionsResponse = `📅 *${moment(dateSelected).format("dddd DD MMMM YYYY")}* :\n\n`;
 
-    predictions.forEach((prediction, index) => {
+    predictions.forEach((prediction) => {
       const { prediction: predictionType, iswin } = prediction;
-      const { homeTeam, awayTeam, score } = prediction.fixture
+      const { homeTeam, awayTeam, score } = prediction.fixture;
       const outcome = iswin ? "✅" : "❌";
       const event = `${homeTeam.team_name} vs ${awayTeam.team_name} • *${predictionType}* • ${score.fulltime} ${outcome}`;
       dailyPredictionsResponse += `▶️ ${event}\n`;
     });
 
-    dailyPredictionsResponse += "\n_Tapez * pour revenir en arrière ,# pour revenir au menu principal._";
+    dailyPredictionsResponse += "\n_Tapez * pour revenir en arrière ,# pour revenir au menu principal._";
     await sendMessageToNumber(client, user.data.phoneNumber, dailyPredictionsResponse);
-    // reset(user);
-
   } catch (error) {
     console.error('Error sending daily predictions:', error);
     await sendMessageToNumber(client, user.data.phoneNumber, `Erreur lors de l'envoi des prédictions journalières.\n\n_Tapez # pour revenir au menu principal_`);
@@ -129,6 +129,7 @@ const sendPredictionHistoryMenu = async (client, user) => {
   }
 };
 
+// Main command handler
 const UserCommander = async (user, msg, client) => {
   try {
     if (!msg.isGroup && !msg.isStatus) {
@@ -137,7 +138,7 @@ const UserCommander = async (user, msg, client) => {
         reset(user);
       }
 
-      // Handle bot status
+      // Handle bot status off/on
       if (user.data.botStatus === "off") {
         if (msg.body.toLowerCase() === "on") {
           const updateResult = await userService.update(user.data.phoneNumber, { botStatus: "on" });
@@ -148,6 +149,36 @@ const UserCommander = async (user, msg, client) => {
             await replyToMessage(client, msg, getMainMenu(Steps[user.data.phoneNumber].isFirstContact, user.data.pseudo));
           }
         }
+        return;
+      }
+
+      // Command from app
+      if (msg.body.startsWith("commande-")) {
+        const encodedData = msg.body.replace("commande-", "");
+        const decodedData = Buffer.from(encodedData, 'base64').toString('utf8');
+        const orderData = JSON.parse(decodedData);
+
+        const welcomeMessage =
+          `👋 Salut ${user.data.pseudo} !\n` +
+          `✨ *Bienvenue sur BIGWIN* – Votre assistant de prédictions football !\n` +
+          `🤖 *Nos experts et IA analysent les meilleurs événements sportifs pour vous faire gagner !* 💰🔥\n\n` +
+          `📊 *80% de réussite* sur nos pronostics !\n\n` +
+          `📱 Nous avons reçu votre commande depuis l'application :\n\n` +
+          `📦 *📝 Récapitulatif de votre abonnement:*\n` +
+          `Forfait : ${orderData.plan.name}\n` +
+          `Prix : ${orderData.plan.price} FCFA\n` +
+          `Durée : ${orderData.plan.duration} jours\n` +
+          `Description : ${orderData.plan.description}\n\n` +
+          `Numéro de paiement : +237 ${orderData.mobileMoneyPhone}\n\n` +
+          `Confirmez-vous la souscription ?\n` +
+          `Répondez par *Oui* ou *Non*`;
+
+        await sendMessageToNumber(client, user.data.phoneNumber, welcomeMessage);
+        Steps[user.data.phoneNumber] = {
+          currentMenu: "appPaymentConfirmation",
+          pendingOrder: orderData,
+          isFirstContact: false
+        };
         return;
       }
 
@@ -171,8 +202,7 @@ const UserCommander = async (user, msg, client) => {
       const { currentMenu, isFirstContact } = Steps[user.data.phoneNumber];
 
       // Handle first contact
-      if (isFirstContact && !msg.body.startsWith("commande-")) {
-        // Send welcome message and wait for next input
+      if (isFirstContact) {
         await replyToMessage(client, msg, getMainMenu(true, user.data.pseudo));
         Steps[user.data.phoneNumber].isFirstContact = false;
         return;
@@ -180,48 +210,47 @@ const UserCommander = async (user, msg, client) => {
 
       // Handle menu navigation
       switch (currentMenu) {
+        case "appPaymentConfirmation":
+          switch(msg.body.toUpperCase()) {
+            case "OUI":
+              try {
+                const paymentResult = await requestPaiement(
+                  user.data,
+                  Steps[user.data.phoneNumber].pendingOrder.mobileMoneyPhone,
+                  Steps[user.data.phoneNumber].pendingOrder.plan
+                );
+                await sendMessageToNumber(client, user.data.phoneNumber,
+                  paymentResult +
+                  "\n\n_Tapez # pour revenir au menu principal_"
+                );
+                reset(user);
+              } catch (error) {
+                console.error('Error processing payment:', error);
+                await sendMessageToNumber(client, user.data.phoneNumber,
+                  "❌ Une erreur est survenue lors du traitement du paiement.\n" +
+                  "Veuillez réessayer ou contacter le support.\n\n" +
+                  "_Tapez # pour revenir au menu principal_"
+                );
+                reset(user);
+              }
+              break;
 
-        case "mainMenu":
-          // Si le message commence par "commande-"
-          if (msg.body.startsWith("commande-")) {
-            try {
-              // Extraire et décoder la commande
-              const encodedData = msg.body.replace("commande-", "");
-              const decodedData = Buffer.from(encodedData, 'base64').toString('utf8');
-              const orderData = JSON.parse(decodedData);
-
-              // Construire le message de récapitulatif
-              const welcomeMessage =
-                `👋 Salut ${user.data.pseudo} !\n\n` +
-                `✨ *Bienvenue sur BIGWIN* – Votre assistant de prédictions football !\n\n` +
-                `🤖 *Nos experts et IA analysent les meilleurs événements sportifs pour vous faire gagner !* 💰🔥\n\n` +
-                `📊 *80% de réussite* sur nos pronostics !\n\n` +
-                `📱 Nous avons reçu votre commande depuis l'application :\n\n` +
-                `📦 *📝 Récapitulatif de votre abonnement:*\n` +
-                `Forfait : ${orderData.plan.name}\n` +
-                `Prix : ${orderData.plan.price} FCFA\n` +
-                `Durée : ${orderData.plan.duration} jours\n` +
-                `Description : ${orderData.plan.description}\n\n` +
-                `Numéro de paiement : +237 ${orderData.mobileMoneyPhone}\n\n` +
-                `Confirmez-vous la souscription ?\n` +
-                `Répondez par *Oui* ou *Non*`;
-
-              // Envoyer le message et mettre à jour l'état
-              await sendMessageToNumber(client, user.data.phoneNumber, welcomeMessage);
-              Steps[user.data.phoneNumber].currentMenu = "confirmPayment";
-              Steps[user.data.phoneNumber].pendingOrder = orderData; // Sauvegarder la commande pour le traitement ultérieur
-
-            } catch (error) {
-              console.error('Error processing order:', error);
+            case "NON":
               await sendMessageToNumber(client, user.data.phoneNumber,
-                "❌ Désolé, une erreur s'est produite lors du traitement de votre commande.\n" +
-                "Veuillez réessayer ou contactez le support.\n\n" +
+                "❌ Commande annulée.\n\n" +
                 "_Tapez # pour revenir au menu principal_"
               );
               reset(user);
-            }
-            break;
+              break;
+
+            default:
+              await sendMessageToNumber(client, user.data.phoneNumber,
+                "⚠️ Veuillez répondre par *OUI* ou *NON* pour confirmer ou annuler votre commande."
+              );
           }
+          break;
+
+        case "mainMenu":
           switch (msg.body) {
             case "1":
               Steps[user.data.phoneNumber].currentMenu = "dailyPredictions";
@@ -245,111 +274,81 @@ const UserCommander = async (user, msg, client) => {
                 `[*Télécharger sur Play Store*](https://play.google.com/store/apps/details?id=com.bigwin.application)\n\n` +
                 `_*Tapez # pour revenir au menu principal.*_`
               );
-
               break;
             default:
               await replyToMessage(client, msg, getInvalidInputMessage(msg.body, "Veuillez choisir un numéro entre 1 et 4"));
               await replyToMessage(client, msg, getMainMenu(false, user.data.pseudo));
           }
           break;
-
-        case "dailyPredictions":
-          const { isVip } = await verifyUserVip(user.data.phoneNumber);
-          const vipChoice = msg.body === "2";
-          if (msg.body === "1") {
-            await sendPrediction(client, vipChoice, user);
-          }
-          else if (msg.body === "2") {
-            if (isVip) {
+          case "dailyPredictions":
+            const { isVip } = await verifyUserVip(user.data.phoneNumber);
+            const vipChoice = msg.body === "2";
+            if (msg.body === "1") {
               await sendPrediction(client, vipChoice, user);
             }
-            else {
-              await sendStepMessage(client, user.data.phoneNumber);
-              Steps[user.data.phoneNumber].currentMenu = "orderMenu";
-
+            else if (msg.body === "2") {
+              if (isVip) {
+                await sendPrediction(client, vipChoice, user);
+              }
+              else {
+                await sendStepMessage(client, user.data.phoneNumber);
+                Steps[user.data.phoneNumber].currentMenu = "orderMenu";
+              }
             }
-          }
-          else {
-            await replyToMessage(client, msg, getInvalidInputMessage(msg.body, "Veuillez choisir un numéro entre 1 et 2"));
-          }
-          break;
-        case "oldPredictions":
-          if (msg.body === "1" || msg.body === "2") {
-            const vipChoice = msg.body === "2";
-            Steps[user.data.phoneNumber].isVipSelected = vipChoice; // Stocker le choix de l'utilisateur
-            await sendPredictionHistory(client, user, vipChoice);
-          } else {
-            await replyToMessage(client, msg, getInvalidInputMessage(msg.body, "Veuillez choisir un numéro entre 1 et 2"));
-          }
-          break;
-        case "SelectDateForPredictions":
-          const dateIndex = parseInt(msg.body);
-          if (!isNaN(dateIndex) && dateIndex > 0 && dateIndex <= Steps[user.data.phoneNumber].predictions.length) {
-            await sendDailyPredictions(client, user, dateIndex);
-          }
-          else if (msg.body == "*") {
-            await sendPredictionHistory(client, user, Steps[user.data.phoneNumber].isVipSelected);
-          }
-          else {
-            await replyToMessage(client, msg, getInvalidInputMessage(msg.body, `Veuillez choisir un numéro entre 1 et ${Steps[user.data.phoneNumber].predictions.length}`));
-
-          }
-          break;
-        case "orderMenu":
-          if (msg.body.toLowerCase() === "non") {
-            reset(user);
-            await replyToMessage(client, msg, getMainMenu(false, user.data.pseudo));
-          }
-          else {
-            await orderCommander(user, msg, client);
-          }
-          break;
-        case "account":
-          // Return to main menu for any input in sub-menus
-          reset(user);
-          await replyToMessage(client, msg, getMainMenu(false, user.data.pseudo));
-          break;
-          case "confirmPayment":
-            switch(msg.body.toUpperCase()) {
-              case "OUI":
-                const paymentResult =  await requestPaiement(
-                  user.data,
-                  Steps[user.data.phoneNumber].pendingOrder.mobileMoneyPhone,
-                  Steps[user.data.phoneNumber].pendingOrder.plan
-              );
-              await sendMessageToNumber(client, user.data.phoneNumber,
-                paymentResult +
-                "_Tapez # pour revenir au menu principal_"
-              );
-              reset(user);
-              break;
-          
-              case "NON":
-                await sendMessageToNumber(client, user.data.phoneNumber,
-                  "❌ Commande annulée.\n\n" +
-                  "_Tapez # pour revenir au menu principal_"
-                );
-                reset(user);
-                break;
-          
-              default:
-                await sendMessageToNumber(client, user.data.phoneNumber,
-                  "⚠️ Veuillez répondre par *OUI* ou *NON* pour confirmer ou annuler votre commande."
-                );
+            else {
+              await replyToMessage(client, msg, getInvalidInputMessage(msg.body, "Veuillez choisir un numéro entre 1 et 2"));
             }
             break;
-        default:
-          await replyToMessage(client, msg, getInvalidInputMessage(msg.body, "Veuillez choisir un numéro entre 1 et 4"));
-          await replyToMessage(client, msg, getMainMenu(false, user.data.pseudo));
+  
+          case "oldPredictions":
+            if (msg.body === "1" || msg.body === "2") {
+              const vipChoice = msg.body === "2";
+              Steps[user.data.phoneNumber].isVipSelected = vipChoice;
+              await sendPredictionHistory(client, user, vipChoice);
+            } else {
+              await replyToMessage(client, msg, getInvalidInputMessage(msg.body, "Veuillez choisir un numéro entre 1 et 2"));
+            }
+            break;
+  
+          case "SelectDateForPredictions":
+            const dateIndex = parseInt(msg.body);
+            if (!isNaN(dateIndex) && dateIndex > 0 && dateIndex <= Steps[user.data.phoneNumber].predictions.length) {
+              await sendDailyPredictions(client, user, dateIndex);
+            }
+            else if (msg.body == "*") {
+              await sendPredictionHistory(client, user, Steps[user.data.phoneNumber].isVipSelected);
+            }
+            else {
+              await replyToMessage(client, msg, getInvalidInputMessage(msg.body, `Veuillez choisir un numéro entre 1 et ${Steps[user.data.phoneNumber].predictions.length}`));
+            }
+            break;
+  
+          case "orderMenu":
+            if (msg.body.toLowerCase() === "non") {
+              reset(user);
+              await replyToMessage(client, msg, getMainMenu(false, user.data.pseudo));
+            }
+            else {
+              await orderCommander(user, msg, client);
+            }
+            break;
+  
+          case "account":
+            reset(user);
+            await replyToMessage(client, msg, getMainMenu(false, user.data.pseudo));
+            break;
+  
+          default:
+            await replyToMessage(client, msg, getInvalidInputMessage(msg.body, "Veuillez choisir un numéro entre 1 et 4"));
+            await replyToMessage(client, msg, getMainMenu(false, user.data.pseudo));
+        }
       }
+    } catch (error) {
+      await logService.addLog(`${error.message}`, 'UserCommander', 'error');
+      await replyToMessage(client, msg, "Une erreur est survenue. Tapez # pour revenir au menu principal.");
     }
-  } catch (error) {
-    await logService.addLog(`${error.message}`, 'UserCommander', 'error');
-    await replyToMessage(client, msg, "Une erreur est survenue. Tapez # pour revenir au menu principal.");
-  }
-};
-
-
-module.exports = {
-  UserCommander
-};
+  };
+  
+  module.exports = {
+    UserCommander
+  };
