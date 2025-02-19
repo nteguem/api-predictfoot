@@ -59,8 +59,8 @@ async function handlePaymentMonetbilSuccess(req, res, client) {
           type: 'subscription_notification',
           subscriptionId: 'operator_transaction_id',
           packageType: 'VIP',
-          startDate: currentDate.toISOString(),
-          expiryDate: expire.toISOString(),
+          startDate: currentDate,
+          expiryDate: expire,
           features: [
             'predictions_vip',
           ].join(','),
