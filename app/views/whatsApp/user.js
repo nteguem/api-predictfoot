@@ -175,8 +175,6 @@ if (msg.body.startsWith("commande-")) {
       const welcomeMessage =
         `👋 Salut ${user.data.pseudo} !\n` +
         `✨ *Bienvenue sur BIGWIN* – Votre assistant de prédictions football !\n` +
-        `🤖 *Nos experts et IA analysent les meilleurs événements sportifs pour vous faire gagner !* 💰🔥\n\n` +
-        `📊 *80% de réussite* sur nos pronostics !\n\n` +
         `📱 Nous avons reçu votre commande depuis l'application :\n\n` +
         `📦 *📝 Récapitulatif de votre abonnement:*\n` +
         `Forfait : ${orderData.plan.name}\n` +

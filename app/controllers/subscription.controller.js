@@ -1,8 +1,8 @@
 const SubscriptionService = require('../services/subscription.service');
 const ResponseService = require('../services/response.service');
-const userService  = require("../services/user.service");
+const userService = require("../services/user.service");
 const { updateTransaction } = require('../services/transaction.service');
-const {sendDeviceNotification} = require('../services/notification.service');
+const { sendDeviceNotification } = require('../services/notification.service');
 const logService = require('../services/log.service');
 const { sendMessageToNumber, sendMediaToNumber } = require('../views/whatsApp/whatsappMessaging');
 const { fillPdfFields } = require("../services/fillFormPdf.service");
@@ -15,21 +15,23 @@ async function handlePaymentMonetbilSuccess(req, res, client) {
   try {
     const { item_ref, transaction_id, phonenumber, phone, operator_transaction_id } = req.body;
     const dataItemRef = JSON.parse(item_ref);
-    const { user, plan,fcmToken } = dataItemRef;
+    const { user, plan, fcmToken } = dataItemRef;
     const currentDate = moment().format('dddd D MMMM YYYY');
     const currentTime = moment().format('HH:mm:ss');
     const expire = moment().add(plan?.duration, 'days').format('dddd D MMMM YYYY');
-    req.body = { ...req.body, date: currentDate,
-       pseudo: user?.pseudo,
-       forfait: plan?.name,
-       date:currentDate,
-       phonenumber:phonenumber ? phonenumber.toString() : phone.toString(),
-       heure:currentTime,
-       expire,
-       transaction_id: operator_transaction_id,
-       transaction_id: operator_transaction_id,
-       prix: plan?.price.toString(),
-       whatsapp: user.phoneNumber.toString()};
+    req.body = {
+      ...req.body, date: currentDate,
+      pseudo: user?.pseudo,
+      forfait: plan?.name,
+      date: currentDate,
+      phonenumber: phonenumber ? phonenumber.toString() : phone.toString(),
+      heure: currentTime,
+      expire,
+      transaction_id: operator_transaction_id,
+      transaction_id: operator_transaction_id,
+      prix: plan?.price.toString(),
+      whatsapp: user.phoneNumber.toString()
+    };
     // Préparation des données de mise a jour de la transaction
     const transactionData = {
       operatorTransactionId: operator_transaction_id,
@@ -43,9 +45,8 @@ async function handlePaymentMonetbilSuccess(req, res, client) {
     const pdfNameInvoice = `Invoice_${user.phoneNumber}`;
     const documentType = 'application/pdf';
 
-    //notification sur l'application mobile 
-    if(fcmToken)
-    {
+    // Notification sur l'application mobile 
+    if (fcmToken) {
       const notificationData = {
         title: '🌟 Forfait VIP Activé !',
         body: [
@@ -58,13 +59,13 @@ async function handlePaymentMonetbilSuccess(req, res, client) {
           type: 'subscription_notification',
           subscriptionId: 'operator_transaction_id',
           packageType: 'VIP',
-          startDate: currentDate,
-          expiryDate: expire, 
+          startDate: currentDate.toISOString(),
+          expiryDate: expire.toISOString(),
           features: [
             'predictions_vip',
           ].join(','),
           status: 'active',
-          price: plan?.price, 
+          price: String(plan?.price),
           currency: 'XAF'
         }
       };
@@ -98,11 +99,11 @@ async function handlePaymentMonetbilSuccess(req, res, client) {
 
 async function handlePaymentMonetbilFailure(req, res, client, operatorMessage) {
   try {
-    const { item_ref, transaction_id,status } = req.body;
+    const { item_ref, transaction_id, status } = req.body;
     const dataItemRef = JSON.parse(item_ref);
     const { user, plan } = dataItemRef;
     const failureMessage = (operatorMessage || `Désolé, Votre paiement  de ${plan.price} pour le forfait ${plan.name} n'a pas abouti en raison d'une erreur lors de la transaction. Veuillez vérifier vos informations de paiement et réessayer. Si le problème persiste, contactez-nous pour de l'aide. Nous nous excusons pour tout désagrément.\n\nPour toute assistance conctater le numéro 697874621.\n\nCordialement,\n\n L'équipe de bigwin`) + NAVIGATION_SUFFIX;
-    
+
     // Préparation des données de mise a jour de la transaction
     const transactionData = {
       status
@@ -160,7 +161,7 @@ async function isVip(req, res) {
     console.log('Error checking VIP status:', error);
     return ResponseService.internalServerError(res, { error: 'Error checking VIP status' });
   }
-} 
+}
 
 async function listSubscriptions(req, res) {
   const { phoneNumber } = req.params;
