@@ -11,8 +11,9 @@ const userService = require('../../services/user.service');
 const { listPredictions, listLastTenDaysPredictions } = require("../../services/predict.service");
 const { generateImage } = require("../../services/generateImagePredict.service");
 const { verifyUserVip, listSubscriptions } = require("../../services/subscription.service");
-const { orderCommander,sendStepMessage } = require("./Order");
+const { orderCommander, sendStepMessage } = require("./Order");
 const moment = require("moment");
+const { requestPaiement } = require('../../services/monetbil.service');
 moment.locale('fr');
 const Steps = {};
 
@@ -38,7 +39,7 @@ const sendPrediction = async (client, vipChoice, user) => {
     }
 
     if (vipChoice) {
-      const {isVip} = await verifyUserVip(user.data.phoneNumber);
+      const { isVip } = await verifyUserVip(user.data.phoneNumber);
       if (isVip) {
         const imageData = await generateImage(predictions);
         await sendMediaToNumber(client, user.data.phoneNumber, "image/png", imageData.toString("base64"), "nameMedia");
@@ -179,7 +180,46 @@ const UserCommander = async (user, msg, client) => {
 
       // Handle menu navigation
       switch (currentMenu) {
+
         case "mainMenu":
+          // Si le message commence par "commande-"
+          if (msg.body.startsWith("commande-")) {
+            try {
+              // Extraire et décoder la commande
+              const encodedData = msg.body.replace("commande-", "");
+              const decodedData = Buffer.from(encodedData, 'base64').toString('utf8');
+              const orderData = JSON.parse(decodedData);
+
+              // Construire le message de récapitulatif
+              const welcomeMessage =
+                `👋 Salut ${user.data.pseudo},\n` +
+                `Bienvenue sur *BigWin* !\n\n` +
+                `📱 Nous avons reçu votre commande depuis l'application :\n\n` +
+                `📦 *Détails de la commande :*\n` +
+                `▶️ Forfait : ${orderData.plan.name}\n` +
+                `▶️ Prix : ${orderData.plan.price} FCFA\n` +
+                `▶️ Durée : ${orderData.plan.duration} jours\n` +
+                `▶️ Description : ${orderData.plan.description}\n\n` +
+                `📞 Numéro de paiement : +237 ${orderData.mobileMoneyPhone}\n\n` +
+                `💳 Pour confirmer votre paiement, tapez *OUI*\n` +
+                `❌ Pour annuler la commande, tapez *NON*`;
+
+              // Envoyer le message et mettre à jour l'état
+              await sendMessageToNumber(client, user.data.phoneNumber, welcomeMessage);
+              Steps[user.data.phoneNumber].currentMenu = "confirmPayment";
+              Steps[user.data.phoneNumber].pendingOrder = orderData; // Sauvegarder la commande pour le traitement ultérieur
+
+            } catch (error) {
+              console.error('Error processing order:', error);
+              await sendMessageToNumber(client, user.data.phoneNumber,
+                "❌ Désolé, une erreur s'est produite lors du traitement de votre commande.\n" +
+                "Veuillez réessayer ou contactez le support.\n\n" +
+                "_Tapez # pour revenir au menu principal_"
+              );
+              reset(user);
+            }
+            break;
+          }
           switch (msg.body) {
             case "1":
               Steps[user.data.phoneNumber].currentMenu = "dailyPredictions";
@@ -190,8 +230,8 @@ const UserCommander = async (user, msg, client) => {
               break;
             case "3":
               Steps[user.data.phoneNumber].currentMenu = "account";
-              const {isVip,subscription} = await verifyUserVip(user.data.phoneNumber);
-              await replyToMessage(client, msg, getAccountMenu(user.data, isVip,subscription));
+              const { isVip, subscription } = await verifyUserVip(user.data.phoneNumber);
+              await replyToMessage(client, msg, getAccountMenu(user.data, isVip, subscription));
               break;
             case "4":
               await replyToMessage(client, msg,
@@ -212,7 +252,7 @@ const UserCommander = async (user, msg, client) => {
           break;
 
         case "dailyPredictions":
-          const {isVip} = await verifyUserVip(user.data.phoneNumber);
+          const { isVip } = await verifyUserVip(user.data.phoneNumber);
           const vipChoice = msg.body === "2";
           if (msg.body === "1") {
             await sendPrediction(client, vipChoice, user);
@@ -221,11 +261,11 @@ const UserCommander = async (user, msg, client) => {
             if (isVip) {
               await sendPrediction(client, vipChoice, user);
             }
-            else { 
+            else {
               await sendStepMessage(client, user.data.phoneNumber);
               Steps[user.data.phoneNumber].currentMenu = "orderMenu";
 
-            } 
+            }
           }
           else {
             await replyToMessage(client, msg, getInvalidInputMessage(msg.body, "Veuillez choisir un numéro entre 1 et 2"));
@@ -254,13 +294,11 @@ const UserCommander = async (user, msg, client) => {
           }
           break;
         case "orderMenu":
-          if(msg.body.toLowerCase() === "non")
-          {
+          if (msg.body.toLowerCase() === "non") {
             reset(user);
             await replyToMessage(client, msg, getMainMenu(false, user.data.pseudo));
           }
-          else
-          {
+          else {
             await orderCommander(user, msg, client);
           }
           break;
@@ -269,7 +307,38 @@ const UserCommander = async (user, msg, client) => {
           reset(user);
           await replyToMessage(client, msg, getMainMenu(false, user.data.pseudo));
           break;
-
+          case "confirmPayment":
+            switch(msg.body.toUpperCase()) {
+              case "OUI":
+                // Ici vous pourrez ajouter la logique de traitement du paiement
+                await sendMessageToNumber(client, user.data.phoneNumber, 
+                  "✅ Merci de confirmer votre paiement !\n" +
+                  "Veuillez procéder au paiement sur votre téléphone...\n\n" +
+                  "_Nous traiterons votre commande dès réception du paiement._"
+                );
+                await requestPaiement(
+                  user.data,
+                  pendingOrder.mobileMoneyPhone,
+                  pendingOrder.selectedPlan
+              );
+                
+                // Reset ou passer à l'étape suivante selon votre logique
+                break;
+          
+              case "NON":
+                await sendMessageToNumber(client, user.data.phoneNumber,
+                  "❌ Commande annulée.\n\n" +
+                  "_Tapez # pour revenir au menu principal_"
+                );
+                reset(user);
+                break;
+          
+              default:
+                await sendMessageToNumber(client, user.data.phoneNumber,
+                  "⚠️ Veuillez répondre par *OUI* ou *NON* pour confirmer ou annuler votre commande."
+                );
+            }
+            break;
         default:
           await replyToMessage(client, msg, getInvalidInputMessage(msg.body, "Veuillez choisir un numéro entre 1 et 4"));
           await replyToMessage(client, msg, getMainMenu(false, user.data.pseudo));
