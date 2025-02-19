@@ -152,7 +152,6 @@ const UserCommander = async (user, msg, client) => {
         return;
       }
 
-      // Command from app
      // Command from app
 if (msg.body.startsWith("commande-")) {
   try {
@@ -166,7 +165,7 @@ if (msg.body.startsWith("commande-")) {
       if (!orderData || !orderData.plan || !orderData.mobileMoneyPhone) {
         await sendMessageToNumber(client, user.data.phoneNumber,
           "❌ Commande invalide.\n\n" +
-          "Veuillez refaire la commande dans votre application et renvoyer le code tel que envoyé à partir de l'application.\n\n" +
+          "Veuillez refaire la commande dans l'application bigwin et renvoyer le code tel que envoyé à partir de l'application.\n\n" +
           "_Tapez # pour revenir au menu principal_"
         );
         reset(user);
@@ -201,7 +200,7 @@ if (msg.body.startsWith("commande-")) {
       // Capture spécifiquement l'erreur de parsing JSON
       await sendMessageToNumber(client, user.data.phoneNumber,
         "❌ Commande invalide.\n\n" +
-        "Veuillez refaire la commande dans votre application et renvoyer le code tel que envoyé à partir de l'application.\n\n" +
+        "Veuillez refaire la commande dans l'application bigwin et renvoyer le code tel que envoyé à partir de l'application.\n\n" +
         "_Tapez # pour revenir au menu principal_"
       );
       reset(user);
@@ -240,7 +239,7 @@ if (msg.body.startsWith("commande-")) {
       const { currentMenu, isFirstContact } = Steps[user.data.phoneNumber];
 
       // Handle first contact
-      if (isFirstContact) {
+      if (isFirstContact && !msg.body.startsWith("commande-")) {
         await replyToMessage(client, msg, getMainMenu(true, user.data.pseudo));
         Steps[user.data.phoneNumber].isFirstContact = false;
         return;
