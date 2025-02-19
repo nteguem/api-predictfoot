@@ -8,9 +8,6 @@ const notify_url = process.env.NOTIFICATION_URL_PAIEMENT || "";
 const paiement_url = process.env.PAYMENT_API_ENDPOINT;
 
 const makePayment = async (user, mobileMoneyPhone, plan) => {
-  console.log('user',user)
-  console.log('mobileMoneyPhone',mobileMoneyPhone)
-  console.log('plan',plan)
   const payload = {
     service: monetbilService,
     user:user?.pseudo.slice(0,30),
