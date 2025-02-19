@@ -318,8 +318,8 @@ const UserCommander = async (user, msg, client) => {
                 );
                 await requestPaiement(
                   user.data,
-                  pendingOrder.mobileMoneyPhone,
-                  pendingOrder.selectedPlan
+                  Steps[user.data.phoneNumber].pendingOrder.mobileMoneyPhone,
+                  Steps[user.data.phoneNumber].pendingOrder.selectedPlan
               );
                 
                 // Reset ou passer à l'étape suivante selon votre logique
