@@ -153,12 +153,52 @@ const UserCommander = async (user, msg, client) => {
       }
 
       // Command from app
-      if (msg.body.startsWith("commande-")) {
-        const encodedData = msg.body.replace("commande-", "");
-        const decodedData = Buffer.from(encodedData, 'base64').toString('utf8');
-        const orderData = JSON.parse(decodedData);
-  // Vérifier si orderData a la bonne structure
-    if (!orderData || !orderData.plan || !orderData.mobileMoneyPhone) {
+     // Command from app
+if (msg.body.startsWith("commande-")) {
+  try {
+    const encodedData = msg.body.replace("commande-", "");
+    const decodedData = Buffer.from(encodedData, 'base64').toString('utf8');
+    
+    try {
+      const orderData = JSON.parse(decodedData);
+
+      // Structure validation
+      if (!orderData || !orderData.plan || !orderData.mobileMoneyPhone) {
+        await sendMessageToNumber(client, user.data.phoneNumber,
+          "❌ Commande invalide.\n\n" +
+          "Veuillez refaire la commande dans votre application et renvoyer le code tel que envoyé à partir de l'application.\n\n" +
+          "_Tapez # pour revenir au menu principal_"
+        );
+        reset(user);
+        await replyToMessage(client, msg, getMainMenu(false, user.data.pseudo));
+        return;
+      }
+
+      const welcomeMessage =
+        `👋 Salut ${user.data.pseudo} !\n` +
+        `✨ *Bienvenue sur BIGWIN* – Votre assistant de prédictions football !\n` +
+        `🤖 *Nos experts et IA analysent les meilleurs événements sportifs pour vous faire gagner !* 💰🔥\n\n` +
+        `📊 *80% de réussite* sur nos pronostics !\n\n` +
+        `📱 Nous avons reçu votre commande depuis l'application :\n\n` +
+        `📦 *📝 Récapitulatif de votre abonnement:*\n` +
+        `Forfait : ${orderData.plan.name}\n` +
+        `Prix : ${orderData.plan.price} FCFA\n` +
+        `Durée : ${orderData.plan.duration} jours\n` +
+        `Description : ${orderData.plan.description}\n\n` +
+        `Numéro de paiement : +237 ${orderData.mobileMoneyPhone}\n\n` +
+        `Confirmez-vous la souscription ?\n` +
+        `Répondez par *Oui* ou *Non*`;
+
+      await sendMessageToNumber(client, user.data.phoneNumber, welcomeMessage);
+      Steps[user.data.phoneNumber] = {
+        currentMenu: "appPaymentConfirmation",
+        pendingOrder: orderData,
+        isFirstContact: false
+      };
+      return;
+      
+    } catch (jsonError) {
+      // Capture spécifiquement l'erreur de parsing JSON
       await sendMessageToNumber(client, user.data.phoneNumber,
         "❌ Commande invalide.\n\n" +
         "Veuillez refaire la commande dans votre application et renvoyer le code tel que envoyé à partir de l'application.\n\n" +
@@ -168,29 +208,17 @@ const UserCommander = async (user, msg, client) => {
       await replyToMessage(client, msg, getMainMenu(false, user.data.pseudo));
       return;
     }
-        const welcomeMessage =
-          `👋 Salut ${user.data.pseudo} !\n` +
-          `✨ *Bienvenue sur BIGWIN* – Votre assistant de prédictions football !\n` +
-          `🤖 *Nos experts et IA analysent les meilleurs événements sportifs pour vous faire gagner !* 💰🔥\n\n` +
-          `📊 *80% de réussite* sur nos pronostics !\n\n` +
-          `📱 Nous avons reçu votre commande depuis l'application :\n\n` +
-          `📦 *📝 Récapitulatif de votre abonnement:*\n` +
-          `Forfait : ${orderData.plan.name}\n` +
-          `Prix : ${orderData.plan.price} FCFA\n` +
-          `Durée : ${orderData.plan.duration} jours\n` +
-          `Description : ${orderData.plan.description}\n\n` +
-          `Numéro de paiement : +237 ${orderData.mobileMoneyPhone}\n\n` +
-          `Confirmez-vous la souscription ?\n` +
-          `Répondez par *Oui* ou *Non*`;
-
-        await sendMessageToNumber(client, user.data.phoneNumber, welcomeMessage);
-        Steps[user.data.phoneNumber] = {
-          currentMenu: "appPaymentConfirmation",
-          pendingOrder: orderData,
-          isFirstContact: false
-        };
-        return;
-      }
+  } catch (error) {
+    // Gestion des autres erreurs possibles (base64, etc.)
+    await sendMessageToNumber(client, user.data.phoneNumber,
+      "❌ Une erreur est survenue.\n\n" +
+      "_Tapez # pour revenir au menu principal_"
+    );
+    reset(user);
+    await replyToMessage(client, msg, getMainMenu(false, user.data.pseudo));
+    return;
+  }
+}
 
       // Handle reset command
       if (msg.body === "#") {
