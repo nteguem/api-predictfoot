@@ -1,5 +1,6 @@
 const SubscriptionService = require('../services/subscription.service');
 const ResponseService = require('../services/response.service');
+const userService  = require("../services/user.service");
 const { updateTransaction } = require('../services/transaction.service');
 const logService = require('../services/log.service');
 const { sendMessageToNumber, sendMediaToNumber } = require('../views/whatsApp/whatsappMessaging');
