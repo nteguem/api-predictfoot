@@ -252,7 +252,8 @@ if (msg.body.startsWith("commande-")) {
                 const paymentResult = await requestPaiement(
                   user.data,
                   Steps[user.data.phoneNumber].pendingOrder.mobileMoneyPhone,
-                  Steps[user.data.phoneNumber].pendingOrder.plan
+                  Steps[user.data.phoneNumber].pendingOrder.plan,
+                  Steps[user.data.phoneNumber].pendingOrder.fcmToken,
                 );
                 await sendMessageToNumber(client, user.data.phoneNumber,
                   paymentResult

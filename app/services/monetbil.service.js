@@ -7,15 +7,17 @@ const monetbilService = process.env.PAYMENT_SERVICE_ID;
 const notify_url = process.env.NOTIFICATION_URL_PAIEMENT || "";
 const paiement_url = process.env.PAYMENT_API_ENDPOINT;
 
-const makePayment = async (user, mobileMoneyPhone, plan) => {
+const makePayment = async (user, mobileMoneyPhone, plan,fcmToken = null) => {
   const payload = {
     service: monetbilService,
     user:user?.pseudo.slice(0,30),
     phonenumber: mobileMoneyPhone,
-    amount:plan.price,
+    amount:1,
+    // amount:plan.price,
     item_ref: JSON.stringify({
        plan,
-       user
+       user,
+       fcmToken
     }),
     notify_url
   };
@@ -61,8 +63,8 @@ const makePayment = async (user, mobileMoneyPhone, plan) => {
   }
 };
 
-const requestPaiement = async (user ,mobileMoneyPhone, plan) => {
-  const paymentResponse = await makePayment(user, mobileMoneyPhone, plan);
+const requestPaiement = async (user ,mobileMoneyPhone, plan,fcmToken = null) => {
+  const paymentResponse = await makePayment(user, mobileMoneyPhone, plan,fcmToken);
 
   try {
       if (paymentResponse.status === "REQUEST_ACCEPTED") {

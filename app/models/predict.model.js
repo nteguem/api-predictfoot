@@ -164,7 +164,6 @@ function calculateExpirationDate(matchDate) {
 
 function formatMatchNotification(fixture) {
   return [
-    `🔴 LIVE PREDICTION!`,
     `\n🏆 ${fixture.homeTeam.team_name} vs ${fixture.awayTeam.team_name}`,
     `📍 ${fixture.venue || 'Venue TBD'}`,
     `⏰ ${new Date(fixture.event_date).toLocaleTimeString('en-US', {
@@ -173,6 +172,19 @@ function formatMatchNotification(fixture) {
       hour12: true
     })}`,
     '\n👉 Tap to see prediction details!'
+  ].join('\n');
+}
+
+function formatMatchNotificationCameroon(fixture) {
+  return [
+    `\n🏆 ${fixture.homeTeam.team_name} vs ${fixture.awayTeam.team_name}`,
+    `📍 ${fixture.venue || 'Venue TBD'}`,
+    `⏰ ${new Date(fixture.event_date).toLocaleTimeString('fr-FR', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    })}`,
+    '\n👉 Appuyez pour voir les détails de la prédiction !'
   ].join('\n');
 }
 
@@ -201,7 +213,24 @@ PredictSchema.pre('save', async function(next) {
         }
       };
 
+    //notification en direct cameroon
+    const notificationDataCameroon = {
+      title: '🔴 PRÉDICTION EN DIRECT !',
+      body: formatMatchNotificationCameroon(this.fixture),
+      data: {
+        predictId: this._id.toString(),
+        type: 'live_prediction',
+        homeTeam: this.fixture.homeTeam.team_name,
+        awayTeam: this.fixture.awayTeam.team_name,
+        matchTime: this.fixture.event_date.toISOString(),
+        venue: this.fixture.venue || '',
+        isLive: 'true',
+        status: this.fixture.status || ''
+      }
+    };
+
       await NotificationService.sendGeneralNotification(notificationData);
+      await NotificationService.sendTopicNotification('all_devices_cameroon',notificationDataCameroon);
     } catch (error) {
       console.error('Error sending notifications:', error);
     }

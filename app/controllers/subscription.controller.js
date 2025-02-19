@@ -2,6 +2,7 @@ const SubscriptionService = require('../services/subscription.service');
 const ResponseService = require('../services/response.service');
 const userService  = require("../services/user.service");
 const { updateTransaction } = require('../services/transaction.service');
+const {sendDeviceNotification} = require('../services/notification.service');
 const logService = require('../services/log.service');
 const { sendMessageToNumber, sendMediaToNumber } = require('../views/whatsApp/whatsappMessaging');
 const { fillPdfFields } = require("../services/fillFormPdf.service");
@@ -14,7 +15,7 @@ async function handlePaymentMonetbilSuccess(req, res, client) {
   try {
     const { item_ref, transaction_id, phonenumber, phone, operator_transaction_id } = req.body;
     const dataItemRef = JSON.parse(item_ref);
-    const { user, plan } = dataItemRef;
+    const { user, plan,fcmToken } = dataItemRef;
     const currentDate = moment().format('dddd D MMMM YYYY');
     const currentTime = moment().format('HH:mm:ss');
     const expire = moment().add(plan?.duration, 'days').format('dddd D MMMM YYYY');
@@ -42,6 +43,33 @@ async function handlePaymentMonetbilSuccess(req, res, client) {
     const pdfNameInvoice = `Invoice_${user.phoneNumber}`;
     const documentType = 'application/pdf';
 
+    //notification sur l'application mobile 
+    if(fcmToken)
+    {
+      const notificationData = {
+        title: '🌟 Forfait VIP Activé !',
+        body: [
+          'Félicitations ! Votre forfait VIP est maintenant actif.',
+          `✨ Accès Premium débloqué pour ${plan?.duration} jours`,
+          '📊 Prédictions exclusives disponibles',
+          '🎯 Pronostics à fort taux de réussite'
+        ].join('\n'),
+        data: {
+          type: 'subscription_notification',
+          subscriptionId: 'operator_transaction_id',
+          packageType: 'VIP',
+          startDate: currentDate,
+          expiryDate: expire, 
+          features: [
+            'predictions_vip',
+          ].join(','),
+          status: 'active',
+          price: plan?.price, 
+          currency: 'XAF'
+        }
+      };
+      await sendDeviceNotification(fcmToken, notificationData);
+    }
     // Envoi de la notification , generation de facture client et mise a jour de la transaction
     await Promise.all([
       sendMediaToNumber(client, user.phoneNumber, documentType, pdfBase64Invoice, pdfNameInvoice, successMessage),

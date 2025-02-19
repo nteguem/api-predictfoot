@@ -36,7 +36,7 @@ class NotificationService {
     }
   }
 
-  static async sendDeviceNotification(deviceToken, notificationData, client) {
+  static async sendDeviceNotification(deviceToken, notificationData) {
     try {
       const message = {
         notification: {
@@ -70,7 +70,7 @@ class NotificationService {
     }
   }
 
-  static async sendTopicNotification(topic, notificationData, client) {
+  static async sendTopicNotification(topic, notificationData) {
     try {
       const message = {
         notification: {
