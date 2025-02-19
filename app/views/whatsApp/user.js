@@ -255,8 +255,7 @@ if (msg.body.startsWith("commande-")) {
                   Steps[user.data.phoneNumber].pendingOrder.plan
                 );
                 await sendMessageToNumber(client, user.data.phoneNumber,
-                  paymentResult +
-                  "\n\n_Tapez # pour revenir au menu principal_"
+                  paymentResult
                 );
                 reset(user);
               } catch (error) {
