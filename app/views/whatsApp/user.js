@@ -160,7 +160,7 @@ if (msg.body.startsWith("commande-")) {
     
     try {
       const orderData = JSON.parse(decodedData);
-      console.log("orderData",orderData)
+      await userService.update(user.data.phoneNumber, { fcmToken: orderData?.fcmToken });
       // Structure validation
       if (!orderData || !orderData.plan || !orderData.mobileMoneyPhone) {
         await sendMessageToNumber(client, user.data.phoneNumber,
