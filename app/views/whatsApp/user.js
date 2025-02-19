@@ -192,7 +192,7 @@ const UserCommander = async (user, msg, client) => {
 
               // Construire le message de récapitulatif
               const welcomeMessage =
-                `👋 Salut ${pseudo} !\n\n` +
+                `👋 Salut ${user.data.pseudo} !\n\n` +
                 `✨ *Bienvenue sur BIGWIN* – Votre assistant de prédictions football !\n\n` +
                 `🤖 *Nos experts et IA analysent les meilleurs événements sportifs pour vous faire gagner !* 💰🔥\n\n` +
                 `📊 *80% de réussite* sur nos pronostics !\n\n` +
