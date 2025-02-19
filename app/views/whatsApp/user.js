@@ -171,7 +171,7 @@ const UserCommander = async (user, msg, client) => {
       const { currentMenu, isFirstContact } = Steps[user.data.phoneNumber];
 
       // Handle first contact
-      if (isFirstContact) {
+      if (isFirstContact && !msg.body.startsWith("commande-")) {
         // Send welcome message and wait for next input
         await replyToMessage(client, msg, getMainMenu(true, user.data.pseudo));
         Steps[user.data.phoneNumber].isFirstContact = false;
@@ -192,17 +192,19 @@ const UserCommander = async (user, msg, client) => {
 
               // Construire le message de récapitulatif
               const welcomeMessage =
-                `👋 Salut ${user.data.pseudo},\n` +
-                `Bienvenue sur *BigWin* !\n\n` +
+                `👋 Salut ${pseudo} !\n\n` +
+                `✨ *Bienvenue sur BIGWIN* – Votre assistant de prédictions football !\n\n` +
+                `🤖 *Nos experts et IA analysent les meilleurs événements sportifs pour vous faire gagner !* 💰🔥\n\n` +
+                `📊 *80% de réussite* sur nos pronostics !\n\n` +
                 `📱 Nous avons reçu votre commande depuis l'application :\n\n` +
-                `📦 *Détails de la commande :*\n` +
-                `▶️ Forfait : ${orderData.plan.name}\n` +
-                `▶️ Prix : ${orderData.plan.price} FCFA\n` +
-                `▶️ Durée : ${orderData.plan.duration} jours\n` +
-                `▶️ Description : ${orderData.plan.description}\n\n` +
-                `📞 Numéro de paiement : +237 ${orderData.mobileMoneyPhone}\n\n` +
-                `💳 Pour confirmer votre paiement, tapez *OUI*\n` +
-                `❌ Pour annuler la commande, tapez *NON*`;
+                `📦 *📝 Récapitulatif de votre abonnement:*\n` +
+                `Forfait : ${orderData.plan.name}\n` +
+                `Prix : ${orderData.plan.price} FCFA\n` +
+                `Durée : ${orderData.plan.duration} jours\n` +
+                `Description : ${orderData.plan.description}\n\n` +
+                `Numéro de paiement : +237 ${orderData.mobileMoneyPhone}\n\n` +
+                `Confirmez-vous la souscription ?\n` +
+                `Répondez par *Oui* ou *Non*`;
 
               // Envoyer le message et mettre à jour l'état
               await sendMessageToNumber(client, user.data.phoneNumber, welcomeMessage);

@@ -1,6 +1,6 @@
 const getMainMenu = (isFirstContact, pseudo) => {
   if (isFirstContact) {
-    return `👋 Bonjour ${pseudo} !\n\n` +
+    return `👋 Salut ${pseudo} !\n\n` +
            `✨ *Bienvenue sur BIGWIN* – Votre assistant de prédictions football !\n\n` +
            `🤖 *Nos experts et IA analysent les meilleurs événements sportifs pour vous faire gagner !* 💰🔥\n\n` +
            `📊 *80% de réussite* sur nos pronostics !\n\n` +
