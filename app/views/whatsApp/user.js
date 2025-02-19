@@ -310,20 +310,17 @@ const UserCommander = async (user, msg, client) => {
           case "confirmPayment":
             switch(msg.body.toUpperCase()) {
               case "OUI":
-                // Ici vous pourrez ajouter la logique de traitement du paiement
-                await sendMessageToNumber(client, user.data.phoneNumber, 
-                  "✅ Merci de confirmer votre paiement !\n" +
-                  "Veuillez procéder au paiement sur votre téléphone...\n\n" +
-                  "_Nous traiterons votre commande dès réception du paiement._"
-                );
-                await requestPaiement(
+                const paymentResult =  await requestPaiement(
                   user.data,
                   Steps[user.data.phoneNumber].pendingOrder.mobileMoneyPhone,
                   Steps[user.data.phoneNumber].pendingOrder.plan
               );
-                
-                // Reset ou passer à l'étape suivante selon votre logique
-                break;
+              await sendMessageToNumber(client, user.data.phoneNumber,
+                paymentResult +
+                "_Tapez # pour revenir au menu principal_"
+              );
+              reset(user);
+              break;
           
               case "NON":
                 await sendMessageToNumber(client, user.data.phoneNumber,
