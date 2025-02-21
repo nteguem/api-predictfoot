@@ -19,29 +19,74 @@ moment.locale('fr');
 
 
 class JsonBinService {
-  static API_KEY = '$2a$10$i.xMsd3ow6gXVS6KvIMz9.TQySCf8BGDqdK5umo2aG9wWA1YRMKZO'; 
+  static API_KEY = '$2a$10$i.xMsd3ow6gXVS6KvIMz9.TQySCf8BGDqdK5umo2aG9wWA1YRMKZO';
   static BASE_URL = 'https://api.jsonbin.io/v3/b';
 
   static async getOrder(binId) {
     try {
+      console.log(`Attempting to retrieve order with ID: ${binId}`);
+
       const response = await fetch(
         `${this.BASE_URL}/${binId}`,
         {
           method: 'GET',
           headers: {
-            'X-Master-Key': this.API_KEY
+            'X-Master-Key': this.API_KEY,
+            'Content-Type': 'application/json'
           }
         }
       );
 
+      // Log detailed response information
+      console.log(`Response Status: ${response.status}`);
+      console.log(`Response Headers: ${JSON.stringify(Object.fromEntries(response.headers))}`);
+
+      // Try to get response body for more details
+      const responseBody = await response.text();
+      console.log(`Response Body: ${responseBody}`);
+
       if (!response.ok) {
-        throw new Error('Erreur de récupération de la commande');
+        // Create a more detailed error message
+        throw new Error(`JSONBin Retrieval Failed: 
+          Status: ${response.status}
+          Body: ${responseBody}
+          Headers: ${JSON.stringify(Object.fromEntries(response.headers))}
+        `);
       }
 
-      const data = await response.json();
+      // Parse the response body
+      let data;
+      try {
+        data = JSON.parse(responseBody);
+      } catch (parseError) {
+        throw new Error(`Failed to parse JSONBin response: ${parseError.message}
+          Raw Response Body: ${responseBody}
+        `);
+      }
+
+      // Validate data structure
+      if (!data || !data.record) {
+        throw new Error(`Invalid JSONBin response structure: 
+          Received data does not contain a 'record' field
+          Full Data: ${JSON.stringify(data)}
+        `);
+      }
+
       return data.record;
     } catch (error) {
-      throw new Error('Erreur de récupération de la commande');
+      // Log the full error details
+      console.error('Full JSONBin Retrieval Error:', {
+        message: error.message,
+        name: error.name,
+        stack: error.stack
+      });
+
+      // Throw a more informative error
+      throw new Error(`Détails de l'erreur de récupération de la commande:
+        - Type d'erreur: ${error.name}
+        - Message: ${error.message}
+        - Vérifiez l'ID de commande, la connexion réseau et les paramètres JSONBin
+      `);
     }
   }
 }
