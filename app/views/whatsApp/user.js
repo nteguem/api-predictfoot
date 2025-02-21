@@ -153,79 +153,67 @@ const UserCommander = async (user, msg, client) => {
       }
 
      // Command from app
-     if (msg.body.startsWith("cmd-")) {
-      try {
-        const encodedData = msg.body.replace("cmd-", "");
-        
-        try {
-          const [price, duration, phone, token] = encodedData.split('-');
-          
-          const orderData = {
-            plan: {
-              price: parseInt(price),
-              duration: parseInt(duration),
-              name: `Forfait ${duration} jours`,
-              description: `Accès premium pendant ${duration} jours`
-            },
-            mobileMoneyPhone: phone,
-            fcmToken: token
-          };
+if (msg.body.startsWith("commande-")) {
+  try {
+    const encodedData = msg.body.replace("commande-", "");
+    const decodedData = Buffer.from(encodedData, 'base64').toString('utf8');
     
-          await userService.update(user.data.phoneNumber, { fcmToken: orderData.fcmToken });
-    
-          // Structure validation
-          if (!orderData || !orderData.plan || !orderData.mobileMoneyPhone) {
-            await sendMessageToNumber(client, user.data.phoneNumber,
-              "❌ Commande invalide.\n\n" +
-              "Veuillez refaire la commande dans l'application bigwin et renvoyer le code tel que envoyé à partir de l'application.\n\n" +
-              "_Tapez # pour revenir au menu principal_"
-            );
-            reset(user);
-            return;
-          }
-    
-          const welcomeMessage =
-            `👋 Salut ${user.data.pseudo} !\n` +
-            `✨ *Bienvenue sur BIGWIN* – Votre assistant de prédictions football !\n` +
-            `📱 Nous avons reçu votre commande depuis l'application :\n\n` +
-            `📦 *📝 Récapitulatif de votre abonnement:*\n` +
-            `Forfait : ${orderData.plan.name}\n` +
-            `Prix : ${orderData.plan.price} FCFA\n` +
-            `Durée : ${orderData.plan.duration} jours\n` +
-            `Description : ${orderData.plan.description}\n\n` +
-            `Numéro de paiement : +237 ${orderData.mobileMoneyPhone}\n\n` +
-            `Confirmez-vous la souscription ?\n` +
-            `Répondez par *Oui* ou *Non*`;
-    
-          await sendMessageToNumber(client, user.data.phoneNumber, welcomeMessage);
-          Steps[user.data.phoneNumber] = {
-            currentMenu: "appPaymentConfirmation",
-            pendingOrder: orderData,
-            isFirstContact: false
-          };
-          return;
-          
-        } catch (parseError) {
-          // Capture spécifiquement l'erreur de parsing des données
-          await sendMessageToNumber(client, user.data.phoneNumber,
-            "❌ Commande invalide.\n\n" +
-            "Veuillez refaire la commande dans l'application bigwin et renvoyer le code tel que envoyé à partir de l'application.\n\n" +
-            "_Tapez # pour revenir au menu principal_"
-          );
-          reset(user);
-          return;
-        }
-      } catch (error) {
-        // Gestion des autres erreurs possibles
+    try {
+      const orderData = JSON.parse(decodedData);
+      await userService.update(user.data.phoneNumber, { fcmToken: orderData?.fcmToken });
+      // Structure validation
+      if (!orderData || !orderData.plan || !orderData.mobileMoneyPhone) {
         await sendMessageToNumber(client, user.data.phoneNumber,
-          "❌ Une erreur est survenue.\n\n" +
+          "❌ Commande invalide.\n\n" +
+          "Veuillez refaire la commande dans l'application bigwin et renvoyer le code tel que envoyé à partir de l'application.\n\n" +
           "_Tapez # pour revenir au menu principal_"
         );
         reset(user);
-        await replyToMessage(client, msg, getMainMenu(false, user.data.pseudo));
         return;
       }
+
+      const welcomeMessage =
+        `👋 Salut ${user.data.pseudo} !\n` +
+        `✨ *Bienvenue sur BIGWIN* – Votre assistant de prédictions football !\n` +
+        `📱 Nous avons reçu votre commande depuis l'application :\n\n` +
+        `📦 *📝 Récapitulatif de votre abonnement:*\n` +
+        `Forfait : ${orderData.plan.name}\n` +
+        `Prix : ${orderData.plan.price} FCFA\n` +
+        `Durée : ${orderData.plan.duration} jours\n` +
+        `Description : ${orderData.plan.description}\n\n` +
+        `Numéro de paiement : +237 ${orderData.mobileMoneyPhone}\n\n` +
+        `Confirmez-vous la souscription ?\n` +
+        `Répondez par *Oui* ou *Non*`;
+
+      await sendMessageToNumber(client, user.data.phoneNumber, welcomeMessage);
+      Steps[user.data.phoneNumber] = {
+        currentMenu: "appPaymentConfirmation",
+        pendingOrder: orderData,
+        isFirstContact: false
+      };
+      return;
+      
+    } catch (jsonError) {
+      // Capture spécifiquement l'erreur de parsing JSON
+      await sendMessageToNumber(client, user.data.phoneNumber,
+        "❌ Commande invalide.\n\n" +
+        "Veuillez refaire la commande dans l'application bigwin et renvoyer le code tel que envoyé à partir de l'application.\n\n" +
+        "_Tapez # pour revenir au menu principal_"
+      );
+      reset(user);
+      return;
     }
+  } catch (error) {
+    // Gestion des autres erreurs possibles (base64, etc.)
+    await sendMessageToNumber(client, user.data.phoneNumber,
+      "❌ Une erreur est survenue.\n\n" +
+      "_Tapez # pour revenir au menu principal_"
+    );
+    reset(user);
+    await replyToMessage(client, msg, getMainMenu(false, user.data.pseudo));
+    return;
+  }
+}
 
       // Handle reset command
       if (msg.body === "#") {
@@ -247,7 +235,7 @@ const UserCommander = async (user, msg, client) => {
       const { currentMenu, isFirstContact } = Steps[user.data.phoneNumber];
 
       // Handle first contact
-      if (isFirstContact && !msg.body.startsWith("cmd-")) {
+      if (isFirstContact && !msg.body.startsWith("commande-")) {
         await replyToMessage(client, msg, getMainMenu(true, user.data.pseudo));
         Steps[user.data.phoneNumber].isFirstContact = false;
         return;
