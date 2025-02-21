@@ -14,7 +14,37 @@ const { verifyUserVip, listSubscriptions } = require("../../services/subscriptio
 const { orderCommander, sendStepMessage } = require("./Order");
 const { requestPaiement } = require('../../services/monetbil.service');
 const moment = require("moment");
+const fetch = require('node-fetch');
 moment.locale('fr');
+
+
+class JsonBinService {
+  static API_KEY = '$2a$10$i.xMsd3ow6gXVS6KvIMz9.TQySCf8BGDqdK5umo2aG9wWA1YRMKZO'; 
+  static BASE_URL = 'https://api.jsonbin.io/v3/b';
+
+  static async getOrder(binId) {
+    try {
+      const response = await fetch(
+        `${this.BASE_URL}/${binId}`,
+        {
+          method: 'GET',
+          headers: {
+            'X-Master-Key': this.API_KEY
+          }
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Erreur de récupération de la commande');
+      }
+
+      const data = await response.json();
+      return data.record;
+    } catch (error) {
+      throw new Error('Erreur de récupération de la commande');
+    }
+  }
+}
 
 // Global state for tracking user steps
 const Steps = {};
@@ -152,20 +182,37 @@ const UserCommander = async (user, msg, client) => {
         return;
       }
 
-     // Command from app
+// Command from app
 if (msg.body.startsWith("commande-")) {
   try {
-    const encodedData = msg.body.replace("commande-", "");
-    const decodedData = Buffer.from(encodedData, 'base64').toString('utf8');
+    const orderId = msg.body.replace("commande-", "");
     
     try {
-      const orderData = JSON.parse(decodedData);
+      // Récupérer les données de la commande depuis JSONBin
+      const orderData = await JsonBinService.getOrder(orderId);
+      
+      // Vérifier la validité et l'âge de la commande
+      const orderTime = new Date(orderData.timestamp);
+      const now = new Date();
+      const orderAgeMinutes = (now - orderTime) / (1000 * 60);
+      
+      if (orderAgeMinutes > 30) { // Rejeter les commandes de plus de 30 minutes
+        await sendMessageToNumber(client, user.data.phoneNumber,
+          "❌ Cette commande a expiré.\n\n" +
+          "Veuillez refaire la commande dans l'application bigwin.\n\n" +
+          "_Tapez # pour revenir au menu principal_"
+        );
+        reset(user);
+        return;
+      }
+
       await userService.update(user.data.phoneNumber, { fcmToken: orderData?.fcmToken });
+
       // Structure validation
       if (!orderData || !orderData.plan || !orderData.mobileMoneyPhone) {
         await sendMessageToNumber(client, user.data.phoneNumber,
           "❌ Commande invalide.\n\n" +
-          "Veuillez refaire la commande dans l'application bigwin et renvoyer le code tel que envoyé à partir de l'application.\n\n" +
+          "Veuillez refaire la commande dans l'application bigwin.\n\n" +
           "_Tapez # pour revenir au menu principal_"
         );
         reset(user);
@@ -193,18 +240,18 @@ if (msg.body.startsWith("commande-")) {
       };
       return;
       
-    } catch (jsonError) {
-      // Capture spécifiquement l'erreur de parsing JSON
+    } catch (error) {
+      console.error('Erreur JSONBin:', error);
       await sendMessageToNumber(client, user.data.phoneNumber,
-        "❌ Commande invalide.\n\n" +
-        "Veuillez refaire la commande dans l'application bigwin et renvoyer le code tel que envoyé à partir de l'application.\n\n" +
+        "❌ Commande invalide ou expirée.\n\n" +
+        "Veuillez refaire la commande dans l'application bigwin.\n\n" +
         "_Tapez # pour revenir au menu principal_"
       );
       reset(user);
       return;
     }
   } catch (error) {
-    // Gestion des autres erreurs possibles (base64, etc.)
+    console.error('Erreur générale:', error);
     await sendMessageToNumber(client, user.data.phoneNumber,
       "❌ Une erreur est survenue.\n\n" +
       "_Tapez # pour revenir au menu principal_"
