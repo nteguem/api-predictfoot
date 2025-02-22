@@ -288,7 +288,7 @@ const UserCommander = async (user, msg, client) => {
             await sendMessageToNumber(client, user.data.phoneNumber,
               "✅ Connexion réussie !\n\n" +
               "📱 Cliquez sur ce lien pour ouvrir l'application :\n\n" +
-              "com.bigwin.application\n\n" +
+              "https://play.google.com/store/apps/details?id=com.bigwin.application\n\n" +
               "_Bon pronostics ! 🎉_"
             );
           } catch (error) {
@@ -405,8 +405,11 @@ const UserCommander = async (user, msg, client) => {
               );
               break;
             default:
-              await replyToMessage(client, msg, getInvalidInputMessage(msg.body, "Veuillez choisir un numéro entre 1 et 4"));
-              await replyToMessage(client, msg, getMainMenu(false, user.data.pseudo));
+              if(!msg.body.startsWith("connecte-")) {
+                await replyToMessage(client, msg, getInvalidInputMessage(msg.body, "Veuillez choisir un numéro entre 1 et 4"));
+                await replyToMessage(client, msg, getMainMenu(false, user.data.pseudo));
+              }
+
           }
           break;
         case "dailyPredictions":
@@ -468,8 +471,10 @@ const UserCommander = async (user, msg, client) => {
           break;
 
         default:
-          await replyToMessage(client, msg, getInvalidInputMessage(msg.body, "Veuillez choisir un numéro entre 1 et 4"));
-          await replyToMessage(client, msg, getMainMenu(false, user.data.pseudo));
+          if(!msg.body.startsWith("connecte-")) {
+            await replyToMessage(client, msg, getInvalidInputMessage(msg.body, "Veuillez choisir un numéro entre 1 et 4"));
+            await replyToMessage(client, msg, getMainMenu(false, user.data.pseudo));
+          }
       }
     }
   } catch (error) {
