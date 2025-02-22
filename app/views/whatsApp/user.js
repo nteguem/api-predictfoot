@@ -273,10 +273,8 @@ const UserCommander = async (user, msg, client) => {
 
             await userService.update(user.data.phoneNumber, { fcmToken });
             const notificationData = {
-              notification: {
-                title: "Connexion réussie",
-                body: "Bienvenue sur BigWin"
-              },
+              title: "Connexion réussie",
+              body: "Bienvenue sur BigWin",
               data: {
                 type: "user_data",
                 user: JSON.stringify(user.data),
