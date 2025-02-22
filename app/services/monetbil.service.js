@@ -46,11 +46,9 @@ const makePayment = async (user, mobileMoneyPhone, plan,fcmToken = null) => {
       phoneNumber:mobileMoneyPhone,
       notifyUrl:payload.notify_url,
       type:'MONETBIL',
-      plan:plan._id,
+      plan:plan._id || plan.id,
       user:user._id
     };
-    console.log("transactionPayload",transactionPayload)
-
     await createTransaction(transactionPayload);
 
     return data;
