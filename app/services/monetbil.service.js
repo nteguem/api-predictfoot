@@ -49,6 +49,7 @@ const makePayment = async (user, mobileMoneyPhone, plan,fcmToken = null) => {
       plan:plan._id,
       user:user._id
     };
+    console.log("transactionPayload",transactionPayload)
 
     await createTransaction(transactionPayload);
 
