@@ -13,6 +13,7 @@ const path = require('path');
 const dbConnect = require('./app/config/dbConnect');
 const appRoutes = require('./app/routes');
 const { initializeWhatsAppClient, handleIncomingMessages } = require('./app/views/whatsApp/whatappsHandler');
+const setupSocketHandlers = require('./app/config/socket.handlers');
 const { ensureDefaultGroupsExist } = require('./app/services/group.service');
 const { ensureDefaultPlansExist } = require('./app/services/plan.service');
 const { scheduleAllTasks } = require('./app/services/schedule.service');
@@ -95,41 +96,8 @@ class Application {
   }
 
   setupSocketConnections() {
-    this.io.on('connection', (socket) => {
-      console.log('Client connected:', socket.id);
-
-      // Handle client messages
-      socket.on('message', (data) => {
-        console.log('Message from client:', data);
-      });
-
-      // Handle client disconnect request
-      socket.on('disconnectClient', () => {
-        if (this.whatsAppClient) {
-          this.io.emit('qrCode', 'disconnected');
-          this.io.emit('numberBot', '');
-          this.whatsAppClient.logout();
-          this.whatsAppClient.initialize();
-        }
-      });
-
-      // Handle socket disconnect
-      socket.on('disconnect', () => {
-        console.log('Client disconnected:', socket.id);
-      });
-
-      // Handle socket errors
-      socket.on('error', (error) => {
-        console.error('WebSocket error:', error);
-      });
-
-      // Send initial client info if available
-      if (this.whatsAppClient?.info) {
-        const { user, pushname } = this.whatsAppClient.info?.wid || {};
-        socket.emit('numberBot', `${user} (${pushname})`);
-        socket.emit('qrCode', 'connected');
-      }
-    });
+    // Utiliser le gestionnaire de socket amélioré
+    setupSocketHandlers(this.io, this.whatsAppClient);
   }
 
   async initializeServices() {

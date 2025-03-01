@@ -4,7 +4,8 @@ const planSchema = new mongoose.Schema({
   name: { type: String, required: true, unique: true },
   price: { type: Number, required: true },
   duration: { type: Number, required: true }, // Duration in days
-  description: { type: String }
+  description: { type: String },
+  description_html: {type: String}
 }, { timestamps: true });
 
 const Plan = mongoose.model('Plan', planSchema);

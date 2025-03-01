@@ -70,6 +70,7 @@ async function handlePaymentMonetbilSuccess(req, res, client) {
           currency: 'XAF'
         }
       };
+      // await sendMessageToNumber(client, user.phoneNumber, adminMessage);
       await sendDeviceNotification(fcmToken, notificationData);
     }
     // Envoi de la notification , generation de facture client et mise a jour de la transaction
