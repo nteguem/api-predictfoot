@@ -1,5 +1,6 @@
 const {getAllPlans } = require('../../../services/plan.service');
 const { parsePhoneNumber } = require('libphonenumber-js');
+const { JSDOM } = require("jsdom");
 
 const countryConfigs = {
     '237': {  // Cameroun
@@ -47,8 +48,8 @@ const countryConfigs = {
 };
 
 function stripHtml(html) {
-    const doc = new DOMParser().parseFromString(html, "text/html");
-    return doc.body.textContent || "";
+    const dom = new JSDOM(html);
+    return dom.window.document.body.textContent || "";
 }
 
 const generatePaymentMessage = (userPhoneNumber) => {

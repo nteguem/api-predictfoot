@@ -16,6 +16,7 @@ const { requestPaiement } = require('../../services/monetbil.service');
 const {sendDeviceNotification} = require('../../services/notification.service');
 const moment = require("moment");
 const fetch = require('node-fetch');
+const { JSDOM } = require("jsdom");
 moment.locale('fr');
 
 
@@ -48,8 +49,8 @@ class JsonBinService {
 }
 
 function stripHtml(html) {
-  const doc = new DOMParser().parseFromString(html, "text/html");
-  return doc.body.textContent || "";
+  const dom = new JSDOM(html);
+  return dom.window.document.body.textContent || "";
 }
 
 // Global state for tracking user steps

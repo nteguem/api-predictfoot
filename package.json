@@ -25,6 +25,7 @@
     "fs": "^0.0.1-security",
     "googleapis": "^144.0.0",
     "http-errors": "^2.0.0",
+    "jsdom": "^26.0.0",
     "jsonwebtoken": "^9.0.2",
     "libphonenumber-js": "^1.12.4",
     "moment": "^2.29.4",
