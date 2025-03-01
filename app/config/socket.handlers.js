@@ -23,32 +23,28 @@ const setupSocketHandlers = (io, whatsAppClient) => {
     // Gestionnaire pour la déconnexion du client WhatsApp
     socket.on('disconnectClient', async () => {
       try {
-        // Appeler le service pour gérer la déconnexion complète
-        const result = await botService.disconnectWhatsApp(whatsAppClient, SESSION_FILE_PATH);
+        // Informer tous les clients de la déconnexion avant de redémarrer
+        io.emit('qrCode', 'disconnected');
+        io.emit('numberBot', '');
+        io.emit('botRestarting', true);
         
-        if (result.success) {
-          io.emit('qrCode', 'disconnected');
-          io.emit('numberBot', '');
-          
-          // Réinitialiser après un court délai
-          setTimeout(() => {
-            whatsAppClient.initialize();
-          }, 2000);
-          
-          logService.addLog('Client WhatsApp déconnecté via Socket.io', 'Socket Handler', 'info');
-        } else {
-          logService.addLog(
-            `Échec de la déconnexion via Socket.io: ${result.message}`,
-            'Socket Handler',
-            'error'
-          );
-        }
+        // Appeler le service pour gérer la déconnexion complète
+        await botService.disconnectWhatsApp(whatsAppClient, SESSION_FILE_PATH);
+        
+        // Le redémarrage de l'application se fait dans le service
+        logService.addLog('Client WhatsApp déconnecté via Socket.io', 'Socket Handler', 'info');
       } catch (error) {
         logService.addLog(
           `Erreur lors de la déconnexion via Socket.io: ${error.message}`,
           'Socket Handler',
           'error'
         );
+        
+        // Informer le client de l'erreur
+        socket.emit('error', {
+          type: 'disconnect_error',
+          message: `Erreur lors de la déconnexion: ${error.message}`
+        });
       }
     });
 
