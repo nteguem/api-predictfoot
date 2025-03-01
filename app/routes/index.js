@@ -14,7 +14,8 @@ const { setupPlan } = require('./plan.route');
 const {setupNotification} = require("./notification.route");
 const {setupLogRoutes} = require('./log.route');
 const {setupTransactionRoutes} = require('./transaction.route');
-const {setupWalletRoutes} = require('./wallet.route')
+const {setupWalletRoutes} = require('./wallet.route');
+const {setupBotRoutes}  = require('./bot.route');
 /* GET home page. */
 // Define a route for the home page ('/') that renders the 'index' template with the title 'Predictfoot'.
 router.get('/', function (req, res, next) {
@@ -43,7 +44,7 @@ const setupAppRoutes = (client) => {
   const app = router;
 
   // Apply the global middleware to all routes with specified exclusions
-  app.use(globalAuthenticate(['/user/login', '/predict/list', '/subscription/notification-payment','/plan/list','/subscription/is-vip','/user/getOne']));
+  app.use(globalAuthenticate(['/user/login', '/predict/list', '/subscription/notification-payment','/plan/list','/subscription/is-vip','/user/getOne','bot/info','/bot/disconnect','/bot/reconnect']));
 
   setupUserRoutes(app, client);
   setupGroup(app, client);
@@ -58,6 +59,7 @@ const setupAppRoutes = (client) => {
   setupLogRoutes(app);
   setupTransactionRoutes(app,client);
   setupWalletRoutes(app,client);
+  setupBotRoutes(app, client);
   return app;
 };
 
