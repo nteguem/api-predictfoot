@@ -6,8 +6,6 @@ const logService = require('../../services/log.service');
 const botService = require('../../services/bot.service');
 const SESSION_FILE_PATH = '../sessions/bigwin';
 
-// Stockage global pour suivre les conversations ChatGPT
-global.chatGPTConversations = new Map();
 
 /**
  * Initialise le client WhatsApp et configure les gestionnaires d'événements
@@ -33,11 +31,18 @@ const initializeWhatsAppClient = (io) => {
 
   client.on('qr', (qrCode) => {
     io.emit('qrCode', qrCode);
+    logService.addLog('Code QR généré', 'WhatsApp Client', 'info');
   });
 
   client.on('authenticated', () => {
     io.emit('qrCode', "");
+    logService.addLog('Client WhatsApp authentifié', 'WhatsApp Client', 'info');
     console.log('Client is authenticated');
+  });
+
+  client.on('auth_failure', (msg) => {
+    logService.addLog(`Échec d'authentification: ${msg}`, 'WhatsApp Client', 'error');
+    io.emit('error', { message: `Échec d'authentification: ${msg}` });
   });
 
   client.on('ready', async () => {
@@ -54,6 +59,7 @@ const initializeWhatsAppClient = (io) => {
         name: botName,
         status: 'connected'
       });
+      logService.addLog(`Bot WhatsApp connecté: ${botNumber} (${botName})`, 'WhatsApp Client', 'info');
     } catch (error) {
       logService.addLog(
         `Erreur lors de la sauvegarde des informations du bot: ${error.message}`,
@@ -62,6 +68,7 @@ const initializeWhatsAppClient = (io) => {
       );
     }
     
+    // Informer tous les clients de la connexion
     io.emit('numberBot', `${botNumber} (${botName})`);
     io.emit('qrCode', "connected");
   });
@@ -72,7 +79,9 @@ const initializeWhatsAppClient = (io) => {
     
     try {
       // Mettre à jour le statut dans la base de données
-      await botService.updateBotStatus('disconnected');      
+      await botService.updateBotStatus('disconnected');
+      logService.addLog('Client WhatsApp déconnecté', 'WhatsApp Client', 'info');
+      
       // Déconnexion propre du client
       await client.logout();
     } catch (error) {
@@ -86,6 +95,20 @@ const initializeWhatsAppClient = (io) => {
     setTimeout(() => {
       client.initialize();
     }, 2000);
+  });
+
+  // Gérer les erreurs potentielles
+  client.on('change_state', (state) => {
+    logService.addLog(`Changement d'état: ${state}`, 'WhatsApp Client', 'info');
+    console.log('State changed to:', state);
+  });
+
+  client.on('message_ack', (msg, ack) => {
+    // Statut d'envoi des messages
+    // 0: non envoyé, 1: envoyé, 2: reçu, 3: lu
+    if (ack === 3) {
+      logService.addLog(`Message lu par le destinataire: ${msg.to}`, 'WhatsApp Client', 'info');
+    }
   });
 
   return client;
