@@ -47,6 +47,11 @@ class JsonBinService {
   }
 }
 
+function stripHtml(html) {
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  return doc.body.textContent || "";
+}
+
 // Global state for tracking user steps
 const Steps = {};
 
@@ -191,6 +196,7 @@ const UserCommander = async (user, msg, client) => {
           try {
             // Récupérer les données de la commande depuis JSONBin
             const orderData = await JsonBinService.getOrder(orderId);
+            const cleanDescription = stripHtml(orderData.plan.description);
 
             // Vérifier la validité et l'âge de la commande
             const orderTime = new Date(orderData.timestamp);
@@ -228,7 +234,7 @@ const UserCommander = async (user, msg, client) => {
               `Forfait : ${orderData.plan.name}\n` +
               `Prix : ${orderData.plan.price} FCFA\n` +
               `Durée : ${orderData.plan.duration} jours\n` +
-              `Description : ${orderData.plan.description}\n\n` +
+              `Description : ${cleanDescription}\n\n` +
               `Numéro de paiement : +237 ${orderData.mobileMoneyPhone}\n\n` +
               `Confirmez-vous la souscription ?\n` +
               `Répondez par *Oui* ou *Non*`;

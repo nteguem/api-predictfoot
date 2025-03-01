@@ -46,6 +46,11 @@ const countryConfigs = {
     }
 };
 
+function stripHtml(html) {
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    return doc.body.textContent || "";
+}
+
 const generatePaymentMessage = (userPhoneNumber) => {
     // Extraire l'indicatif (les 3 premiers chiffres après le +)
     const countryCode = userPhoneNumber.substring(0, 3);
@@ -121,9 +126,10 @@ const OrderStepDefinition = {
             type: 'summary',
             message: async (data) => {
                 const plan = data.selectedPlan;
+                const cleanDescription = stripHtml(plan.description);
                 return `📝 Récapitulatif de votre abonnement:\n\n` +
                        `Forfait: ${plan.name}\n` +
-                       `Description: ${plan.description}\n` +
+                       `Description: ${cleanDescription}\n` +
                        `Prix: ${plan.price} XAF\n\n` +
                        `Confirmez-vous la souscription ?\n` +
                        `Répondez par *Oui* ou *Non*`;
