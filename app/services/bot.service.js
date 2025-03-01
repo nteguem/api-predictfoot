@@ -23,6 +23,11 @@ const deleteSessionFolder = async (sessionPath) => {
           });
         } else {
           console.log(`Dossier de session supprimé avec succès: ${sessionPath}`);
+          logService.addLog(
+            `Dossier de session supprimé: ${sessionPath}`,
+            'deleteSessionFolder',
+            'info'
+          );
           resolve({
             success: true,
             message: 'Dossier de session supprimé avec succès'
@@ -34,6 +39,61 @@ const deleteSessionFolder = async (sessionPath) => {
     await logService.addLog(
       `Exception lors de la suppression du dossier: ${error.message}`,
       'deleteSessionFolder',
+      'error'
+    );
+    return {
+      success: false,
+      message: `Exception: ${error.message}`
+    };
+  }
+};
+
+/**
+ * Redémarre l'application avec PM2
+ * @returns {Promise<Object>} - Résultat de l'opération
+ */
+const restartApplication = async () => {
+  try {
+    return new Promise((resolve, reject) => {
+      exec('pm2 restart launch.js', (error, stdout, stderr) => {
+        if (error) {
+          logService.addLog(
+            `Erreur lors du redémarrage de l'application: ${error.message}`,
+            'restartApplication',
+            'error'
+          );
+          reject({
+            success: false,
+            message: `Erreur lors du redémarrage: ${error.message}`
+          });
+          return;
+        }
+        
+        if (stderr) {
+          logService.addLog(
+            `Avertissement lors du redémarrage: ${stderr}`,
+            'restartApplication',
+            'warning'
+          );
+        }
+        
+        console.log(`Application redémarrée avec PM2: ${stdout}`);
+        logService.addLog(
+          'Application redémarrée avec PM2',
+          'restartApplication',
+          'info'
+        );
+        
+        resolve({
+          success: true,
+          message: 'Application redémarrée avec succès'
+        });
+      });
+    });
+  } catch (error) {
+    await logService.addLog(
+      `Exception lors du redémarrage de l'application: ${error.message}`,
+      'restartApplication',
       'error'
     );
     return {
@@ -121,7 +181,39 @@ const updateBotStatus = async (status) => {
 };
 
 /**
- * Déconnecte complètement le bot WhatsApp
+ * Supprime toutes les informations du bot de la base de données
+ * @returns {Promise<Object>} - Résultat de l'opération
+ */
+const clearBotInfo = async () => {
+  try {
+    await Bot.deleteMany({});
+    
+    logService.addLog(
+      'Informations du bot supprimées de la base de données',
+      'clearBotInfo',
+      'info'
+    );
+    
+    return {
+      success: true,
+      message: 'Informations du bot supprimées avec succès'
+    };
+  } catch (error) {
+    await logService.addLog(
+      `Erreur lors de la suppression des informations du bot: ${error.message}`,
+      'clearBotInfo',
+      'error'
+    );
+    
+    return {
+      success: false,
+      message: `Erreur: ${error.message}`
+    };
+  }
+};
+
+/**
+ * Déconnecte complètement le bot WhatsApp, supprime la session et redémarre l'application
  * @param {Object} client - Le client WhatsApp
  * @param {string} sessionPath - Chemin du dossier de session
  * @returns {Promise<Object>} - Résultat de l'opération
@@ -133,31 +225,37 @@ const disconnectWhatsApp = async (client, sessionPath) => {
     await client.logout();
     console.log('Client WhatsApp déconnecté avec succès');
     
-    // 2. Mettre à jour le statut dans la base de données
-    const statusUpdate = await updateBotStatus('disconnected');
-    if (!statusUpdate.success) {
-      await logService.addLog(
-        `Échec de la mise à jour du statut: ${statusUpdate.message}`,
-        'disconnectWhatsApp',
-        'warning'
-      );
-    }
+    // 2. Mettre à jour le statut dans la base de données ou supprimer les infos
+    await clearBotInfo(); // Supprime les informations de l'ancien numéro
     
     // 3. Supprimer le dossier de session
     console.log(`Suppression du dossier de session: ${sessionPath}`);
     const deleteResult = await deleteSessionFolder(sessionPath);
     
-    if (deleteResult.success) {
+    // 4. Redémarrer l'application avec PM2
+    console.log('Redémarrage de l\'application...');
+    const restartResult = await restartApplication();
+    
+    if (deleteResult.success && restartResult.success) {
       return {
         success: true,
-        message: 'Bot déconnecté et session supprimée avec succès',
-        data: statusUpdate.data
+        message: 'Bot déconnecté, session supprimée et application redémarrée avec succès'
       };
     } else {
+      // Construire un message détaillé en cas d'erreur partielle
+      let message = 'Déconnexion partielle : ';
+      
+      if (!deleteResult.success) {
+        message += `échec de la suppression de la session (${deleteResult.message}). `;
+      }
+      
+      if (!restartResult.success) {
+        message += `échec du redémarrage (${restartResult.message}).`;
+      }
+      
       return {
         success: false,
-        message: `Bot déconnecté mais échec de la suppression de la session: ${deleteResult.message}`,
-        data: statusUpdate.data
+        message: message
       };
     }
   } catch (error) {
@@ -201,5 +299,7 @@ module.exports = {
   saveOrUpdateBotInfo,
   updateBotStatus,
   getBotInfo,
-  disconnectWhatsApp
+  disconnectWhatsApp,
+  clearBotInfo,
+  restartApplication
 };
