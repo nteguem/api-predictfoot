@@ -1,5 +1,5 @@
 const botService = require('../services/bot.service');
-const logService = require('../../services/log.service');
+const logService = require('../services/log.service');
 const SESSION_FILE_PATH = '../sessions/bigwin'; // Chemin du dossier de session
 
 /**
