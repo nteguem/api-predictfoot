@@ -1,6 +1,7 @@
 const Predict = require('../models/predict.model');
 const {loadFixtureData,findFixtureByTeamId} = require("./fixture.service");
 const moment = require('moment');
+const { sendTopicNotification,sendGeneralNotification } = require('./notification.service');
 const { getRandomDelay } = require("../helpers/utils")
 const {sendMediaToNumber,sendMessageToNumber} = require('../views/whatsApp/whatsappMessaging');
 const {generateImage} = require('./generateImagePredict.service');
@@ -228,6 +229,64 @@ async function publishPrediction(client, date) {
       const {isVip} = await verifyUserVip(user.phoneNumber);
       userGroups[isVip ? 'vip' : 'nonVip'].push(user);
     }
+
+    //envoyer les notifications a l'app mobile s'il l'un des free ou vip a la data 
+ // Pour les prédictions VIP
+const notificationDataVIP = {
+  title: '🔥 Pronostics VIP disponibles !',
+  body: [
+    'Les pronostics premium du jour sont prêts.',
+    '👉 CLIQUEZ pour voir vos pronos VIP'
+  ].join('\n'),
+  data: {
+    type: 'predictions_notification',
+    predictionType: 'vip',
+    status: 'available'
+  }
+};
+
+// Version française pour le Cameroun (VIP)
+const notificationDataVIPCameroon = {
+  title: '🔥 Pronostics VIP disponibles !',
+  body: [
+    'Les pronostics premium du jour sont prêts.',
+    '👉 CLIQUEZ pour voir vos pronos VIP'
+  ].join('\n'),
+  data: {
+    type: 'predictions_notification',
+    predictionType: 'vip',
+    status: 'available',
+    region: 'cameroon'
+  }
+};
+
+// Pour les prédictions gratuites
+const notificationDataFree = {
+  title: '📊 Daily Predictions Available!',
+  body: [
+    'Today\'s free predictions are ready.',
+    '👉 TAP to see your winning picks'
+  ].join('\n'),
+};
+
+// Version française pour le Cameroun (Gratuit)
+const notificationDataFreeCameroon = {
+  title: '📊 Pronostics gratuits disponibles !',
+  body: [
+    'Les pronostics gratuits du jour sont prêts.',
+    '👉 CLIQUEZ pour voir vos pronos gagnants'
+  ].join('\n'),
+};
+
+// Modifiez la condition comme suit:
+if (vipPredictions.length > 0) {
+  await sendGeneralNotification(notificationDataVIP);
+  await sendTopicNotification('all_devices_cameroon', notificationDataVIPCameroon);
+}
+else if (nonVipPredictions.length > 0) {
+  await sendGeneralNotification(notificationDataFree);
+  await sendTopicNotification('all_devices_cameroon', notificationDataFreeCameroon);
+}
 
     // Envoyer les prédictions aux utilisateurs VIP et non-VIP uniquement si des images ont été générées
     for (const group in userGroups) {
