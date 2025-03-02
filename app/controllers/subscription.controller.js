@@ -47,12 +47,10 @@ async function handlePaymentMonetbilSuccess(req, res, client) {
     // Notification sur l'application mobile 
     if (fcmToken) {
       const notificationData = {
-        title: '🌟 Forfait VIP Activé !',
+        title: '🌟 Pronos PREMIUM Activés !',
         body: [
-          'Félicitations ! Votre forfait VIP est maintenant actif.',
-          `✨ Accès Premium débloqué pour ${plan?.duration} jours`,
-          '📊 Prédictions exclusives disponibles',
-          '🎯 Pronostics à fort taux de réussite'
+          `Forfait actif pour ${plan?.duration} jours.`,
+          '👉 CLIQUEZ pour voir vos pronos premium !'
         ].join('\n'),
         data: {
           type: 'subscription_notification',

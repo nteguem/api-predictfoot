@@ -1,5 +1,6 @@
 const Campaign = require('../models/campaign.model');
 const cron = require('node-cron');
+const { sendDeviceNotification } = require('./notification.service');
 const {sendMessageToNumber,sendMediaToNumber} = require('../views/whatsApp/whatsappMessaging')
 const {list} = require('./user.service')
 const { getRandomDelay } = require("../helpers/utils")
@@ -141,6 +142,31 @@ async function sendCampaignWhatapp(client, campaign) {
                   {
                     const content = `Salut ${ targetUser.user ? targetUser.user.pseudo :  targetUser.pseudo},\n\n*Votre ${targetUser.plan.name} se termine bientôt !* \n\n Il vous reste seulement  ${targetUser.user ? targetUser.user.daysRemaining :  targetUser.daysRemaining} jours avant l'expiration de votre forfait. Pensez à renouveler votre abonnement pour éviter toute interruption de service.`;     
                     await sendMessageToNumber(client, targetUser.user ? targetUser.user.phoneNumber : targetUser.phoneNumber, content);
+                    if(targetUser.user.fcmToken)
+                    {
+                      const notificationData = {
+                        title: '🌟 Votre forfait se termine bientôt !',
+                        body: [
+                          `${targetUser.plan.name} : Plus que ${targetUser.user.daysRemaining} jours restants  !`,
+                          `👉 CLIQUEZ pour renouveler maintenant`
+                        ].join('\n'),
+                        data: {
+                          type: 'subscription_notification',
+                          subscriptionId: 'operator_transaction_id',
+                          packageType: 'VIP',
+                          user: JSON.stringify(targetUser.user),
+                          features: [
+                            'predictions_vip',
+                          ].join(','),
+                          status: 'active',
+                          price: String(targetUser.plan.price),
+                          currency: 'XAF'
+                        }
+                      };
+
+                      await sendDeviceNotification(targetUser.user?.fcmToken, notificationData);
+                    }
+                    
                   }
                 else
                 {
