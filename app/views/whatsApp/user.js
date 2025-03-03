@@ -292,8 +292,7 @@ const UserCommander = async (user, msg, client) => {
             // Envoyer le message WhatsApp de confirmation avec lien deep link
             await sendMessageToNumber(client, user.data.phoneNumber,
               "✅ Connexion réussie !\n\n" +
-              "📱 Cliquez sur ce lien pour ouvrir l'application :\n\n" +
-              "https://play.google.com/store/apps/details?id=com.bigwin.application\n\n" +
+              "📱 Appuyez sur la notification de l'application BigWin pour finaliser." +
               "_Bon pronostics ! 🎉_"
             );
           } catch (error) {

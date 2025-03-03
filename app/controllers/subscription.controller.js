@@ -39,7 +39,8 @@ async function handlePaymentMonetbilSuccess(req, res, client) {
     };
 
     // Preparation de la facture pdf du client
-    const successMessage = `Félicitations, ${user.pseudo} ! Votre paiement de ${plan.price} pour le forfait ${plan.name} a été validé avec succès. Vous trouverez ci-joint votre facture.${fcmToken ? "\nVeuillez ouvrir votre application pour bénéficier des pronostics VIP." : ""}${NAVIGATION_SUFFIX}`;    const pdfBufferInvoice = await fillPdfFields(pathInvoice, req.body);
+    const successMessage = `Félicitations, ${user.pseudo} ! Votre paiement de ${plan.price} pour le forfait ${plan.name} a été validé avec succès. Vous trouverez ci-joint votre facture.${fcmToken ? "\nAppuyez sur la notification BigWin pour voir vos pronostics premium." : ""}${NAVIGATION_SUFFIX}`;
+    const pdfBufferInvoice = await fillPdfFields(pathInvoice, req.body);
     const pdfBase64Invoice = pdfBufferInvoice.toString('base64');
     const pdfNameInvoice = `Invoice_${user.phoneNumber}`;
     const documentType = 'application/pdf';
@@ -50,7 +51,7 @@ async function handlePaymentMonetbilSuccess(req, res, client) {
         title: '🌟 Pronos PREMIUM Activés !',
         body: [
           `Forfait actif pour ${plan?.duration} jours.`,
-          '👉 CLIQUEZ pour voir vos pronos premium !'
+          '👉 APPUYEZ pour voir vos pronos premium !'
         ].join('\n'),
         data: {
           type: 'subscription_notification',
