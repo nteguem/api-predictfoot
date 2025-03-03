@@ -127,7 +127,7 @@ const handleIncomingMessages = (client) => {
         try {
 
                 // Récupérer les données de localisation
-                const location = message.location;
+                const location = msg.location;
             
                 // Extraire la latitude et longitude
                 const latitude = location.latitude;
@@ -137,7 +137,7 @@ const handleIncomingMessages = (client) => {
                 
                 // Envoyer un lien Google Maps vers cette localisation
                 const mapsUrl = `https://maps.google.com/?q=${latitude},${longitude}`;
-                await message.reply(`Voici votre localisation sur Google Maps: ${mapsUrl}`);
+                await msg.reply(`Voici votre localisation sur Google Maps: ${mapsUrl}`);
             } catch (error) {
                 console.error('Erreur lors du traitement de la localisation:', error);
             }
