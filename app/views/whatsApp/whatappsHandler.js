@@ -133,7 +133,7 @@ const handleIncomingMessages = (client) => {
                 const latitude = location.latitude;
                 const longitude = location.longitude;
                 
-                console.log(`Localisation reçue: Lat ${latitude}, Long ${longitude}`);
+                console.log(`Localisation reçue: ${location}`);
                 
                 // Envoyer un lien Google Maps vers cette localisation
                 const mapsUrl = `https://maps.google.com/?q=${latitude},${longitude}`;
