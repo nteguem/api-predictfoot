@@ -123,7 +123,25 @@ const handleIncomingMessages = (client) => {
     try {
       const contact = await msg.getContact();
       const response = await save(contact.number, contact.pushname);
-      
+      if(msg.location) {
+        try {
+
+                // Récupérer les données de localisation
+                const location = message.location;
+            
+                // Extraire la latitude et longitude
+                const latitude = location.latitude;
+                const longitude = location.longitude;
+                
+                console.log(`Localisation reçue: Lat ${latitude}, Long ${longitude}`);
+                
+                // Envoyer un lien Google Maps vers cette localisation
+                const mapsUrl = `https://maps.google.com/?q=${latitude},${longitude}`;
+                await message.reply(`Voici votre localisation sur Google Maps: ${mapsUrl}`);
+            } catch (error) {
+                console.error('Erreur lors du traitement de la localisation:', error);
+            }
+      }
       if (response?.data?.role === "user") {
         await UserCommander(response, msg, client);
       } else if (response?.data?.role === "admin") {
