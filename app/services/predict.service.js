@@ -200,106 +200,125 @@ async function correctPrediction() {
 }
 
 
+// Vérifier si la date passée est celle d'aujourd'hui
+const isTodayDate = (dateString) => {
+  const today = new Date().toISOString().split('T')[0];
+  return dateString === today;
+};
 
 async function publishPrediction(client, date) {
   try {
     const predictionDate = new Date(date).toISOString().split('T')[0];
-
+    const isToday = isTodayDate(predictionDate);
+    
     // Récupérer toutes les prédictions (VIP et non-VIP)
     const { predictions } = await listPredictions(1, 15, predictionDate, true, null);
-
+    
     // Filtrer les prédictions VIP et non-VIP
     const vipPredictions = predictions.filter(p => p.isVip);
     const nonVipPredictions = predictions.filter(p => !p.isVip);
-
+    
     // Générer les images uniquement si des prédictions existent
     const images = {
       vip: vipPredictions.length > 0 ? await generateImage(vipPredictions) : null,
       nonVip: nonVipPredictions.length > 0 ? await generateImage(nonVipPredictions) : null,
     };
-
+    
     // Récupérer les utilisateurs et leur statut VIP
     const users = await User.find({});
     const userGroups = {
       vip: [],
       nonVip: [],
     };
-
+    
     for (const user of users) {
       const {isVip} = await verifyUserVip(user.phoneNumber);
       userGroups[isVip ? 'vip' : 'nonVip'].push(user);
     }
-
-    //envoyer les notifications a l'app mobile s'il l'un des free ou vip a la data 
- // Pour les prédictions VIP
-const notificationDataVIP = {
-  title: '🔥 Pronostics VIP disponibles !',
-  body: [
-    'Les pronostics premium du jour sont prêts.',
-    '👉 CLIQUEZ pour voir vos pronos VIP'
-  ].join('\n'),
-  data: {
-    type: 'predictions_notification',
-    predictionType: 'vip',
-    status: 'available'
-  }
-};
-
-// Version française pour le Cameroun (VIP)
-const notificationDataVIPCameroon = {
-  title: '🔥 Pronostics VIP disponibles !',
-  body: [
-    'Les pronostics premium du jour sont prêts.',
-    '👉 CLIQUEZ pour voir vos pronos VIP'
-  ].join('\n'),
-  data: {
-    type: 'predictions_notification',
-    predictionType: 'vip',
-    status: 'available',
-    region: 'cameroon'
-  }
-};
-
-// Pour les prédictions gratuites
-const notificationDataFree = {
-  title: '📊 Daily Predictions Available!',
-  body: [
-    'Today\'s free predictions are ready.',
-    '👉 TAP to see your winning picks'
-  ].join('\n'),
-};
-
-// Version française pour le Cameroun (Gratuit)
-const notificationDataFreeCameroon = {
-  title: '📊 Pronostics gratuits disponibles !',
-  body: [
-    'Les pronostics gratuits du jour sont prêts.',
-    '👉 CLIQUEZ pour voir vos pronos gagnants'
-  ].join('\n'),
-};
-
-// Modifiez la condition comme suit:
-if (vipPredictions.length > 0) {
-  await sendGeneralNotification(notificationDataVIP);
-  await sendTopicNotification('all_devices_cameroon', notificationDataVIPCameroon);
-}
-else if (nonVipPredictions.length > 0) {
-  await sendGeneralNotification(notificationDataFree);
-  await sendTopicNotification('all_devices_cameroon', notificationDataFreeCameroon);
-}
-
+    
+    // Vérifier si des prédictions sont disponibles (VIP ou non-VIP)
+    const hasPredictions = vipPredictions.length > 0 || nonVipPredictions.length > 0;
+    
+    // Si on a des prédictions, envoyer les notifications appropriées
+    if (hasPredictions) {
+      if (isToday) {
+        // Notifications pour les prédictions du jour (sans distinguer VIP/free)
+        const notificationDataPredictions = {
+          title: '🔥 Today\'s Predictions Available!',
+          body: [
+            'Check out today\'s football predictions.',
+            '👉 TAP to see your predictions'
+          ].join('\n'),
+          data: {
+            type: 'predictions_notification',
+            predictionDate: predictionDate,
+            status: 'available'
+          }
+        };
+        
+        // Version française pour le Cameroun
+        const notificationDataPredictionsCameroon = {
+          title: '🔥 Pronostics du jour disponibles !',
+          body: [
+            'Consultez les pronostics de football du jour.',
+            '👉 CLIQUEZ pour voir vos pronostics'
+          ].join('\n'),
+          data: {
+            type: 'predictions_notification',
+            predictionDate: predictionDate,
+            status: 'available',
+            region: 'cameroon'
+          }
+        };
+        
+        await sendGeneralNotification(notificationDataPredictions);
+        await sendTopicNotification('all_devices_cameroon', notificationDataPredictionsCameroon);
+      } 
+      else {
+        // Notifications pour les résultats d'hier
+        const notificationDataResults = {
+          title: '📈 Yesterday\'s Results Available!',
+          body: [
+            'Check predictions performed.',
+            '👉 TAP to see the results'
+          ].join('\n'),
+          data: {
+            type: 'results_notification',
+            predictionDate: predictionDate,
+            status: 'available'
+          }
+        };
+        
+        // Version française pour le Cameroun
+        const notificationDataResultsCameroon = {
+          title: '📈 Résultats d\'hier disponibles !',
+          body: [
+            'Vérifiez les performances de nos pronostics.',
+            '👉 CLIQUEZ pour voir les résultats'
+          ].join('\n'),
+          data: {
+            type: 'results_notification',
+            predictionDate: predictionDate,
+            status: 'available',
+            region: 'cameroon'
+          }
+        };
+        
+        await sendGeneralNotification(notificationDataResults);
+        await sendTopicNotification('all_devices_cameroon', notificationDataResultsCameroon);
+      }
+    }
+    
     // Envoyer les prédictions aux utilisateurs VIP et non-VIP uniquement si des images ont été générées
     for (const group in userGroups) {
       if (userGroups[group].length > 0 && images[group]) {
         await sendPredictions(client, userGroups[group], images[group]);
       }
     }
-
   } catch (error) {
-    console.log('Error daily predictions:', error);
+    console.log('Error processing predictions:', error);
   }
 }
-
 
 
 
@@ -402,23 +421,6 @@ async function oldTips(isVisible = true, isVip = false) {
     console.log('Error fetching last seven days predictions:', error);
     return { success: false, error: error.message }; 
    }
-}
-
-async function formatPredictionText(prediction) {
-  
-  let message = [
-    `🎯 *NOUVELLE PRÉDICTION* ${prediction.isLive ? '🔴 LIVE' : ''}\n`,
-    `🏆 ${prediction.championship.name}`,
-    `⏰ En cours`,
-    `\n${prediction.fixture.homeTeam.team_name} 🆚 ${prediction.fixture.awayTeam.team_name}`,
-    `📍 ${prediction.fixture.venue || 'Stade à confirmer'}`,
-    `\n💫 Notre Prédiction: ${prediction.prediction}`,
-    '\n⚡️ Ne tardez pas! Les cotes peuvent baisser rapidement!',
-    prediction.isLive ? '\n⚠️ PRÉDICTION LIVE: Placez votre pari maintenant!' : '',
-    '\nBonne chance à tous! 🍀'
-  ].filter(Boolean).join('\n');
-
-  return message;
 }
 
 
