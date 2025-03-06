@@ -31,7 +31,7 @@ const PredictSchema = new mongoose.Schema({
     }
   },
   iswin: { type: Boolean, default: false }, 
-  prediction: { type: String, required: true },
+  prediction: { type: Object, required: true },
   coast: { type: Number, required: true },
   author: { type: String},
   isVisible: { type: Boolean, default: false },
