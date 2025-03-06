@@ -181,9 +181,7 @@ function formatMatchNotificationCameroon(fixture) {
 
 // Middleware pre-save modifié
 PredictSchema.pre('save', async function(next) {
-  if (this.isLive) {
-    this.isVip = true;
-    this.isPlatinum = true;
+  if (this.isLive) 
     
     try {
       // Notification Firebase
