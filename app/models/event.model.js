@@ -9,6 +9,10 @@ const EventSchema = new Schema({
   description: {
     type: String,
     required: true
+  },
+  description_fr: {
+    type: String,
+    required: true
   }
 }, { timestamps: true });
 
