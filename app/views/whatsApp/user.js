@@ -144,7 +144,7 @@ const sendDailyPredictions = async (client, user, dateIndex) => {
       const { prediction: predictionType, iswin } = prediction;
       const { homeTeam, awayTeam, score } = prediction.fixture;
       const outcome = iswin ? "✅" : "❌";
-      const event = `${homeTeam.team_name} vs ${awayTeam.team_name} • *${predictionType}* • ${score.fulltime} ${outcome}`;
+      const event = `${homeTeam.team_name} vs ${awayTeam.team_name} • *${predictionType?.description_fr}* • ${score.fulltime} ${outcome}`;
       dailyPredictionsResponse += `▶️ ${event}\n`;
     });
 

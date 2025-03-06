@@ -136,7 +136,7 @@ async function generateImage(data) {
 
     // Prediction aligned below home team logo
     ctx.font = '20px Arial';
-    ctx.fillText(item.prediction, 20, fixtureYStart + 100);
+    ctx.fillText(item.prediction?.description_fr, 20, fixtureYStart + 100);
 
     // Affichage de la cote et du statut
     const coastText = `${item.coast}`;
