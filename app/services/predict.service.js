@@ -98,9 +98,10 @@ async function listPredictions(
       query.isVisible = isVisible;
     }
 
-    if (isVip !== null && (isLive===false || isLive==null)) {
+    if (isVip !== null ) {
       query.isVip = isVip;
       query.isPlatinum = false;
+      query.isLive = false;
     }
 
     if (isPlatinum !== null) {
