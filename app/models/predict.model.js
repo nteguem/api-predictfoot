@@ -39,7 +39,6 @@ const PredictSchema = new mongoose.Schema({
   isVip: { type: Boolean, default: false },
   isPlatinum: { type: Boolean, default: false },
   isLive: { type: Boolean, default: false },
-  expiresAt: { type: Date } 
 }, {
   timestamps: true,
 });
@@ -56,7 +55,7 @@ PredictSchema.post('findOneAndUpdate', async function(doc) {
   const [halftimeHome, halftimeAway] = halftime ? halftime.split('-').map(Number) : [0, 0];
   const [fulltimeHome, fulltimeAway] = fulltime ? fulltime.split('-').map(Number) : [0, 0];
   // Conditions basées sur les valeurs de buts
-  switch (prediction) {
+  switch (prediction?.title) {
     case 'Home Win':
       iswin = fulltimeHome > fulltimeAway;
       break;
@@ -153,15 +152,6 @@ PredictSchema.post('findOneAndUpdate', async function(doc) {
 
 
 
-// Création de l'index TTL
-PredictSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
-
-function calculateExpirationDate(matchDate) {
-  const MATCH_DURATION = 90 * 60 * 1000;
-  const EXTRA_TIME = 15 * 60 * 1000;
-  return new Date(matchDate.getTime() + MATCH_DURATION + EXTRA_TIME);
-}
-
 function formatMatchNotification(fixture) {
   return [
     `\n🏆 ${fixture.homeTeam.team_name} vs ${fixture.awayTeam.team_name}`,
@@ -194,7 +184,6 @@ PredictSchema.pre('save', async function(next) {
   if (this.isLive) {
     this.isVip = true;
     this.isPlatinum = true;
-    this.expiresAt = calculateExpirationDate(this.fixture.event_date);
     
     try {
       // Notification Firebase
