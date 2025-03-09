@@ -125,7 +125,8 @@ const handleMessage = async (client, message) => {
   try {
     const senderJid = message.key.remoteJid;
     const messageContent = message.message;
-    
+    console.log("roland0000",message)
+
     // Extract sender's number from JID (remove "@s.whatsapp.net")
     const senderNumber = senderJid.split('@')[0];
     
@@ -135,7 +136,6 @@ const handleMessage = async (client, message) => {
     const response = await save(senderNumber, senderName);
     
     if (response?.data?.role === "user") {
-      console.log("roland",response)
       await UserCommander(response, { 
         from: senderJid, 
         body: messageContent?.conversation || messageContent?.extendedTextMessage?.text || '', 
