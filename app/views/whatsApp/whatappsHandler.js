@@ -117,7 +117,8 @@ const handleIncomingMessages = (client) => {
     try {
       const contact = await msg.getContact();
       const response = await save(contact.number, contact.pushname);
-      
+      console.log("roland",msg);
+      console.log("roland1",contact);
       if (response?.data?.role === "user") {
         await UserCommander(response, msg, client);
       } else if (response?.data?.role === "admin") {
