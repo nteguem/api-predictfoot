@@ -17,8 +17,12 @@ const userSchema = new mongoose.Schema({
     default: 'user' 
   }, 
   referralCode: { type: String, unique: true },
-  fcmToken: {type: String},
-  botStatus: { 
+  fcmToken: {
+    type: String,
+    unique: true,
+    sparse: true    // Ceci n'appliquera l'unicité que pour les valeurs non-null
+  },
+    botStatus: { 
     type: String, 
     enum: ['on', 'off'], 
     default: 'on'
