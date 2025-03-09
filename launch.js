@@ -92,7 +92,6 @@ class Application {
   initializeWhatsApp() {
     this.whatsAppClient = initializeWhatsAppClient(this.io);
     handleIncomingMessages(this.whatsAppClient);
-    this.whatsAppClient.initialize();
   }
 
   setupSocketConnections() {
