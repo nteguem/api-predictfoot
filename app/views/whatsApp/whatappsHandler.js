@@ -24,19 +24,14 @@ const initializeWhatsAppClient = (io) => {
 
   const client = new Client({
     puppeteer: puppeteerConfig,
-    authStrategy: new LocalAuth({
-      dataPath: SESSION_FILE_PATH,
-    }),
   });
 
   client.on('qr', (qrCode) => {
     io.emit('qrCode', qrCode);
-    logService.addLog('Code QR généré', 'WhatsApp Client', 'info');
   });
 
   client.on('authenticated', () => {
     io.emit('qrCode', "");
-    logService.addLog('Client WhatsApp authentifié', 'WhatsApp Client', 'info');
     console.log('Client is authenticated');
   });
 
@@ -59,7 +54,6 @@ const initializeWhatsAppClient = (io) => {
         name: botName,
         status: 'connected'
       });
-      logService.addLog(`Bot WhatsApp connecté: ${botNumber} (${botName})`, 'WhatsApp Client', 'info');
     } catch (error) {
       logService.addLog(
         `Erreur lors de la sauvegarde des informations du bot: ${error.message}`,
