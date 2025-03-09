@@ -24,7 +24,7 @@ async function createPrediction(predictionData, client) {
         const messageText = [
           `🔴 PRÉDICTION EN DIRECT (_match en cours_)\n\n`,
           `*${savedPrediction.fixture.homeTeam.team_name} 🆚 ${savedPrediction.fixture.awayTeam.team_name}*`,
-          `\n Prédiction : *${savedPrediction.prediction}*`,
+          `\n Prédiction : *${savedPrediction.prediction.description_fr}*`,
           '\n⚡️ Placez votre pari maintenant!'
         ].join('\n');
 
