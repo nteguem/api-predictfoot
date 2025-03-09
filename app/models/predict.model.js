@@ -65,10 +65,10 @@ PredictSchema.post('findOneAndUpdate', async function(doc) {
     case 'Draw':
       iswin = fulltimeHome === fulltimeAway;
       break;
-    case 'Double Chance Home':
+    case 'Double Chance 1X':
       iswin = fulltimeHome >= fulltimeAway;
       break;
-    case 'Double Chance Away':
+    case 'Double Chance X2':
       iswin = fulltimeHome <= fulltimeAway;
       break;
     case 'Two Teams Goals':
@@ -77,28 +77,28 @@ PredictSchema.post('findOneAndUpdate', async function(doc) {
     case 'Two Teams Don\'t Goals':
       iswin = (halftimeHome === 0 || halftimeAway === 0) && (fulltimeHome === 0 || fulltimeAway === 0);
       break;
-    case 'Over 0.5':
+    case 'Over 0.5 goals':
       iswin = fulltimeHome + fulltimeAway > 0;
       break;
-    case 'Under 0.5':
+    case 'Under 0.5 goals':
       iswin = fulltimeHome + fulltimeAway === 0;
       break;
-    case 'Over 1.5':
+    case 'Over 1.5 goals':
       iswin = fulltimeHome + fulltimeAway > 1;
       break;
-    case 'Under 1.5':
+    case 'Under 1.5 goals':
       iswin = fulltimeHome + fulltimeAway <= 1;
       break;
-    case 'Over 2.5':
+    case 'Over 2.5 goals':
       iswin = fulltimeHome + fulltimeAway > 2;
       break;
-    case 'Under 2.5':
+    case 'Under 2.5 goals':
       iswin = fulltimeHome + fulltimeAway <= 2;
       break;
-    case 'Over 3.5':
+    case 'Over 3.5 goals':
       iswin = fulltimeHome + fulltimeAway > 3;
       break;
-    case 'Under 3.5':
+    case 'Under 3.5 goals':
       iswin = fulltimeHome + fulltimeAway <= 3;
       break;
     case 'Home Team Scores':
@@ -112,12 +112,6 @@ PredictSchema.post('findOneAndUpdate', async function(doc) {
       break;
     case 'Away Team Doesn\'t Score':
       iswin = fulltimeAway === 0;
-      break;
-    case 'Clean Sheet Home Team':
-      iswin = fulltimeHome === 0 && fulltimeAway > 0;
-      break;
-    case 'Clean Sheet Away Team':
-      iswin = fulltimeAway === 0 && fulltimeHome > 0;
       break;
     case 'First Half Goals Over 0.5':
       iswin = halftimeHome + halftimeAway > 0;
