@@ -7,48 +7,51 @@ const {addLog} = require('./log.service');
 
 async function save(phoneNumber, contactName, client) {
   try {
-    const user = await User.findOne({ phoneNumber: phoneNumber });
-    if (user == null) {
-      console.log("userin", user);
+    const existingUser = await User.findOne({ phoneNumber: phoneNumber });
+    if (existingUser == null) {
+      console.log("userin", existingUser);
       // Case 1: User not found, create the user
       const newUser = new User({
         pseudo: contactName,
         phoneNumber: phoneNumber,
         password: process.env.DEFAULT_PASSWORD,
       });
-
-      const user = await newUser.save();
-      console.log("user", user);
-
+      
+      const savedUser = await newUser.save();
+      console.log("user", savedUser);
+      
       return {
         exist: false,
-        data: user,
+        data: savedUser,
         message: "User created successfully.",
       };
     } else {
-      console.log("userout", user);
-
+      console.log("userout", existingUser);
+      
       // Case 2: User found, increment engagement
-      user.engagementLevel = (user.engagementLevel || 0) + 1;
-      await user.save();
+      existingUser.engagementLevel = (existingUser.engagementLevel || 0) + 1;
+      await existingUser.save();
       return {
         exist: true,
-        data: user,
+        data: existingUser,
         message: "User already exist",
       }
     }
   } catch (error) {
     console.log("usercatch", error);
-
+    
     await addLog(
       `${error.message}`,
       'save',
       'error'
     );
-    // return {
-    //   error: error,
-    //   message: "We're sorry, but an internal server error has occurred. Our team has been alerted and is working to resolve the issue. Please try again later.",
-    // }
+    
+    // You should return something here or throw the error
+    return {
+      exist: false,
+      data: null,
+      message: "Error saving user: " + error.message
+    };
   }
 }
 
