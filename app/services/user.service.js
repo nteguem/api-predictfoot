@@ -7,12 +7,8 @@ const {addLog} = require('./log.service');
 
 async function save(phoneNumber, contactName, client) {
   try {
-    console.log("phoneNumber", phoneNumber);
-    console.log("contactName", contactName);
     const user = await User.findOne({ phoneNumber: phoneNumber });
-    console.log("user1", user);
-
-    if (!user || user == null) {
+    if (user == null) {
       console.log("userin", user);
       // Case 1: User not found, create the user
       const newUser = new User({
@@ -42,6 +38,8 @@ async function save(phoneNumber, contactName, client) {
       }
     }
   } catch (error) {
+    console.log("usercatch", error);
+
     await addLog(
       `${error.message}`,
       'save',
