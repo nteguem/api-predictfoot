@@ -39,78 +39,103 @@ const sendMessageToNumber = async (client, phoneNumber, message) => {
 };
 
 const sendMediaToNumber = async (client, phoneNumber, mediaType, mediaBase64, filename, caption = '') => {
+  // Format correct du JID pour Baileys
   const jid = `${phoneNumber}@s.whatsapp.net`;
   
   try {
+    // Vérifier si le client est correctement initialisé
+    if (!client || typeof client.sendMessage !== 'function') {
+      throw new Error('Client WhatsApp non initialisé correctement');
+    }
+    
     // Prepare caption with assistant prefix if provided
     const formattedCaption = caption ? `*_[Assistant virtuel]_*\n\n${caption}` : '';
     
-    // Simulate typing for better user experience
-    await client.sendPresenceUpdate('composing', jid);
+    // Simulate typing
+    if (typeof client.presenceSubscribe === 'function') {
+      await client.presenceSubscribe(jid);
+    }
+    if (typeof client.sendPresenceUpdate === 'function') {
+      await client.sendPresenceUpdate('composing', jid);
+    }
     
-    // Calculate typing duration based on caption length if present
-    const typingDuration = caption ? Math.min(5000, caption.length * 100) : 2000;
+    // Délai de simulation de frappe
+    const typingDuration = caption ? Math.min(3000, caption.length * 50) : 1000;
     
-    setTimeout(async () => {
-      // Reset presence after typing
-      await client.sendPresenceUpdate('paused', jid);
-      
-      // PDF documents need special handling in Baileys
-      if (mediaType === 'application/pdf') {
-        await client.sendMessage(jid, {
-          document: Buffer.from(mediaBase64, 'base64'),
-          mimetype: 'application/pdf',
-          fileName: `${filename}.pdf`,
-          caption: formattedCaption
-        });
-      } else if (mediaType.startsWith('image/')) {
-        await client.sendMessage(jid, {
-          image: Buffer.from(mediaBase64, 'base64'),
-          caption: formattedCaption,
-          fileName: filename
-        });
-      } else if (mediaType.startsWith('video/')) {
-        await client.sendMessage(jid, {
-          video: Buffer.from(mediaBase64, 'base64'),
-          caption: formattedCaption,
-          fileName: filename
-        });
-      } else if (mediaType.startsWith('audio/')) {
-        await client.sendMessage(jid, {
-          audio: Buffer.from(mediaBase64, 'base64'),
-          mimetype: mediaType,
-          fileName: filename
-        });
-      } else {
-        // Generic file/document for other types
-        await client.sendMessage(jid, {
-          document: Buffer.from(mediaBase64, 'base64'),
-          mimetype: mediaType,
-          fileName: filename,
-          caption: formattedCaption
-        });
-      }
-    }, typingDuration);
-    
+    // Préparer le message selon le type de média
+    return new Promise((resolve, reject) => {
+      setTimeout(async () => {
+        try {
+          // Reset presence
+          if (typeof client.sendPresenceUpdate === 'function') {
+            await client.sendPresenceUpdate('paused', jid);
+          }
+          
+          let messageContent;
+          
+          // PDF documents
+          if (mediaType === 'application/pdf') {
+            messageContent = {
+              document: Buffer.from(mediaBase64, 'base64'),
+              mimetype: 'application/pdf',
+              fileName: filename.endsWith('.pdf') ? filename : `${filename}.pdf`,
+              caption: formattedCaption
+            };
+          } 
+          // Images
+          else if (mediaType.startsWith('image/')) {
+            messageContent = {
+              image: Buffer.from(mediaBase64, 'base64'),
+              caption: formattedCaption,
+              fileName: filename
+            };
+          } 
+          // Videos
+          else if (mediaType.startsWith('video/')) {
+            messageContent = {
+              video: Buffer.from(mediaBase64, 'base64'),
+              caption: formattedCaption,
+              fileName: filename
+            };
+          } 
+          // Audios
+          else if (mediaType.startsWith('audio/')) {
+            messageContent = {
+              audio: Buffer.from(mediaBase64, 'base64'),
+              mimetype: mediaType,
+              fileName: filename
+            };
+          } 
+          // Other documents
+          else {
+            messageContent = {
+              document: Buffer.from(mediaBase64, 'base64'),
+              mimetype: mediaType || 'application/octet-stream',
+              fileName: filename,
+              caption: formattedCaption
+            };
+          }
+          
+          // Envoyer le message
+          await client.sendMessage(jid, messageContent);
+          resolve();
+        } catch (err) {
+          await logService.addLog(
+            `Failed to send media: ${err.message}`,
+            'sendMediaToNumber',
+            'error'
+          );
+          reject(err);
+        }
+      }, typingDuration);
+    });
   } catch (error) {
     await logService.addLog(
-      `Error sending media to ${phoneNumber}: ${error.message}`,
+      `Error in sendMediaToNumber: ${error.message}`,
       'sendMediaToNumber',
       'error'
     );
-    
-    // Attempt to send error message to the user
-    try {
-      await client.sendMessage(jid, { 
-        text: "*_[Assistant virtuel]_*\n\nDésolé, une erreur est survenue lors de l'envoi du média. Veuillez réessayer plus tard."
-      });
-    } catch (secondError) {
-      await logService.addLog(
-        `Failed to send error message: ${secondError.message}`,
-        'sendMediaToNumber',
-        'error'
-      );
-    }
+    throw error;
   }
 };
 
