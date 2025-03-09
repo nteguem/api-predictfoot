@@ -42,54 +42,75 @@ const sendMediaToNumber = async (client, phoneNumber, mediaType, mediaBase64, fi
   const jid = `${phoneNumber}@s.whatsapp.net`;
   
   try {
-    // Prepare caption with assistant prefix
+    // Prepare caption with assistant prefix if provided
     const formattedCaption = caption ? `*_[Assistant virtuel]_*\n\n${caption}` : '';
     
-    let mediaMessage;
+    // Simulate typing for better user experience
+    await client.sendPresenceUpdate('composing', jid);
     
-    // Create appropriate media message based on type
-    if (mediaType.startsWith('image/')) {
-      mediaMessage = {
-        image: Buffer.from(mediaBase64, 'base64'),
-        caption: formattedCaption,
-        fileName: filename
-      };
-    } else if (mediaType.startsWith('video/')) {
-      mediaMessage = {
-        video: Buffer.from(mediaBase64, 'base64'),
-        caption: formattedCaption,
-        fileName: filename
-      };
-    } else if (mediaType.startsWith('audio/')) {
-      mediaMessage = {
-        audio: Buffer.from(mediaBase64, 'base64'),
-        mimetype: mediaType,
-        fileName: filename
-      };
-    } else if (mediaType === 'application/pdf' || mediaType.includes('document')) {
-      mediaMessage = {
-        document: Buffer.from(mediaBase64, 'base64'),
-        mimetype: mediaType,
-        fileName: filename,
-        caption: formattedCaption
-      };
-    } else {
-      // Generic file
-      mediaMessage = {
-        document: Buffer.from(mediaBase64, 'base64'),
-        mimetype: mediaType,
-        fileName: filename,
-        caption: formattedCaption
-      };
-    }
+    // Calculate typing duration based on caption length if present
+    const typingDuration = caption ? Math.min(5000, caption.length * 100) : 2000;
     
-    await sendWithTyping(client, jid, mediaMessage, true);
+    setTimeout(async () => {
+      // Reset presence after typing
+      await client.sendPresenceUpdate('paused', jid);
+      
+      // PDF documents need special handling in Baileys
+      if (mediaType === 'application/pdf') {
+        await client.sendMessage(jid, {
+          document: Buffer.from(mediaBase64, 'base64'),
+          mimetype: 'application/pdf',
+          fileName: `${filename}.pdf`,
+          caption: formattedCaption
+        });
+      } else if (mediaType.startsWith('image/')) {
+        await client.sendMessage(jid, {
+          image: Buffer.from(mediaBase64, 'base64'),
+          caption: formattedCaption,
+          fileName: filename
+        });
+      } else if (mediaType.startsWith('video/')) {
+        await client.sendMessage(jid, {
+          video: Buffer.from(mediaBase64, 'base64'),
+          caption: formattedCaption,
+          fileName: filename
+        });
+      } else if (mediaType.startsWith('audio/')) {
+        await client.sendMessage(jid, {
+          audio: Buffer.from(mediaBase64, 'base64'),
+          mimetype: mediaType,
+          fileName: filename
+        });
+      } else {
+        // Generic file/document for other types
+        await client.sendMessage(jid, {
+          document: Buffer.from(mediaBase64, 'base64'),
+          mimetype: mediaType,
+          fileName: filename,
+          caption: formattedCaption
+        });
+      }
+    }, typingDuration);
+    
   } catch (error) {
     await logService.addLog(
-      `Error sending media: ${error.message}`,
+      `Error sending media to ${phoneNumber}: ${error.message}`,
       'sendMediaToNumber',
       'error'
     );
+    
+    // Attempt to send error message to the user
+    try {
+      await client.sendMessage(jid, { 
+        text: "*_[Assistant virtuel]_*\n\nDésolé, une erreur est survenue lors de l'envoi du média. Veuillez réessayer plus tard."
+      });
+    } catch (secondError) {
+      await logService.addLog(
+        `Failed to send error message: ${secondError.message}`,
+        'sendMediaToNumber',
+        'error'
+      );
+    }
   }
 };
 
