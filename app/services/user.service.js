@@ -45,13 +45,6 @@ async function save(phoneNumber, contactName, client) {
       'save',
       'error'
     );
-    
-    // You should return something here or throw the error
-    return {
-      exist: false,
-      data: null,
-      message: "Error saving user: " + error.message
-    };
   }
 }
 
