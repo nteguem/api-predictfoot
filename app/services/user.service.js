@@ -12,7 +12,8 @@ async function save(phoneNumber, contactName, client) {
     const user = await User.findOne({ phoneNumber: phoneNumber });
     console.log("user1", user);
 
-    if (!user || user === null) {
+    if (!user || user == null) {
+      console.log("userin", user);
       // Case 1: User not found, create the user
       const newUser = new User({
         pseudo: contactName,
@@ -29,6 +30,8 @@ async function save(phoneNumber, contactName, client) {
         message: "User created successfully.",
       };
     } else {
+      console.log("userout", user);
+
       // Case 2: User found, increment engagement
       user.engagementLevel = (user.engagementLevel || 0) + 1;
       await user.save();
