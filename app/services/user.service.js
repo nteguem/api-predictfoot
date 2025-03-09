@@ -7,6 +7,8 @@ const {addLog} = require('./log.service');
 
 async function save(phoneNumber, contactName, client) {
   try {
+    console.log("phoneNumber", phoneNumber);
+    console.log("contactName", contactName);
     const user = await User.findOne({ phoneNumber: phoneNumber });
     if (!user) {
       // Case 1: User not found, create the user
@@ -17,6 +19,8 @@ async function save(phoneNumber, contactName, client) {
       });
 
       const user = await newUser.save();
+      console.log("user", user);
+
       return {
         exist: false,
         data: user,

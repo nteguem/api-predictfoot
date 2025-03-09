@@ -133,7 +133,6 @@ const handleMessage = async (client, message) => {
     const senderName = message.pushName || 'Unknown';
     
     const response = await save(senderNumber, senderName);
-    console.log("roland0000",response)
     if (response?.data?.role === "user") {
       await UserCommander(response, { 
         from: senderJid, 
