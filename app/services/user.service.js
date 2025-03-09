@@ -10,6 +10,8 @@ async function save(phoneNumber, contactName, client) {
     console.log("phoneNumber", phoneNumber);
     console.log("contactName", contactName);
     const user = await User.findOne({ phoneNumber: phoneNumber });
+    console.log("user1", user);
+
     if (!user) {
       // Case 1: User not found, create the user
       const newUser = new User({
