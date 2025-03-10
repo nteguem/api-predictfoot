@@ -39,7 +39,7 @@ async function handlePaymentMonetbilSuccess(req, res, client) {
     };
 
     // Preparation de la facture pdf du client
-    const successMessage = `Félicitations, ${user.pseudo} ! Votre paiement de ${plan.price} pour le forfait ${plan.name} a été validé avec succès. Vous trouverez ci-joint votre facture.${fcmToken ? "\nAppuyez sur la notification BigWin pour voir vos pronostics premium." : ""}${NAVIGATION_SUFFIX}`;
+    const successMessage = `Félicitations, ${user.pseudo} ! Votre paiement de ${plan.price} pour le forfait ${plan.name} a été validé avec succès. Vous trouverez ci-joint votre facture\n\n🔥 Vous pouvez maintenant bénéficier des pronostics premium !.${fcmToken ? "\nAppuyez sur la notification BigWin pour voir vos pronostics premium." : ""}${NAVIGATION_SUFFIX}`;
     const pdfBufferInvoice = await fillPdfFields(pathInvoice, req.body);
     const pdfBase64Invoice = pdfBufferInvoice.toString('base64');
     const pdfNameInvoice = `Invoice_${user.phoneNumber}`;
