@@ -158,17 +158,8 @@ const handleMessage = async (client, message) => {
   }
 };
 
-/**
- * Configure le gestionnaire de messages entrants
- * @param {Object} client - Client WhatsApp
- */
-const handleIncomingMessages = (client) => {
-  // All message handling is now done in the messages.upsert event in initializeWhatsAppClient
-  // This function is kept for backward compatibility
-};
 
 module.exports = {
   initializeWhatsAppClient,
-  handleIncomingMessages,
   SESSION_FILE_PATH
 };

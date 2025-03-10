@@ -44,7 +44,7 @@ const globalAuthenticate = (excludedPaths = []) => {
  */
 const setupAppRoutes = (client) => {
   const app = router;
-
+  console.log("client",client);
   // Apply the global middleware to all routes with specified exclusions
   app.use(globalAuthenticate(['/user/login', '/predict/list', '/subscription/notification-payment','/plan/list','/subscription/is-vip','/user/getOne','/bot/info','/bot/disconnect','/bot/reconnect','/referrals/installation']));
 

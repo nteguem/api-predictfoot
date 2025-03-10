@@ -12,7 +12,7 @@ const path = require('path');
 
 const dbConnect = require('./app/config/dbConnect');
 const appRoutes = require('./app/routes');
-const { initializeWhatsAppClient, handleIncomingMessages } = require('./app/views/whatsApp/whatappsHandler');
+const { initializeWhatsAppClient } = require('./app/views/whatsApp/whatappsHandler');
 const setupSocketHandlers = require('./app/config/socket.handlers');
 const { ensureDefaultGroupsExist } = require('./app/services/group.service');
 const { ensureDefaultPlansExist } = require('./app/services/plan.service');
@@ -91,7 +91,6 @@ class Application {
 
   initializeWhatsApp() {
     this.whatsAppClient = initializeWhatsAppClient(this.io);
-    handleIncomingMessages(this.whatsAppClient);
   }
 
   setupSocketConnections() {
