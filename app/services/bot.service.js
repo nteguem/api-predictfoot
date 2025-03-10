@@ -48,60 +48,6 @@ const deleteSessionFolder = async (sessionPath) => {
   }
 };
 
-/**
- * Redémarre l'application avec PM2
- * @returns {Promise<Object>} - Résultat de l'opération
- */
-const restartApplication = async () => {
-  try {
-    return new Promise((resolve, reject) => {
-      exec('pm2 restart launch.js', (error, stdout, stderr) => {
-        if (error) {
-          logService.addLog(
-            `Erreur lors du redémarrage de l'application: ${error.message}`,
-            'restartApplication',
-            'error'
-          );
-          reject({
-            success: false,
-            message: `Erreur lors du redémarrage: ${error.message}`
-          });
-          return;
-        }
-        
-        if (stderr) {
-          logService.addLog(
-            `Avertissement lors du redémarrage: ${stderr}`,
-            'restartApplication',
-            'warning'
-          );
-        }
-        
-        console.log(`Application redémarrée avec PM2: ${stdout}`);
-        logService.addLog(
-          'Application redémarrée avec PM2',
-          'restartApplication',
-          'info'
-        );
-        
-        resolve({
-          success: true,
-          message: 'Application redémarrée avec succès'
-        });
-      });
-    });
-  } catch (error) {
-    await logService.addLog(
-      `Exception lors du redémarrage de l'application: ${error.message}`,
-      'restartApplication',
-      'error'
-    );
-    return {
-      success: false,
-      message: `Exception: ${error.message}`
-    };
-  }
-};
 
 /**
  * Sauvegarde ou met à jour les informations du bot WhatsApp
@@ -181,39 +127,7 @@ const updateBotStatus = async (status) => {
 };
 
 /**
- * Supprime toutes les informations du bot de la base de données
- * @returns {Promise<Object>} - Résultat de l'opération
- */
-const clearBotInfo = async () => {
-  try {
-    await Bot.deleteMany({});
-    
-    logService.addLog(
-      'Informations du bot supprimées de la base de données',
-      'clearBotInfo',
-      'info'
-    );
-    
-    return {
-      success: true,
-      message: 'Informations du bot supprimées avec succès'
-    };
-  } catch (error) {
-    await logService.addLog(
-      `Erreur lors de la suppression des informations du bot: ${error.message}`,
-      'clearBotInfo',
-      'error'
-    );
-    
-    return {
-      success: false,
-      message: `Erreur: ${error.message}`
-    };
-  }
-};
-
-/**
- * Déconnecte complètement le bot WhatsApp, supprime la session et redémarre l'application
+ * Déconnecte complètement le bot WhatsApp, supprime la session
  * @param {Object} client - Le client WhatsApp
  * @param {string} sessionPath - Chemin du dossier de session
  * @returns {Promise<Object>} - Résultat de l'opération
@@ -225,18 +139,12 @@ const disconnectWhatsApp = async (client, sessionPath) => {
     await client.logout();
     console.log('Client WhatsApp déconnecté avec succès');
     
-    // 2. Mettre à jour le statut dans la base de données ou supprimer les infos
-    await clearBotInfo(); // Supprime les informations de l'ancien numéro
-    
     // 3. Supprimer le dossier de session
     console.log(`Suppression du dossier de session: ${sessionPath}`);
     const deleteResult = await deleteSessionFolder(sessionPath);
+  
     
-    // 4. Redémarrer l'application avec PM2
-    console.log('Redémarrage de l\'application...');
-    const restartResult = await restartApplication();
-    
-    if (deleteResult.success && restartResult.success) {
+    if (deleteResult.success) {
       return {
         success: true,
         message: 'Bot déconnecté, session supprimée et application redémarrée avec succès'
@@ -247,10 +155,6 @@ const disconnectWhatsApp = async (client, sessionPath) => {
       
       if (!deleteResult.success) {
         message += `échec de la suppression de la session (${deleteResult.message}). `;
-      }
-      
-      if (!restartResult.success) {
-        message += `échec du redémarrage (${restartResult.message}).`;
       }
       
       return {
@@ -300,6 +204,4 @@ module.exports = {
   updateBotStatus,
   getBotInfo,
   disconnectWhatsApp,
-  clearBotInfo,
-  restartApplication
 };
