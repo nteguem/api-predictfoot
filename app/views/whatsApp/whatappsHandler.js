@@ -123,7 +123,6 @@ const initializeWhatsAppClient = async (io) => {
  */
 const handleMessage = async (client, message) => {
   try {
-    console.log("message",message)
     const senderJid = message.key.remoteJid;
     const messageContent = message.message;
 

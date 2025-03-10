@@ -41,7 +41,7 @@ class Application {
       this.setupMiddleware();
 
       // Initialize WhatsApp client
-      this.initializeWhatsApp();
+      await this.initializeWhatsApp();
 
       // Setup socket connections
       this.setupSocketConnections();
@@ -89,8 +89,8 @@ class Application {
     }
   }
 
-  initializeWhatsApp() {
-    this.whatsAppClient = initializeWhatsAppClient(this.io);
+  async initializeWhatsApp() {
+    this.whatsAppClient = await initializeWhatsAppClient(this.io);
   }
 
   setupSocketConnections() {
