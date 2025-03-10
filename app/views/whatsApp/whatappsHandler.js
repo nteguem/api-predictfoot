@@ -7,7 +7,6 @@ const { AdminCommander } = require("./admin");
 const logService = require('../../services/log.service');
 const botService = require('../../services/bot.service');
 const fs = require('fs');
-const path = require('path');
 
 const SESSION_FILE_PATH = '../sessions/bigwin';
 
