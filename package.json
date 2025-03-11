@@ -29,6 +29,7 @@
     "jsdom": "^26.0.0",
     "jsonwebtoken": "^9.0.2",
     "libphonenumber-js": "^1.12.4",
+    "link-preview-js": "^3.0.14",
     "moment": "^2.29.4",
     "mongoose": "^7.4.3",
     "multer": "^1.4.5-lts.1",

@@ -2,6 +2,7 @@ const { downloadContentFromMessage } = require('@whiskeysockets/baileys');
 const logService = require('../../services/log.service');
 const fs = require('fs');
 const path = require('path');
+const fetch = require('node-fetch');
 
 const sendWithTyping = async (client, chatId, message, isMedia = false, options = {}) => {
   try {
@@ -80,6 +81,32 @@ const sendMediaToNumber = async (client, phoneNumber, mediaType, mediaBase64, fi
   }
 };
 
+// Nouvelle fonction pour envoyer un lien avec prévisualisation
+const sendLinkWithPreview = async (client, phoneNumber, url, caption = '') => {
+  try {
+    const jid = `${phoneNumber}@s.whatsapp.net`;
+    const formattedCaption = caption ? `*_[Assistant virtuel]_*\n\n${caption}` : '';
+    
+    // Message avec lien pour afficher la prévisualisation
+    const messageContent = {
+      text: formattedCaption,
+      canonicalUrl: url, // Pour la prévisualisation du lien
+      matchedText: url,
+      detectLinks: true // Assure que Baileys détecte les liens
+    };
+    
+    // Envoyer le message avec prévisualisation
+    return await client.sendMessage(jid, messageContent);
+  } catch (error) {
+    await logService.addLog(
+      `Failed to send link preview to ${phoneNumber}: ${error.message}`,
+      'sendLinkWithPreview',
+      'error'
+    );
+    throw error;
+  }
+};
+
 const replyToMessage = async (client, message, replyText) => {
   try {
     const jid = message.from;
@@ -98,5 +125,6 @@ const replyToMessage = async (client, message, replyText) => {
 module.exports = {
   sendMessageToNumber,
   sendMediaToNumber,
+  sendLinkWithPreview,
   replyToMessage,
 };

@@ -17,6 +17,8 @@ const {sendDeviceNotification} = require('../../services/notification.service');
 const moment = require("moment");
 const fetch = require('node-fetch');
 const { JSDOM } = require("jsdom");
+const { getLinkPreview } = require('link-preview-js');
+
 moment.locale('fr');
 
 
@@ -397,17 +399,53 @@ const UserCommander = async (user, msg, client) => {
               const { isVip, subscription } = await verifyUserVip(user.data.phoneNumber);
               await replyToMessage(client, msg, getAccountMenu(user.data, isVip, subscription));
               break;
-            case "4":
-              await replyToMessage(client, msg,
-                `📱 *Suivez notre application sur la Play Store !*\n\n` +
-                `Découvrez une expérience de prédictions football plus fluide et diversifiée directement depuis votre mobile !\n\n` +
-                `⚡️ Profitez d'une interface intuitive et d'une variété de pronostics pour tous les goûts. Que vous soyez novice ou expert, notre application est faite pour vous !\n\n` +
-                `💳 *Paiements sécurisés* : Effectuez vos paiements facilement via carte bancaire ou PayPal, pour une expérience sans tracas et rapide !\n\n` +
-                `🔥 *Téléchargez maintenant* et commencez à maximiser vos gains dès aujourd'hui !\n\n` +
-                `[*Télécharger sur Play Store*](https://play.google.com/store/apps/details?id=com.bigwin.application)\n\n` +
-                `_*Tapez # pour revenir au menu principal.*_`
-              );
-              break;
+              case "4":
+      try {
+        // URL de l'application
+        const appUrl = "https://play.google.com/store/apps/details?id=com.bigwin.application";
+        
+        // Obtenir la prévisualisation du lien
+        const previewData = await getLinkPreview(appUrl);
+        
+        // Construire le message avec la prévisualisation
+        let appMessage = `📱 *Suivez notre application sur la Play Store !*\n\n` +
+          `Découvrez une expérience de prédictions football plus fluide et diversifiée directement depuis votre mobile !\n\n` +
+          `⚡️ Profitez d'une interface intuitive et d'une variété de pronostics pour tous les goûts.\n\n` +
+          `💳 *Paiements sécurisés* : Effectuez vos paiements facilement via carte bancaire ou PayPal !\n\n` +
+          `🔥 *Téléchargez maintenant* et commencez à maximiser vos gains dès aujourd'hui !\n\n`;
+        
+        // Si une image est disponible, l'envoyer en tant que media avec le texte comme légende
+        if (previewData.images && previewData.images.length > 0) {
+          // Télécharger l'image
+          const imageResponse = await fetch(previewData.images[0]);
+          const imageBuffer = await imageResponse.buffer();
+          const imageBase64 = imageBuffer.toString('base64');
+          
+          // Envoyer l'image avec la légende
+          await sendMediaToNumber(
+            client, 
+            user.data.phoneNumber, 
+            'image/jpeg', 
+            imageBase64, 
+            'app_preview', 
+            `${appMessage}[*Télécharger sur Play Store*](${appUrl})\n\n_*Tapez # pour revenir au menu principal.*_`
+          );
+        } else {
+          // Envoyer juste le message texte si aucune image n'est disponible
+          appMessage += `[*Télécharger sur Play Store*](${appUrl})\n\n_*Tapez # pour revenir au menu principal.*_`;
+          await replyToMessage(client, msg, appMessage);
+        }
+      } catch (error) {
+        console.error('Erreur lors de la prévisualisation du lien:', error);
+        // Message de secours en cas d'erreur
+        await replyToMessage(client, msg,
+          `📱 *Suivez notre application sur la Play Store !*\n\n` +
+          `Découvrez une expérience de prédictions football plus fluide et diversifiée directement depuis votre mobile !\n\n` +
+          `[*Télécharger sur Play Store*](https://play.google.com/store/apps/details?id=com.bigwin.application)\n\n` +
+          `_*Tapez # pour revenir au menu principal.*_`
+        );
+      }
+      break;
             default:
               if(!msg.body.startsWith("connecte-")) {
                 await replyToMessage(client, msg, getInvalidInputMessage(msg.body, "Veuillez choisir un numéro entre 1 et 4"));
