@@ -3,7 +3,11 @@ const NotificationService = require('../services/notification.service');
 
 const PredictSchema = new mongoose.Schema({
   country: {
-    logo: { type: String, default: "https://media.api-sports.io/football/teams/24051.png" },
+    logo: { 
+      type: String, 
+      default: "https://media.api-sports.io/football/teams/24051.png",
+      set: (v) => v || "https://media.api-sports.io/football/teams/24051.png"
+    },
     name: { type: String, required: true }
   },
   championship: {
