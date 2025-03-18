@@ -24,7 +24,7 @@
     "express": "^4.18.2",
     "firebase-admin": "^13.0.2",
     "fs": "^0.0.1-security",
-    "googleapis": "^144.0.0",
+    "googleapis": "^146.0.0",
     "http-errors": "^2.0.0",
     "jsdom": "^26.0.0",
     "jsonwebtoken": "^9.0.2",
