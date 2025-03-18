@@ -13,3 +13,4 @@ uploads
 .logger.log
 logger.log
 firebase-credentials.json
+google-service-account.json
