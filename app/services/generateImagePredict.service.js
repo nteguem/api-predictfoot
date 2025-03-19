@@ -349,7 +349,7 @@ async function generateOriginalImage(data) {
     // Ajouter "NB" en bas avec police plus grande
     ctx.font = '14px Arial';
     ctx.fillStyle = textColor;
-    ctx.fillText("NB : Jouez de manière responsable. Les gains ou pertes sont sous la responsabilité des joueurs.", 20, canvasHeight - 20);
+    ctx.fillText("Jouez de manière responsable. Les gains ou pertes sont sous la responsabilité des joueurs.", 20, canvasHeight - 20);
 
     const buffer = canvas.toBuffer('image/png');
     return buffer;
