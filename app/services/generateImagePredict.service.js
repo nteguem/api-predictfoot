@@ -4,10 +4,6 @@ moment.locale('fr');
 
 // Fonction originale pour générer l'image de pronostic
 async function generateOriginalImage(data) {
-  // Tout votre code original ici, sans changements
-  // ...
-  
-  // Copie complète de votre fonction originale
   // Vérifier si data existe et n'est pas vide
   if (!data || data.length === 0) {
     // Créer une image d'erreur si aucune donnée n'est disponible
@@ -378,7 +374,7 @@ async function generateOriginalImage(data) {
   }
 }
 
-// Version optimisée de la fonction mobile qui place simplement l'image dans un cadre
+// Version optimisée de la fonction mobile qui place l'image dans un cadre iPhone 15
 async function generateMobileImage(data) {
   try {
     // D'abord, générer l'image de pronostic standard
@@ -399,20 +395,31 @@ async function generateMobileImage(data) {
     const mobileCanvas = createCanvas(mobileWidth, mobileHeight);
     const ctx = mobileCanvas.getContext('2d');
     
-    // Fond blanc
-    ctx.fillStyle = '#FFFFFF';
-    ctx.fillRect(0, 0, mobileWidth, mobileHeight);
+    // Fond transparent (au lieu de blanc) pour éviter les coins blancs
+    ctx.clearRect(0, 0, mobileWidth, mobileHeight);
     
-    // Dessiner le cadre du téléphone
-    drawPhoneFrame(ctx, mobileWidth, mobileHeight);
+    // Dessiner le cadre d'iPhone 15
+    drawIphone15Frame(ctx, mobileWidth, mobileHeight);
     
-    // Positionner l'image de pronostic pour qu'elle soit bien centrée dans le cadre
-    // et que tout soit visible, y compris le texte "Jouez de manière responsable"
-    const pronoX = frameMargin;
-    const pronoY = frameMargin;
+    // Dessiner le contenu dans le "téléphone" avec une légère marge
+    const screenMargin = 14; // Marge à l'intérieur de l'écran
     
-    // Dessiner l'image de pronostic
-    ctx.drawImage(pronosticImage, pronoX, pronoY, pronoWidth, pronoHeight);
+    // Calculer les dimensions de l'écran (espace disponible pour l'image)
+    const frameThickness = 12;
+    const screenWidth = mobileWidth - (frameThickness * 2) - (screenMargin * 2);
+    const screenHeight = mobileHeight - (frameThickness * 2) - (screenMargin * 2);
+    
+    // Adapter l'image au screen
+    const scale = Math.min(screenWidth / pronoWidth, screenHeight / pronoHeight);
+    const scaledWidth = pronoWidth * scale;
+    const scaledHeight = pronoHeight * scale;
+    
+    // Centrer l'image dans l'écran
+    const pronoX = frameThickness + screenMargin + (screenWidth - scaledWidth) / 2;
+    const pronoY = frameThickness + screenMargin + (screenHeight - scaledHeight) / 2;
+    
+    // Dessiner l'image de pronostic adaptée à l'écran
+    ctx.drawImage(pronosticImage, pronoX, pronoY, scaledWidth, scaledHeight);
     
     // Retourner l'image finale
     return mobileCanvas.toBuffer('image/png');
@@ -433,50 +440,81 @@ async function generateMobileImage(data) {
   }
 }
 
-// Fonction simplifiée pour dessiner un cadre de téléphone
-function drawPhoneFrame(ctx, width, height) {
-  // Récupérer les dimensions du canvas
-  const canvasWidth = width;
-  const canvasHeight = height;
+// Fonction pour dessiner un cadre style iPhone 15
+function drawIphone15Frame(ctx, width, height) {
+  // Paramètres du cadre
+  const frameThickness = 12;
+  const cornerRadius = 40;  // Coins plus arrondis comme iPhone 15
   
-  // Dessiner le cadre noir avec coins arrondis
-  ctx.fillStyle = '#333333';
-  const cornerRadius = 40;
+  // Couleur du cadre (noir comme iPhone 15 Pro)
+  const frameColor = '#1A1A1A';  // Noir subtil, légèrement moins foncé que pur noir
   
-  // Cadre externe (contour du téléphone)
-  roundedRect(ctx, 0, 0, canvasWidth, canvasHeight, cornerRadius);
+  // Dessiner le cadre externe avec un clip pour éviter les coins blancs
+  ctx.save();
+  
+  // Créer le chemin pour le cadre externe
+  roundedRect(ctx, 0, 0, width, height, cornerRadius);
+  
+  // Le dessiner et le remplir
+  ctx.fillStyle = frameColor;
   ctx.fill();
   
-  // Écran intérieur (blanc)
+  // Maintenant, créer un clip basé sur ce chemin pour que rien ne soit dessiné en dehors
+  ctx.clip();
+  
+  // Dessiner l'écran intérieur
   ctx.fillStyle = '#FFFFFF';
-  const frameThickness = 12;
   roundedRect(
     ctx, 
     frameThickness, 
     frameThickness, 
-    canvasWidth - (frameThickness * 2), 
-    canvasHeight - (frameThickness * 2), 
+    width - (frameThickness * 2), 
+    height - (frameThickness * 2), 
     cornerRadius - 5
   );
   ctx.fill();
   
-  // Ajouter une encoche en haut pour le style moderne
-  ctx.fillStyle = '#333333';
-  const notchWidth = canvasWidth / 4;
-  const notchHeight = 20;
-  const notchX = (canvasWidth - notchWidth) / 2;
+  // Ajouter la Dynamic Island (Apple iPhone 15)
+  const islandWidth = width * 0.25;
+  const islandHeight = 35;
+  const islandX = (width - islandWidth) / 2;
+  const islandY = frameThickness + 4;
+  const islandRadius = islandHeight / 2;
   
-  ctx.beginPath();
-  ctx.moveTo(notchX, frameThickness);
-  ctx.lineTo(notchX + notchWidth, frameThickness);
-  ctx.quadraticCurveTo(notchX + notchWidth + 10, frameThickness + 5, notchX + notchWidth, frameThickness + notchHeight);
-  ctx.lineTo(notchX, frameThickness + notchHeight);
-  ctx.quadraticCurveTo(notchX - 10, frameThickness + 5, notchX, frameThickness);
-  ctx.closePath();
+  ctx.fillStyle = frameColor;
+  roundedRect(ctx, islandX, islandY, islandWidth, islandHeight, islandRadius);
   ctx.fill();
+  
+  // Ajouter les détails de la Dynamic Island
+  // Cercle pour caméra
+  ctx.fillStyle = '#0A0A0A';
+  ctx.beginPath();
+  ctx.arc(islandX + islandWidth - islandHeight/2, islandY + islandHeight/2, 6, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Restaurer le contexte après avoir terminé
+  ctx.restore();
+  
+  // Ajouter un léger effet de brillance sur les bords du cadre
+  ctx.save();
+  roundedRect(ctx, 0, 0, width, height, cornerRadius);
+  ctx.clip();
+  
+  // Effet subtil de reflet sur le bord
+  const gradient = ctx.createLinearGradient(0, 0, width, height);
+  gradient.addColorStop(0, 'rgba(255, 255, 255, 0.1)');
+  gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0)');
+  gradient.addColorStop(1, 'rgba(255, 255, 255, 0.05)');
+  
+  ctx.strokeStyle = gradient;
+  ctx.lineWidth = 1;
+  roundedRect(ctx, 1, 1, width-2, height-2, cornerRadius-1);
+  ctx.stroke();
+  
+  ctx.restore();
 }
 
-// Fonction utilitaire pour dessiner un rectangle avec des coins arrondis
+// Fonction utilitaire améliorée pour dessiner un rectangle avec des coins arrondis
 function roundedRect(ctx, x, y, width, height, radius) {
   ctx.beginPath();
   ctx.moveTo(x + radius, y);
