@@ -42,7 +42,7 @@ async function generateOriginalImage(data) {
     // Charger le logo du pronostic avec gestion d'erreur
     let logoPronostic;
     try {
-      logoPronostic = await loadImage('https://res.cloudinary.com/nwccompany/image/upload/v1739009050/nmyxfglhznextbg4jiok.png');
+      logoPronostic = await loadImage('https://res.cloudinary.com/nwccompany/image/upload/v1742381887/fbx8xkn1zrckulw4djkh.png');
     } catch (error) {
       console.error('Erreur lors du chargement du logo pronostic:', error);
       // Créer un logo de remplacement
