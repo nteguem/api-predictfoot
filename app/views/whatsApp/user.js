@@ -161,7 +161,7 @@ const sendDailyPredictions = async (client, user, dateIndex) => {
 
 const sendPredictionHistoryMenu = async (client, user) => {
   try {
-    await sendMessageToNumber(client, user.data.phoneNumber, "📅 Sélectionnez le type de pronostic pour consulter l'historique :\n\n1-Pronostic gratuit, Tapez 1 \n2-Pronostic VIP, Tapez 2\n\n _Tapez # pour revenir au menu principal_");
+    await sendMessageToNumber(client, user.data.phoneNumber, "📅 Sélectionnez le type de pronostic pour consulter l'historique :\n\n1️⃣ *Pronostic gratuit*, Tapez 1 \n2️⃣ *Pronostic VIP*, Tapez 2\n\n _Tapez # pour revenir au menu principal_");
     Steps[user.data.phoneNumber].currentMenu = "oldPredictions";
   } catch (error) {
     console.log('Error sending prediction history menu:', error);
@@ -456,7 +456,7 @@ const UserCommander = async (user, msg, client) => {
           `• WhatsApp Support: +237 6 94 75 11 62\n` +
           `• Email: contact@bigwinpronos.com\n` +
           `⏱️ *Disponibilité du service client 7jours/7*\n` +
-          `_*Tapez # pour revenir au menu principal.*_`
+          `_Tapez # pour revenir au menu principal._`
         );
         break;  
             default:
