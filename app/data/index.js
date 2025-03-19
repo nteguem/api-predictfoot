@@ -8,7 +8,7 @@ const getMainMenu = (isFirstContact, pseudo) => {
            `1️⃣ *Prédictions du Jour*, tapez 1\n` +
            `2️⃣ *Anciennes Prédictions*, tapez 2\n` +
            `3️⃣ *Mon Compte*, tapez 3\n` +
-           `4️⃣ *Nous retrouver sur Play Store*, tapez 4`
+           `4️⃣ *Nous retrouver sur Play Store*, tapez 4`+
            `5️⃣ *Nous contacter*, tapez 5`;
   }
 
@@ -17,7 +17,7 @@ const getMainMenu = (isFirstContact, pseudo) => {
   `1️⃣ *Prédictions du Jour*, tapez 1\n` +
   `2️⃣ *Anciennes Prédictions*, tapez 2\n` +
   `3️⃣ *Mon Compte*, tapez 3\n` +
-  `4️⃣ *Nous retrouver sur Play Store*, tapez 4`
+  `4️⃣ *Nous retrouver sur Play Store*, tapez 4`+
   `5️⃣ *Nous contacter*, tapez 5`;
 };
 
