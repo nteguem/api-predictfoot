@@ -58,14 +58,6 @@ const sendMediaToNumber = async (client, phoneNumber, mediaType, mediaBase64, fi
       messageContent = {
         image: Buffer.from(mediaBase64, 'base64'),
         caption: formattedCaption,
-        jpegThumbnail: null, // Désactiver la miniature pour préserver la qualité
-        mimetype: Mimetype.jpeg,
-        // Options supplémentaires pour conserver la qualité
-        mediaKeyTimestamp: Math.floor(Date.now() / 1000),
-        viewOnce: false,
-        // Pour la version récente de Baileys
-        ptt: false,
-        isQuotedMessage: false
       };
     } else {
       // Document générique
