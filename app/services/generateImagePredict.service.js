@@ -441,6 +441,7 @@ async function generateMobileImage(data) {
 }
 
 // Fonction pour dessiner un cadre style iPhone 15
+// Fonction pour dessiner un cadre style iPhone 15
 function drawIphone15Frame(ctx, width, height) {
   // Paramètres du cadre
   const frameThickness = 12;
@@ -448,6 +449,9 @@ function drawIphone15Frame(ctx, width, height) {
   
   // Couleur du cadre (noir comme iPhone 15 Pro)
   const frameColor = '#1A1A1A';  // Noir subtil, légèrement moins foncé que pur noir
+  
+  // Couleur ROUGE pour le capteur de la Dynamic Island
+  const cameraRed = '#F44336';  // Rouge vif, comme celui utilisé pour les erreurs dans votre code
   
   // Dessiner le cadre externe avec un clip pour éviter les coins blancs
   ctx.save();
@@ -486,8 +490,8 @@ function drawIphone15Frame(ctx, width, height) {
   ctx.fill();
   
   // Ajouter les détails de la Dynamic Island
-  // Cercle pour caméra
-  ctx.fillStyle = '#0A0A0A';
+  // Cercle pour caméra - CHANGÉ EN ROUGE
+  ctx.fillStyle = cameraRed; // Changé de '#0A0A0A' à rouge
   ctx.beginPath();
   ctx.arc(islandX + islandWidth - islandHeight/2, islandY + islandHeight/2, 6, 0, Math.PI * 2);
   ctx.fill();
@@ -513,7 +517,6 @@ function drawIphone15Frame(ctx, width, height) {
   
   ctx.restore();
 }
-
 // Fonction utilitaire améliorée pour dessiner un rectangle avec des coins arrondis
 function roundedRect(ctx, x, y, width, height, radius) {
   ctx.beginPath();
