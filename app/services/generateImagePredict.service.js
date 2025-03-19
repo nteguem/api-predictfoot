@@ -208,49 +208,56 @@ async function generateHDImage(data) {
       const leagueLogo = await safeLoadImage(championship.logo, 'League');
       const countryLogo = await safeLoadImage(country.logo, 'Country');
 
-      // Hauteur du bloc de pronostic
-      const blockHeight = fixtureHeight - 30 * scale;
-
+      // Hauteur du bloc de pronostic - augmentée pour éviter les débordements
+      const blockHeight = fixtureHeight - 10 * scale; // Augmenté de 30*scale à 10*scale
+      
+      // Ajouter plus d'espace pour les informations
+      const leftMargin = 30 * scale;
+      const rightMargin = 30 * scale;
+      const topOffset = 20 * scale;
+      const bottomPadding = 30 * scale; // Espace supplémentaire en bas
+      
       // Fond vert ciel clair pour chaque pronostic avec border radius
       ctx.fillStyle = '#E0FBE0';
       
-      // Améliorer le rendu des coins arrondis en utilisant bezierCurveTo au lieu de quadraticCurveTo
+      // Améliorer le rendu des coins arrondis en utilisant arcTo pour des courbes plus douces
       const cornerRadius = 20 * scale;
       ctx.beginPath();
       // Haut gauche
-      ctx.moveTo(30 * scale, fixtureYStart - 20 * scale + cornerRadius);
+      ctx.moveTo(leftMargin, fixtureYStart - topOffset + cornerRadius);
       ctx.arcTo(
-        30 * scale, fixtureYStart - 20 * scale,
-        30 * scale + cornerRadius, fixtureYStart - 20 * scale,
+        leftMargin, fixtureYStart - topOffset,
+        leftMargin + cornerRadius, fixtureYStart - topOffset,
         cornerRadius
       );
       // Haut droit
       ctx.arcTo(
-        canvasWidth - 30 * scale, fixtureYStart - 20 * scale,
-        canvasWidth - 30 * scale, fixtureYStart - 20 * scale + cornerRadius,
+        canvasWidth - rightMargin, fixtureYStart - topOffset,
+        canvasWidth - rightMargin, fixtureYStart - topOffset + cornerRadius,
         cornerRadius
       );
       // Bas droit
       ctx.arcTo(
-        canvasWidth - 30 * scale, fixtureYStart + blockHeight + 20 * scale,
-        canvasWidth - 30 * scale - cornerRadius, fixtureYStart + blockHeight + 20 * scale,
+        canvasWidth - rightMargin, fixtureYStart + blockHeight + bottomPadding,
+        canvasWidth - rightMargin - cornerRadius, fixtureYStart + blockHeight + bottomPadding,
         cornerRadius
       );
       // Bas gauche
       ctx.arcTo(
-        30 * scale, fixtureYStart + blockHeight + 20 * scale,
-        30 * scale, fixtureYStart + blockHeight + 20 * scale - cornerRadius,
+        leftMargin, fixtureYStart + blockHeight + bottomPadding,
+        leftMargin, fixtureYStart + blockHeight + bottomPadding - cornerRadius,
         cornerRadius
       );
       // Fermer
       ctx.closePath();
       ctx.fill();
 
-      // Country Logo and Name à gauche avec border-radius
+      // Country Logo and Name à gauche avec border-radius - déplacé un peu plus à gauche
       const countryLogoSize = 30 * scale;
+      const countryLogoX = 40 * scale; // Déplacé de 20*scale à 40*scale
       drawImageWithBorderRadius(
         countryLogo, 
-        20 * scale, 
+        countryLogoX, 
         fixtureYStart - 35 * scale, 
         countryLogoSize, 
         countryLogoSize, 
@@ -258,13 +265,50 @@ async function generateHDImage(data) {
       );
       ctx.font = `${18 * scale}px Arial`;
       ctx.fillStyle = textColor;
-      ctx.fillText(country.name || 'Pays non spécifié', 55 * scale, fixtureYStart - 15 * scale);
+      
+      // Limiter la taille du texte du pays pour éviter le débordement
+      const countryName = country.name || 'Pays non spécifié';
+      const countryTextX = countryLogoX + countryLogoSize + 5 * scale;
+      const maxCountryWidth = (canvasWidth / 2) - countryTextX - 10 * scale;
+      
+      // Tronquer le nom du pays si nécessaire
+      let displayCountryName = countryName;
+      if (ctx.measureText(countryName).width > maxCountryWidth) {
+        // Tronquer si trop long
+        let i = countryName.length - 1;
+        while (i > 0 && ctx.measureText(countryName.substring(0, i) + '...').width > maxCountryWidth) {
+          i--;
+        }
+        displayCountryName = countryName.substring(0, i) + '...';
+      }
+      
+      ctx.fillText(displayCountryName, countryTextX, fixtureYStart - 15 * scale);
 
-      // League Logo and Name à droite avec border-radius
+      // League Logo and Name à droite avec border-radius - déplacé un peu plus à droite
       const leagueLogoSize = 30 * scale;
       ctx.font = `${18 * scale}px Arial`;
-      const leagueNameWidth = ctx.measureText(championship.name || 'Championnat non spécifié').width;
-      const leagueLogoRightX = canvasWidth - 20 * scale - leagueLogoSize;
+      const leagueText = championship.name || 'Championnat non spécifié';
+      const leagueNameWidth = ctx.measureText(leagueText).width;
+      
+      // S'assurer que le logo de la ligue n'est pas trop près du bord droit
+      const leagueLogoRightX = canvasWidth - 50 * scale - leagueLogoSize; // Déplacé de 20*scale à 50*scale
+      
+      // Limiter la taille du texte de la ligue
+      const maxLeagueWidth = (canvasWidth / 2) - 40 * scale;
+      let displayLeagueText = leagueText;
+      
+      if (leagueNameWidth > maxLeagueWidth) {
+        // Tronquer si trop long
+        let i = leagueText.length - 1;
+        while (i > 0 && ctx.measureText(leagueText.substring(0, i) + '...').width > maxLeagueWidth) {
+          i--;
+        }
+        displayLeagueText = leagueText.substring(0, i) + '...';
+      }
+      
+      // Recalculer la largeur après troncature possible
+      const finalLeagueWidth = ctx.measureText(displayLeagueText).width;
+      
       drawImageWithBorderRadius(
         leagueLogo, 
         leagueLogoRightX, 
@@ -273,44 +317,78 @@ async function generateHDImage(data) {
         leagueLogoSize, 
         5 * scale
       );
+      
       ctx.fillText(
-        championship.name || 'Championnat non spécifié', 
-        leagueLogoRightX - leagueNameWidth - 5 * scale, 
+        displayLeagueText, 
+        leagueLogoRightX - finalLeagueWidth - 5 * scale, 
         fixtureYStart - 15 * scale
       );
 
-      // Home Team Logo and Name avec police diminuée
+      // Home Team Logo and Name avec police diminuée - repositionné
+      const homeTeamLogoX = 40 * scale; // Déplacé de 20*scale à 40*scale
+      const teamLogoSize = 55 * scale;
+      
       drawImageWithBorderRadius(
         homeTeamLogo, 
-        20 * scale, 
+        homeTeamLogoX, 
         fixtureYStart, 
-        55 * scale, 
-        55 * scale, 
+        teamLogoSize, 
+        teamLogoSize, 
         8 * scale
       );
+      
       ctx.font = `${20 * scale}px Arial`;
       ctx.fillStyle = textColor;
-      ctx.fillText(homeTeam.team_name || 'Équipe à domicile', 85 * scale, fixtureYStart + 32 * scale);
+      
+      // Limiter la taille du nom de l'équipe à domicile
+      const homeTeamText = homeTeam.team_name || 'Équipe à domicile';
+      const maxHomeTeamWidth = (canvasWidth / 2) - 150 * scale; // Laisser de l'espace pour le temps/score au centre
+      
+      let displayHomeTeamText = homeTeamText;
+      if (ctx.measureText(homeTeamText).width > maxHomeTeamWidth) {
+        // Tronquer si trop long
+        let i = homeTeamText.length - 1;
+        while (i > 0 && ctx.measureText(homeTeamText.substring(0, i) + '...').width > maxHomeTeamWidth) {
+          i--;
+        }
+        displayHomeTeamText = homeTeamText.substring(0, i) + '...';
+      }
+      
+      ctx.fillText(displayHomeTeamText, homeTeamLogoX + teamLogoSize + 10 * scale, fixtureYStart + 32 * scale);
 
       // Away Team Name avec police diminuée
-      const awayTeamName = awayTeam.team_name || 'Équipe à l\'extérieur';
+      const awayTeamText = awayTeam.team_name || 'Équipe à l\'extérieur';
       ctx.font = `${20 * scale}px Arial`;
-      const awayTeamNameWidth = ctx.measureText(awayTeamName).width;
+      
+      // Limiter la taille du nom de l'équipe à l'extérieur
+      const maxAwayTeamWidth = (canvasWidth / 2) - 150 * scale;
+      
+      let displayAwayTeamText = awayTeamText;
+      if (ctx.measureText(awayTeamText).width > maxAwayTeamWidth) {
+        // Tronquer si trop long
+        let i = awayTeamText.length - 1;
+        while (i > 0 && ctx.measureText(awayTeamText.substring(0, i) + '...').width > maxAwayTeamWidth) {
+          i--;
+        }
+        displayAwayTeamText = awayTeamText.substring(0, i) + '...';
+      }
+      
+      const awayTeamNameWidth = ctx.measureText(displayAwayTeamText).width;
 
-      // Away Team Logo avec border-radius
-      const awayTeamLogoX = canvasWidth - 80 * scale;
+      // Away Team Logo avec border-radius - repositionné
+      const awayTeamLogoX = canvasWidth - teamLogoSize - 40 * scale; // Déplacé pour éviter le débordement
       drawImageWithBorderRadius(
         awayTeamLogo, 
         awayTeamLogoX, 
         fixtureYStart, 
-        55 * scale, 
-        55 * scale, 
+        teamLogoSize, 
+        teamLogoSize, 
         8 * scale
       );
 
       // Positionner le nom de l'équipe à l'extérieur de manière à ce qu'il prenne de l'espace vers la gauche
       const awayTeamNameX = awayTeamLogoX - 10 * scale - awayTeamNameWidth;
-      ctx.fillText(awayTeamName, awayTeamNameX, fixtureYStart + 32 * scale);
+      ctx.fillText(displayAwayTeamText, awayTeamNameX, fixtureYStart + 32 * scale);
 
       // Match Time or Score
       let matchInfo = '';
@@ -328,11 +406,30 @@ async function generateHDImage(data) {
       const blockCenterX = canvasWidth / 2 - ctx.measureText(matchInfo).width / 2;
       ctx.fillText(matchInfo, blockCenterX, fixtureYStart + 32 * scale);
 
-      // Prediction aligned below home team logo with larger font
+      // Prediction aligned below home team logo with larger font - avec limitation de la longueur
       ctx.font = `${28 * scale}px Arial`;
+      
+      // Limiter la longueur du pronostic pour éviter le débordement
+      const predictionText = prediction.description_fr || 'Pronostic non disponible';
+      
+      // Calculer l'espace disponible pour le pronostic (en évitant le bloc de cote)
+      const blockWidth = 90 * scale; // Légèrement plus large pour plus d'espace
+      const availableWidth = canvasWidth - 90 * scale - blockWidth - 40 * scale;
+      
+      // Vérifier si le texte dépasse l'espace disponible
+      let displayPredictionText = predictionText;
+      if (ctx.measureText(predictionText).width > availableWidth) {
+        // Tronquer si trop long
+        let i = predictionText.length - 1;
+        while (i > 0 && ctx.measureText(predictionText.substring(0, i) + '...').width > availableWidth) {
+          i--;
+        }
+        displayPredictionText = predictionText.substring(0, i) + '...';
+      }
+      
       ctx.fillText(
-        prediction.description_fr || 'Pronostic non disponible', 
-        20 * scale, 
+        displayPredictionText, 
+        40 * scale, // Augmenté de 20*scale à 40*scale pour correspondre aux autres éléments
         fixtureYStart + 105 * scale
       );
 
@@ -348,9 +445,9 @@ async function generateHDImage(data) {
         statusText = 'En attente';
       }
 
-      const blockWidth = 80 * scale;
+      // Augmenter légèrement la taille du bloc et le déplacer un peu plus à droite
       const statusBlockHeight = 70 * scale;
-      const blockX = canvasWidth - blockWidth - 20 * scale;
+      const blockX = canvasWidth - blockWidth - 40 * scale; // Augmenté de 20*scale à 40*scale
       const blockY = fixtureYStart + 70 * scale;
 
       // Couleur en fonction du statut, avec gestion des nulls
@@ -363,32 +460,35 @@ async function generateHDImage(data) {
         blockColor = '#0F5784'; // Bleu pour en attente
       }
       
+      // Assurer que le bloc n'est pas trop près du bord
+      const safeBlockX = Math.min(blockX, canvasWidth - blockWidth - 30 * scale);
+      
       ctx.fillStyle = blockColor;
       const blockRadius = 8 * scale;
       ctx.beginPath();
       // Haut gauche
-      ctx.moveTo(blockX + blockRadius, blockY);
+      ctx.moveTo(safeBlockX + blockRadius, blockY);
       ctx.arcTo(
-        blockX, blockY,
-        blockX, blockY + blockRadius,
+        safeBlockX, blockY,
+        safeBlockX, blockY + blockRadius,
         blockRadius
       );
       // Bas gauche
       ctx.arcTo(
-        blockX, blockY + statusBlockHeight,
-        blockX + blockRadius, blockY + statusBlockHeight,
+        safeBlockX, blockY + statusBlockHeight,
+        safeBlockX + blockRadius, blockY + statusBlockHeight,
         blockRadius
       );
       // Bas droit
       ctx.arcTo(
-        blockX + blockWidth, blockY + statusBlockHeight,
-        blockX + blockWidth, blockY + statusBlockHeight - blockRadius,
+        safeBlockX + blockWidth, blockY + statusBlockHeight,
+        safeBlockX + blockWidth, blockY + statusBlockHeight - blockRadius,
         blockRadius
       );
       // Haut droit
       ctx.arcTo(
-        blockX + blockWidth, blockY,
-        blockX + blockWidth - blockRadius, blockY,
+        safeBlockX + blockWidth, blockY,
+        safeBlockX + blockWidth - blockRadius, blockY,
         blockRadius
       );
       ctx.closePath();
@@ -397,12 +497,12 @@ async function generateHDImage(data) {
       ctx.fillStyle = '#FFFFFF'; // Texte blanc
       ctx.font = `${26 * scale}px Arial`;
       const coastTextWidth = ctx.measureText(coastText).width;
-      const coastTextX = blockX + (blockWidth - coastTextWidth) / 2;
+      const coastTextX = safeBlockX + (blockWidth - coastTextWidth) / 2;
       ctx.fillText(coastText, coastTextX, blockY + 30 * scale);
 
       ctx.font = `${16 * scale}px Arial`;
       const statusTextWidth = ctx.measureText(statusText).width;
-      const statusTextX = blockX + (blockWidth - statusTextWidth) / 2;
+      const statusTextX = safeBlockX + (blockWidth - statusTextWidth) / 2;
       ctx.fillText(statusText, statusTextX, blockY + 52 * scale);
 
       // Calculating total coast
