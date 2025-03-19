@@ -58,6 +58,7 @@ const sendMediaToNumber = async (client, phoneNumber, mediaType, mediaBase64, fi
       messageContent = {
         image: Buffer.from(mediaBase64, 'base64'),
         caption: formattedCaption,
+        mimetype: 'image/jpeg',
       };
     } else {
       // Document générique
