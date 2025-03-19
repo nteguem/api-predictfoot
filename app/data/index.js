@@ -1,7 +1,7 @@
 const getMainMenu = (isFirstContact, pseudo) => {
   if (isFirstContact) {
     return `👋 Salut ${pseudo} ,\n\n` +
-           `✨ *Bienvenue sur BIGWIN* votre solution russe d'aide à la réussite de vos paris football !\n\n`
+           `✨ *Bienvenue sur BIGWIN* votre solution russe d'aide à la réussite de vos paris football !\n\n`+
            `🤖 *Nos experts et notre intelligence artificielle analysent les meilleurs événements sportifs pour vous faire gagner !* 💰🔥\n\n` +
            `📊 *80% de réussite* sur nos pronostics !\n\n` +
            `🔢 Que voulez-vous faire ?\n\n` +
