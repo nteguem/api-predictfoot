@@ -7,26 +7,48 @@ async function generateHDImage(data) {
   // Vérifier si data existe et n'est pas vide
   if (!data || data.length === 0) {
     // Créer une image d'erreur si aucune donnée n'est disponible
-    const errorCanvas = createCanvas(1200, 600); // Doublé la résolution
+    const errorCanvas = createCanvas(1200, 600);
     const ctx = errorCanvas.getContext('2d');
     ctx.fillStyle = '#FFFFFF';
     ctx.fillRect(0, 0, 1200, 600);
     ctx.fillStyle = '#F44336';
-    ctx.font = '48px Arial'; // Doublé la taille de police
+    ctx.font = '48px Arial';
     ctx.fillText('Aucune donnée de pronostic disponible', 200, 300);
-    return errorCanvas.toBuffer('image/png', { quality: 1.0, compressionLevel: 0 });
+    return errorCanvas.toBuffer('image/png', { quality: 0.9, compressionLevel: 6 });
   }
 
-  // Facteur d'échelle pour la HD (multiplicateur de résolution)
-  const scale = 2.5;
+  // Facteur d'échelle adaptatif - réduit pour les grandes listes
+  const baseScale = 2.0; // Réduit de 2.5 à 2.0 pour diminuer la taille globale
+  let scale = baseScale;
   
-  // Augmenter l'espacement entre les pronostics
-  const spacingBetweenFixtures = 60 * scale; // Augmenté de 30*scale à 60*scale pour plus d'espace entre les blocs
-  const fixtureHeight = 180 * scale;
+  // Ajustement dynamique de l'échelle en fonction du nombre d'événements
+  if (data.length > 3) {
+    scale = baseScale * (1 - (data.length - 3) * 0.05);
+    // Limiter la réduction d'échelle à un minimum de 70% de l'échelle de base
+    scale = Math.max(scale, baseScale * 0.7);
+  }
+  
+  // Espacement adaptatif entre les pronostics - réduit pour les grandes listes
+  const baseSpacing = 60;
+  const spacingBetweenFixtures = baseSpacing * scale * (data.length > 5 ? 0.8 : 1);
+  
+  // Hauteur de base d'un pronostic - réduite pour les grandes listes
+  const baseFixtureHeight = 180;
+  const fixtureHeight = baseFixtureHeight * scale * (data.length > 5 ? 0.9 : 1);
 
+  // Dimensions du canvas
   const canvasWidth = 600 * scale;
-  // Ajuster la hauteur du canvas pour inclure l'espacement supplémentaire
-  const canvasHeight = (400 + (data.length * (fixtureHeight / scale + spacingBetweenFixtures / scale))) * scale;
+  
+  // Marges supérieure et inférieure fixes pour protéger l'encoche et le NB
+  const topMargin = 220 * scale; // Espace pour le logo et l'encoche
+  const bottomMargin = 80 * scale; // Espace pour le NB
+  
+  // Calculer la hauteur disponible pour les pronostics
+  const availableHeight = (data.length * (fixtureHeight + spacingBetweenFixtures));
+  
+  // Calculer la hauteur totale du canvas
+  const canvasHeight = topMargin + availableHeight + bottomMargin;
+  
   const canvas = createCanvas(canvasWidth, canvasHeight);
   const ctx = canvas.getContext('2d', { alpha: true });
 
@@ -99,16 +121,16 @@ async function generateHDImage(data) {
       ctx.fillText(formattedDate, canvasWidth - ctx.measureText(formattedDate).width - 20 * scale, 130 * scale);
     }
 
-    // Position de départ pour les pronostics
-    let fixtureYStart = 180 * scale;
-    // Augmenter la hauteur de ligne pour inclure l'espacement
+    // Position de départ pour les pronostics - après le topMargin
+    let fixtureYStart = topMargin; 
+    // Hauteur de ligne incluant l'espacement
     const lineHeight = fixtureHeight + spacingBetweenFixtures;
 
     let totalCoast = 1;
     let winCount = 0;
     
     // Ajouter une ligne de séparation visuelle entre le haut et les pronostics
-    ctx.strokeStyle = '#CCFBCC'; // Couleur légèrement plus foncée que le fond des blocs
+    ctx.strokeStyle = '#CCFBCC';
     ctx.lineWidth = 2 * scale;
     ctx.beginPath();
     ctx.moveTo(30 * scale, fixtureYStart - 40 * scale);
@@ -523,18 +545,27 @@ async function generateHDImage(data) {
       fixtureYStart += lineHeight + 30 * scale; // Ajout de 30*scale d'espacement supplémentaire entre chaque bloc
     }
 
-    // Afficher la cote cumulée ou le ratio de réussite avec police plus grande
+    // Afficher la cote cumulée ou le ratio de réussite
     let totalInfo = '';
     if (data[0]?.fixture?.score?.fulltime != null) {
       totalInfo = `Ratio: ${winCount}/${data.length} (${((winCount / data.length) * 100).toFixed(2)}%)`;
     } else {
       totalInfo = `Cote totale : ${totalCoast.toFixed(2)}`;
     }
-    ctx.font = `${28 * scale}px Arial`;
+    
+    // Positionner le texte total juste après le dernier pronostic
+    const totalInfoY = fixtureYStart - lineHeight + 60 * scale;
+    
+    // Vérifier si le texte total est trop près du bas
+    const minDistanceFromBottom = 60 * scale; // Distance minimale du bas
+    const safeY = Math.min(totalInfoY, canvasHeight - bottomMargin + 20 * scale);
+    
+    ctx.font = `${24 * scale}px Arial`; // Légèrement réduit de 28*scale
     ctx.fillStyle = textColor;
-    ctx.fillText(totalInfo, 20 * scale, fixtureYStart + 20 * scale);
+    ctx.fillText(totalInfo, 20 * scale, safeY);
 
-    // Ajouter "NB" en bas avec police plus grande
+    // Ajouter "NB" en bas
+    // Positionner spécifiquement pour qu'il soit toujours au bas absolu du canvas
     ctx.font = `${14 * scale}px Arial`;
     ctx.fillStyle = textColor;
     ctx.fillText(
@@ -543,11 +574,11 @@ async function generateHDImage(data) {
       canvasHeight - 20 * scale
     );
 
-    // Enregistrer avec la plus haute qualité possible
+    // Enregistrer avec compression optimisée
     const buffer = canvas.toBuffer('image/png', { 
-      quality: 1.0,             // Qualité maximale pour JPEG (non utilisé pour PNG)
-      compressionLevel: 0,      // Pas de compression pour PNG
-      resolution: 300           // Résolution DPI élevée
+      quality: 0.9,             // Qualité légèrement réduite pour JPEG (non utilisé pour PNG)
+      compressionLevel: 6,      // Compression modérée pour PNG (0=none, 9=max)
+      resolution: 144           // Résolution DPI réduite mais suffisante
     });
     
     return buffer;
@@ -626,26 +657,26 @@ async function generateHDMobileImage(data) {
     // Dessiner l'image de pronostic adaptée à l'écran
     ctx.drawImage(pronosticImage, pronoX, pronoY, scaledWidth, scaledHeight);
     
-    // Retourner l'image finale avec haute qualité
+    // Retourner l'image finale avec compression modérée
     return mobileCanvas.toBuffer('image/png', { 
-      quality: 1.0,             // Qualité maximale
-      compressionLevel: 0,      // Pas de compression
-      resolution: 300           // Résolution DPI élevée
+      quality: 0.9,             // Qualité légèrement réduite
+      compressionLevel: 6,      // Compression modérée
+      resolution: 144           // Résolution DPI standard
     });
   } catch (error) {
     console.error('Erreur lors de la génération de l\'image mobile HD:', error);
     
     // Créer une image d'erreur
-    const errorCanvas = createCanvas(1050, 1750); // 420*2.5, 700*2.5
+    const errorCanvas = createCanvas(1050, 1750);
     const errorCtx = errorCanvas.getContext('2d');
     errorCtx.fillStyle = '#FFFFFF';
     errorCtx.fillRect(0, 0, 1050, 1750);
     errorCtx.fillStyle = '#F44336';
-    errorCtx.font = '60px Arial'; // 24*2.5
+    errorCtx.font = '60px Arial';
     errorCtx.fillText('Erreur lors de la génération', 125, 875);
     errorCtx.fillText('de l\'image mobile HD', 250, 950);
     
-    return errorCanvas.toBuffer('image/png', { quality: 1.0, compressionLevel: 0 });
+    return errorCanvas.toBuffer('image/png', { quality: 0.9, compressionLevel: 6 });
   }
 }
 
@@ -793,11 +824,11 @@ async function optimizeForWhatsApp(imageBuffer) {
     
     ctx.putImageData(imageData, 0, 0);
     
-    // Retourner l'image optimisée avec paramètres de haute qualité
+    // Retourner l'image optimisée avec paramètres de qualité modérée
     return canvas.toBuffer('image/png', { 
-      quality: 1.0,             // Qualité maximale
-      compressionLevel: 0,      // Pas de compression pour PNG
-      resolution: 300           // Résolution DPI élevée
+      quality: 0.9,             // Qualité légèrement réduite
+      compressionLevel: 6,      // Compression modérée pour PNG (0=none, 9=max)
+      resolution: 144           // Résolution DPI standard pour web
     });
   } catch (error) {
     console.error('Erreur lors de l\'optimisation pour WhatsApp:', error);
