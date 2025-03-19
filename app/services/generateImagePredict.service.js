@@ -18,30 +18,30 @@ async function generateHDImage(data) {
   }
 
   // Facteur d'échelle adaptatif - réduit pour les grandes listes
-  const baseScale = 2.0; // Réduit de 2.5 à 2.0 pour diminuer la taille globale
+  const baseScale = 2.0;
   let scale = baseScale;
   
   // Ajustement dynamique de l'échelle en fonction du nombre d'événements
   if (data.length > 3) {
     scale = baseScale * (1 - (data.length - 3) * 0.05);
-    // Limiter la réduction d'échelle à un minimum de 70% de l'échelle de base
     scale = Math.max(scale, baseScale * 0.7);
   }
   
-  // Espacement adaptatif entre les pronostics - réduit pour les grandes listes
+  // Espacement adaptatif entre les pronostics
   const baseSpacing = 60;
   const spacingBetweenFixtures = baseSpacing * scale * (data.length > 5 ? 0.8 : 1);
   
-  // Hauteur de base d'un pronostic - réduite pour les grandes listes
+  // Hauteur de base d'un pronostic
   const baseFixtureHeight = 180;
   const fixtureHeight = baseFixtureHeight * scale * (data.length > 5 ? 0.9 : 1);
 
   // Dimensions du canvas
   const canvasWidth = 600 * scale;
   
-  // Marges supérieure et inférieure fixes pour protéger l'encoche et le NB
-  const topMargin = 220 * scale; // Espace pour le logo et l'encoche
-  const bottomMargin = 80 * scale; // Espace pour le NB
+  // Marges supérieure et inférieure fixes 
+  // Augmentation significative de la marge supérieure pour protéger l'encoche
+  const topMargin = 280 * scale; // Augmenté de 220 à 280 pour laisser plus d'espace en haut
+  const bottomMargin = 100 * scale; // Augmenté de 80 à 100 pour garantir l'espace en bas
   
   // Calculer la hauteur disponible pour les pronostics
   const availableHeight = (data.length * (fixtureHeight + spacingBetweenFixtures));
@@ -604,9 +604,10 @@ async function generateHDImage(data) {
 }
 
 // Version HD de la fonction mobile qui place l'image dans un cadre iPhone 15
+// avec optimisation pour éviter les superpositions avec l'encoche
 async function generateHDMobileImage(data) {
   try {
-    // D'abord, générer l'image de pronostic HD
+    // Générer l'image de pronostic HD
     const pronosticImageBuffer = await generateHDImage(data);
     const pronosticImage = await loadImage(pronosticImageBuffer);
     
@@ -614,54 +615,63 @@ async function generateHDMobileImage(data) {
     const pronoWidth = pronosticImage.width;
     const pronoHeight = pronosticImage.height;
     
-    // Facteur d'échelle pour la HD
-    const scale = 2.5;
+    // Facteur d'échelle adaptatif
+    const baseScale = 2.0;
+    let scale = baseScale;
     
-    // Calculer les dimensions du téléphone pour s'assurer que tout est visible
-    // Ajouter de l'espace pour le cadre du téléphone
+    // Ajustement dynamique de l'échelle en fonction du nombre d'événements
+    if (data.length > 3) {
+      scale = baseScale * (1 - (data.length - 3) * 0.05);
+      scale = Math.max(scale, baseScale * 0.7);
+    }
+    
+    // Calculer les dimensions du téléphone
     const frameMargin = 30 * scale;
     const mobileWidth = pronoWidth + (frameMargin * 2);
-    // S'assurer que la hauteur est suffisante pour tout afficher avec une marge
     const mobileHeight = pronoHeight + (frameMargin * 2) + 50 * scale;
     
     const mobileCanvas = createCanvas(mobileWidth, mobileHeight);
     const ctx = mobileCanvas.getContext('2d', { alpha: true });
     
-    // Activer l'anticrénelage pour des lignes plus nettes
+    // Activer l'anticrénelage
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
     
     // Fond transparent
     ctx.clearRect(0, 0, mobileWidth, mobileHeight);
     
-    // Dessiner le cadre d'iPhone 15 HD
+    // Dessiner le cadre d'iPhone 15 HD avec une encoche plus grande
     drawHDIphone15Frame(ctx, mobileWidth, mobileHeight, scale);
     
-    // Dessiner le contenu dans le "téléphone" avec une légère marge
+    // Dessiner le contenu dans le "téléphone" avec des marges plus importantes
     const screenMargin = 14 * scale;
     
-    // Calculer les dimensions de l'écran (espace disponible pour l'image)
+    // Calculer les dimensions de l'écran avec un espace supplémentaire en haut
     const frameThickness = 12 * scale;
+    // Ajouter un offset pour éviter de dessiner dans la zone de l'encoche
+    const encocheOffset = 50 * scale; // Zone de sécurité pour l'encoche
+    
     const screenWidth = mobileWidth - (frameThickness * 2) - (screenMargin * 2);
-    const screenHeight = mobileHeight - (frameThickness * 2) - (screenMargin * 2);
+    const screenHeight = mobileHeight - (frameThickness * 2) - (screenMargin * 2) - encocheOffset;
     
     // Adapter l'image au screen
     const scaleRatio = Math.min(screenWidth / pronoWidth, screenHeight / pronoHeight);
     const scaledWidth = pronoWidth * scaleRatio;
     const scaledHeight = pronoHeight * scaleRatio;
     
-    // Centrer l'image dans l'écran
+    // Centrer l'image dans l'écran, mais plus bas pour éviter l'encoche
     const pronoX = frameThickness + screenMargin + (screenWidth - scaledWidth) / 2;
-    const pronoY = frameThickness + screenMargin + (screenHeight - scaledHeight) / 2;
+    // Ajouter l'offset de l'encoche à la position Y
+    const pronoY = frameThickness + screenMargin + encocheOffset + (screenHeight - scaledHeight) / 2;
     
-    // Dessiner l'image de pronostic adaptée à l'écran
+    // Dessiner l'image de pronostic
     ctx.drawImage(pronosticImage, pronoX, pronoY, scaledWidth, scaledHeight);
     
-    // Retourner l'image finale avec compression modérée
+    // Retourner l'image avec compression modérée
     return mobileCanvas.toBuffer('image/png', { 
-      quality: 0.9,             // Qualité légèrement réduite
-      compressionLevel: 6,      // Compression modérée
-      resolution: 144           // Résolution DPI standard
+      quality: 0.9,
+      compressionLevel: 6,
+      resolution: 144
     });
   } catch (error) {
     console.error('Erreur lors de la génération de l\'image mobile HD:', error);
@@ -680,7 +690,7 @@ async function generateHDMobileImage(data) {
   }
 }
 
-// Fonction pour dessiner un cadre style iPhone 15 en HD
+// Fonction pour dessiner un cadre style iPhone 15 en HD avec une encoche améliorée
 function drawHDIphone15Frame(ctx, width, height, scale) {
   // Paramètres du cadre
   const frameThickness = 12 * scale;
@@ -702,7 +712,7 @@ function drawHDIphone15Frame(ctx, width, height, scale) {
   ctx.fillStyle = frameColor;
   ctx.fill();
   
-  // Maintenant, créer un clip basé sur ce chemin pour que rien ne soit dessiné en dehors
+  // Créer un clip pour que rien ne soit dessiné en dehors
   ctx.clip();
   
   // Dessiner l'écran intérieur
@@ -718,8 +728,9 @@ function drawHDIphone15Frame(ctx, width, height, scale) {
   ctx.fill();
   
   // Ajouter la Dynamic Island (Apple iPhone 15)
-  const islandWidth = width * 0.25;
-  const islandHeight = 35 * scale;
+  // Augmenter significativement la taille de l'encoche
+  const islandWidth = width * 0.30; // Augmenté de 0.25 à 0.30
+  const islandHeight = 40 * scale; // Augmenté de 35 à 40
   const islandX = (width - islandWidth) / 2;
   const islandY = frameThickness + 4 * scale;
   const islandRadius = islandHeight / 2;
@@ -733,6 +744,12 @@ function drawHDIphone15Frame(ctx, width, height, scale) {
   ctx.fillStyle = cameraRed;
   ctx.beginPath();
   ctx.arc(islandX + islandWidth - islandHeight/2, islandY + islandHeight/2, 6 * scale, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Ajouter un deuxième capteur (pour plus de réalisme)
+  ctx.fillStyle = '#000000';
+  ctx.beginPath();
+  ctx.arc(islandX + islandWidth/2, islandY + islandHeight/2, 5 * scale, 0, Math.PI * 2);
   ctx.fill();
   
   // Restaurer le contexte après avoir terminé
