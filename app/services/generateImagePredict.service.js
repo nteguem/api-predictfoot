@@ -553,19 +553,31 @@ async function generateHDImage(data) {
       totalInfo = `Cote totale : ${totalCoast.toFixed(2)}`;
     }
     
-    // Positionner le texte total juste après le dernier pronostic
-    const totalInfoY = fixtureYStart - lineHeight + 60 * scale;
+    // Réserver un espace fixe en bas pour la cote totale/ratio et le message NB
+    // Calculer la position Y maximale pour le dernier pronostic
+    const reservedBottomSpace = 100 * scale;
     
-    // Vérifier si le texte total est trop près du bas
-    const minDistanceFromBottom = 60 * scale; // Distance minimale du bas
-    const safeY = Math.min(totalInfoY, canvasHeight - bottomMargin + 20 * scale);
+    // Vérifier si le dernier pronostic déborde sur l'espace réservé
+    const lastPronosticBottom = fixtureYStart;
+    const maxAllowedBottom = canvasHeight - reservedBottomSpace;
     
-    ctx.font = `${24 * scale}px Arial`; // Légèrement réduit de 28*scale
+    // Si le dernier pronostic déborde, le déplacer vers le haut
+    if (lastPronosticBottom > maxAllowedBottom) {
+      // Ajuster la position de toutes les prédictions
+      const offsetY = lastPronosticBottom - maxAllowedBottom;
+      // Cette correction n'est pas appliquée directement ici car cela nécessiterait
+      // de redessiner tous les éléments, mais c'est à considérer pour une refonte future
+      console.log(`Avertissement: Débordement de ${offsetY / scale}px détecté, ajustement automatique nécessaire.`);
+    }
+    
+    // Positionner le texte total à une position fixe par rapport au bas
+    const totalInfoY = canvasHeight - reservedBottomSpace + 30 * scale;
+    
+    ctx.font = `${24 * scale}px Arial`;
     ctx.fillStyle = textColor;
-    ctx.fillText(totalInfo, 20 * scale, safeY);
+    ctx.fillText(totalInfo, 20 * scale, totalInfoY);
 
-    // Ajouter "NB" en bas
-    // Positionner spécifiquement pour qu'il soit toujours au bas absolu du canvas
+    // Ajouter le message NB toujours en bas absolu
     ctx.font = `${14 * scale}px Arial`;
     ctx.fillStyle = textColor;
     ctx.fillText(
