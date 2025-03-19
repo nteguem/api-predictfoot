@@ -2,8 +2,12 @@ const { createCanvas, loadImage } = require('canvas');
 const moment = require('moment');
 moment.locale('fr');
 
-// Renommer l'ancienne fonction pour éviter les conflits
+// Fonction originale pour générer l'image de pronostic
 async function generateOriginalImage(data) {
+  // Tout votre code original ici, sans changements
+  // ...
+  
+  // Copie complète de votre fonction originale
   // Vérifier si data existe et n'est pas vide
   if (!data || data.length === 0) {
     // Créer une image d'erreur si aucune donnée n'est disponible
@@ -374,16 +378,24 @@ async function generateOriginalImage(data) {
   }
 }
 
-// Nouvelle fonction mobile qui utilise la fonction originale renommée
+// Version optimisée de la fonction mobile qui place simplement l'image dans un cadre
 async function generateMobileImage(data) {
   try {
-    // D'abord, générer l'image de pronostic standard en utilisant la fonction originale
+    // D'abord, générer l'image de pronostic standard
     const pronosticImageBuffer = await generateOriginalImage(data);
     const pronosticImage = await loadImage(pronosticImageBuffer);
     
-    // Créer un canvas pour le téléphone mobile
-    const mobileWidth = 420;  // Largeur du mockup de téléphone
-    const mobileHeight = 900; // Hauteur du mockup de téléphone
+    // Dimensions du pronostic
+    const pronoWidth = pronosticImage.width;
+    const pronoHeight = pronosticImage.height;
+    
+    // Calculer les dimensions du téléphone pour s'assurer que tout est visible
+    // Ajouter de l'espace pour le cadre du téléphone (30px de chaque côté)
+    const frameMargin = 30;
+    const mobileWidth = pronoWidth + (frameMargin * 2);
+    // S'assurer que la hauteur est suffisante pour tout afficher avec une marge
+    const mobileHeight = pronoHeight + (frameMargin * 2) + 50; // 50px supplémentaires pour garantir que le texte de bas de page est visible
+    
     const mobileCanvas = createCanvas(mobileWidth, mobileHeight);
     const ctx = mobileCanvas.getContext('2d');
     
@@ -394,18 +406,13 @@ async function generateMobileImage(data) {
     // Dessiner le cadre du téléphone
     drawPhoneFrame(ctx, mobileWidth, mobileHeight);
     
-    // Calculer la taille pour l'image de pronostic
-    const maxPronoWidth = mobileWidth - 40;  // Marges de 20px de chaque côté
-    const ratio = maxPronoWidth / pronosticImage.width;
-    const pronoWidth = maxPronoWidth;
-    const pronoHeight = pronosticImage.height * ratio;
+    // Positionner l'image de pronostic pour qu'elle soit bien centrée dans le cadre
+    // et que tout soit visible, y compris le texte "Jouez de manière responsable"
+    const pronoX = frameMargin;
+    const pronoY = frameMargin;
     
-    // Déterminer la position Y pour commencer à dessiner l'image de pronostic
-    // Cela dépendra de la taille de votre interface BIGWIN
-    const pronoY = 200;  // Après l'en-tête et les sélecteurs
-    
-    // Dessiner l'image de pronostic dans le "téléphone"
-    ctx.drawImage(pronosticImage, 20, pronoY, pronoWidth, pronoHeight);
+    // Dessiner l'image de pronostic
+    ctx.drawImage(pronosticImage, pronoX, pronoY, pronoWidth, pronoHeight);
     
     // Retourner l'image finale
     return mobileCanvas.toBuffer('image/png');
@@ -426,45 +433,48 @@ async function generateMobileImage(data) {
   }
 }
 
-// Fonction pour dessiner le cadre du téléphone
+// Fonction simplifiée pour dessiner un cadre de téléphone
 function drawPhoneFrame(ctx, width, height) {
-  // Cadre externe du téléphone (gris foncé)
+  // Récupérer les dimensions du canvas
+  const canvasWidth = width;
+  const canvasHeight = height;
+  
+  // Dessiner le cadre noir avec coins arrondis
   ctx.fillStyle = '#333333';
-  const frameThickness = 10;
   const cornerRadius = 40;
   
-  // Dessiner le cadre externe avec des coins arrondis
-  roundedRect(ctx, 0, 0, width, height, cornerRadius);
+  // Cadre externe (contour du téléphone)
+  roundedRect(ctx, 0, 0, canvasWidth, canvasHeight, cornerRadius);
   ctx.fill();
   
-  // Dessiner l'écran intérieur (blanc)
+  // Écran intérieur (blanc)
   ctx.fillStyle = '#FFFFFF';
+  const frameThickness = 12;
   roundedRect(
     ctx, 
     frameThickness, 
     frameThickness, 
-    width - (frameThickness * 2), 
-    height - (frameThickness * 2), 
-    cornerRadius - frameThickness
+    canvasWidth - (frameThickness * 2), 
+    canvasHeight - (frameThickness * 2), 
+    cornerRadius - 5
   );
   ctx.fill();
   
-  // Ajouter une encoche en haut (pour les téléphones modernes)
+  // Ajouter une encoche en haut pour le style moderne
   ctx.fillStyle = '#333333';
-  const notchWidth = 100;
-  const notchHeight = 25;
-  const notchX = (width - notchWidth) / 2;
+  const notchWidth = canvasWidth / 4;
+  const notchHeight = 20;
+  const notchX = (canvasWidth - notchWidth) / 2;
   
   ctx.beginPath();
   ctx.moveTo(notchX, frameThickness);
   ctx.lineTo(notchX + notchWidth, frameThickness);
-  ctx.quadraticCurveTo(notchX + notchWidth + 10, frameThickness + 10, notchX + notchWidth, frameThickness + notchHeight);
+  ctx.quadraticCurveTo(notchX + notchWidth + 10, frameThickness + 5, notchX + notchWidth, frameThickness + notchHeight);
   ctx.lineTo(notchX, frameThickness + notchHeight);
-  ctx.quadraticCurveTo(notchX - 10, frameThickness + 10, notchX, frameThickness);
+  ctx.quadraticCurveTo(notchX - 10, frameThickness + 5, notchX, frameThickness);
   ctx.closePath();
   ctx.fill();
 }
-
 
 // Fonction utilitaire pour dessiner un rectangle avec des coins arrondis
 function roundedRect(ctx, x, y, width, height, radius) {
@@ -484,5 +494,5 @@ function roundedRect(ctx, x, y, width, height, radius) {
 // Exporter la fonction mobile comme generateImage pour maintenir la compatibilité
 module.exports = { 
   generateImage: generateMobileImage,
-  generateOriginalImage  // Vous pouvez aussi exporter la fonction originale si nécessaire
+  generateOriginalImage
 };
