@@ -394,9 +394,6 @@ async function generateMobileImage(data) {
     // Dessiner le cadre du téléphone
     drawPhoneFrame(ctx, mobileWidth, mobileHeight);
     
-    // Dessiner l'interface BIGWIN
-    drawBigwinInterface(ctx, mobileWidth, mobileHeight);
-    
     // Calculer la taille pour l'image de pronostic
     const maxPronoWidth = mobileWidth - 40;  // Marges de 20px de chaque côté
     const ratio = maxPronoWidth / pronosticImage.width;
@@ -468,83 +465,6 @@ function drawPhoneFrame(ctx, width, height) {
   ctx.fill();
 }
 
-// Fonction pour dessiner l'interface BIGWIN
-function drawBigwinInterface(ctx, width, height) {
-  // Barre de navigation supérieure (verte)
-  ctx.fillStyle = '#4CAF50';  // Vert BIGWIN
-  ctx.fillRect(10, 50, width - 20, 60);
-  
-  // Logo BIGWIN
-  ctx.fillStyle = '#FFFFFF';
-  ctx.font = 'bold 24px Arial';
-  ctx.fillText('BIGWIN', 100, 90);
-  
-  // Icône de menu (trois lignes)
-  for (let i = 0; i < 3; i++) {
-    ctx.beginPath();
-    ctx.moveTo(30, 75 + (i * 7));
-    ctx.lineTo(50, 75 + (i * 7));
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = '#FFFFFF';
-    ctx.stroke();
-  }
-  
-  // Bouton Subscribe (jaune)
-  ctx.fillStyle = '#FFC107';  // Jaune
-  roundedRect(ctx, width - 130, 65, 100, 30, 15);
-  ctx.fill();
-  
-  ctx.fillStyle = '#333333';
-  ctx.font = '16px Arial';
-  ctx.fillText('Subscribe', width - 115, 85);
-  
-  // Titre "Old Tips"
-  ctx.fillStyle = '#4CAF50';  // Vert BIGWIN
-  ctx.font = 'bold 26px Arial';
-  ctx.fillText('Old Tips', 30, 140);
-  
-  // Sélecteur de type de pronostic (Free, VIP, Platinum)
-  drawSelectorButtons(ctx, 30, 160);
-}
-
-// Fonction pour dessiner les boutons de sélection (Free, VIP, Platinum)
-function drawSelectorButtons(ctx, x, y) {
-  // Bouton Free (actif)
-  ctx.fillStyle = '#4CAF50';
-  roundedRect(ctx, x, y, 80, 40, 20);
-  ctx.fill();
-  
-  ctx.fillStyle = '#FFFFFF';
-  ctx.font = '16px Arial';
-  ctx.fillText('Free', x + 25, y + 25);
-  
-  // Icône de vérification
-  ctx.beginPath();
-  ctx.moveTo(x + 15, y + 20);
-  ctx.lineTo(x + 20, y + 25);
-  ctx.lineTo(x + 25, y + 15);
-  ctx.lineWidth = 2;
-  ctx.strokeStyle = '#FFFFFF';
-  ctx.stroke();
-  
-  // Bouton VIP (inactif)
-  ctx.strokeStyle = '#333333';
-  ctx.lineWidth = 1;
-  roundedRect(ctx, x + 90, y, 80, 40, 20);
-  ctx.stroke();
-  
-  ctx.fillStyle = '#333333';
-  ctx.font = '16px Arial';
-  ctx.fillText('VIP', x + 115, y + 25);
-  
-  // Bouton Platinum (inactif)
-  roundedRect(ctx, x + 180, y, 90, 40, 20);
-  ctx.stroke();
-  
-  ctx.fillStyle = '#333333';
-  ctx.font = '16px Arial';
-  ctx.fillText('Platinum', x + 195, y + 25);
-}
 
 // Fonction utilitaire pour dessiner un rectangle avec des coins arrondis
 function roundedRect(ctx, x, y, width, height, radius) {
