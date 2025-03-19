@@ -1,30 +1,32 @@
 const getMainMenu = (isFirstContact, pseudo) => {
   if (isFirstContact) {
-    return `👋 Salut ${pseudo} !\n\n` +
-           `✨ *Bienvenue sur BIGWIN* – Votre assistant de prédictions football !\n\n` +
-           `🤖 *Nos experts et IA analysent les meilleurs événements sportifs pour vous faire gagner !* 💰🔥\n\n` +
+    return `👋 Salut ${pseudo} ,\n\n` +
+           `✨ *Bienvenue sur BIGWIN* votre solution russe d'aide à la réussite de vos paris football !\n\n`
+           `🤖 *Nos experts et notre intelligence artificielle analysent les meilleurs événements sportifs pour vous faire gagner !* 💰🔥\n\n` +
            `📊 *80% de réussite* sur nos pronostics !\n\n` +
-           `📜 Que voulez-vous faire ?\n\n` +
-           `1- *Prédictions du Jour*, tapez 1\n` +
-           `2- *Anciennes Prédictions*, tapez 2\n` +
-           `3- *Mon Compte*, tapez 3\n` +
-           `4- *Suivre sur Play Store*, tapez 4`;
+           `🔢 Que voulez-vous faire ?\n\n` +
+           `1️⃣ *Prédictions du Jour*, tapez 1\n` +
+           `2️⃣ *Anciennes Prédictions*, tapez 2\n` +
+           `3️⃣ *Mon Compte*, tapez 3\n` +
+           `4️⃣ *Nous retrouver sur Play Store*, tapez 4`
+           `5️⃣ *Nous contacter*, tapez 5`;
   }
 
   return `✨ *BIGWIN - Prédictions*\n\n` +
-         `📜 Que voulez-vous faire ?\n\n` +
-         `1- *Prédictions du Jour*, tapez 1\n` +
-         `2- *Anciennes Prédictions*, tapez 2\n` +
-         `3- *Mon Compte*, tapez 3\n` +
-         `4- *Suivre sur Play Store*, tapez 4`;
+  `🔢 Que voulez-vous faire ?\n\n` +
+  `1️⃣ *Prédictions du Jour*, tapez 1\n` +
+  `2️⃣ *Anciennes Prédictions*, tapez 2\n` +
+  `3️⃣ *Mon Compte*, tapez 3\n` +
+  `4️⃣ *Nous retrouver sur Play Store*, tapez 4`
+  `5️⃣ *Nous contacter*, tapez 5`;
 };
 
 
 
 const getDailyPredictionsMenu = () => {
-  return `📜 *Prédictions du Jour*\n\n` +
-         `1 - *Prédiction Gratuite*, tapez 1\n` +
-         `2 - *Prédiction VIP*, tapez 2\n\n` +
+  return `🔢 *Prédictions du Jour*\n\n` +
+         `1️⃣ *Prédiction Gratuite*, tapez 1\n` +
+         `2️⃣ *Prédiction VIP*, tapez 2\n\n` +
          `_*Tapez # pour revenir au menu principal*_`;
 };
 

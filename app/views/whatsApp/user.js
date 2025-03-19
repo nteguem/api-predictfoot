@@ -446,9 +446,22 @@ const UserCommander = async (user, msg, client) => {
         );
       }
       break;
+      case "5":
+        await replyToMessage(client, msg, 
+          `🏢 *À propos de BIGWIN*\n\n` +
+          `BIGWIN est une solution russe de pronostics sportifs opérant depuis 2020, spécialisée dans l'analyse des matchs de football à travers le monde.\n\n` +
+          `🌟 *Notre expertise*\n` +
+          `Notre équipe d'analystes et nos algorithmes d'intelligence artificielle travaillent ensemble pour vous offrir les meilleures prédictions possibles avec un taux de réussite moyen de 80%.\n\n` +
+          `📞 *Nous contacter*\n` +
+          `• WhatsApp Support: +237 6 94 75 11 62\n` +
+          `• Email: contact@bigwinpronos.com\n` +
+          `⏱️ *Disponibilité du service client 7jours/7*\n` +
+          `_*Tapez # pour revenir au menu principal.*_`
+        );
+        break;  
             default:
               if(!msg.body.startsWith("connecte-")) {
-                await replyToMessage(client, msg, getInvalidInputMessage(msg.body, "Veuillez choisir un numéro entre 1 et 4"));
+                await replyToMessage(client, msg, getInvalidInputMessage(msg.body, "Veuillez choisir un numéro entre 1 et 5"));
                 await replyToMessage(client, msg, getMainMenu(false, user.data.pseudo));
               }
 
@@ -514,7 +527,7 @@ const UserCommander = async (user, msg, client) => {
 
         default:
           if(!msg.body.startsWith("connecte-")) {
-            await replyToMessage(client, msg, getInvalidInputMessage(msg.body, "Veuillez choisir un numéro entre 1 et 4"));
+            await replyToMessage(client, msg, getInvalidInputMessage(msg.body, "Veuillez choisir un numéro entre 1 et 5"));
             await replyToMessage(client, msg, getMainMenu(false, user.data.pseudo));
           }
       }
