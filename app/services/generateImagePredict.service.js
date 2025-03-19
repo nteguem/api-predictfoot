@@ -21,7 +21,7 @@ async function generateHDImage(data) {
   const scale = 2.5;
   
   // Augmenter l'espacement entre les pronostics
-  const spacingBetweenFixtures = 30 * scale;
+  const spacingBetweenFixtures = 60 * scale; // Augmenté de 30*scale à 60*scale pour plus d'espace entre les blocs
   const fixtureHeight = 180 * scale;
 
   const canvasWidth = 600 * scale;
@@ -106,6 +106,14 @@ async function generateHDImage(data) {
 
     let totalCoast = 1;
     let winCount = 0;
+    
+    // Ajouter une ligne de séparation visuelle entre le haut et les pronostics
+    ctx.strokeStyle = '#CCFBCC'; // Couleur légèrement plus foncée que le fond des blocs
+    ctx.lineWidth = 2 * scale;
+    ctx.beginPath();
+    ctx.moveTo(30 * scale, fixtureYStart - 40 * scale);
+    ctx.lineTo(canvasWidth - 30 * scale, fixtureYStart - 40 * scale);
+    ctx.stroke();
 
     // Charger le logo pour le filigrane avec gestion d'erreur
     let watermark;
@@ -512,7 +520,7 @@ async function generateHDImage(data) {
       }
 
       // Ajuster la position Y pour le prochain pronostic avec un espacement supplémentaire
-      fixtureYStart += lineHeight;
+      fixtureYStart += lineHeight + 30 * scale; // Ajout de 30*scale d'espacement supplémentaire entre chaque bloc
     }
 
     // Afficher la cote cumulée ou le ratio de réussite avec police plus grande
