@@ -2,7 +2,196 @@ const { createCanvas, loadImage } = require('canvas');
 const moment = require('moment');
 moment.locale('fr');
 
+async function generateMobileImage(data) {
+  // Récupérer l'image de pronostic normale d'abord
+  const pronosticImage = await generateImage(data);
+  
+  // Créer un canvas plus grand pour le téléphone mobile
+  const mobileWidth = 750;
+  const mobileHeight = 1500;
+  const mobileCanvas = createCanvas(mobileWidth, mobileHeight);
+  const mobileCtx = mobileCanvas.getContext('2d');
+  
+  // Charger l'image de fond du mobile (ou la dessiner directement)
+  try {
+    // Option 1: Charger une image de téléphone mobile
+    const phoneFrame = await loadImage('https://exemple.com/phone-frame.png');
+    mobileCtx.drawImage(phoneFrame, 0, 0, mobileWidth, mobileHeight);
+  } catch (error) {
+    console.error('Erreur lors du chargement du cadre de téléphone, dessin du cadre par défaut:', error);
+    
+    // Option 2: Dessiner un téléphone mobile directement
+    // Fond gris foncé
+    mobileCtx.fillStyle = '#333333';
+    mobileCtx.fillRect(0, 0, mobileWidth, mobileHeight);
+    
+    // Cadre du téléphone
+    mobileCtx.fillStyle = '#222222';
+    const phoneX = 50;
+    const phoneY = 100;
+    const phoneWidth = mobileWidth - 100;
+    const phoneHeight = mobileHeight - 200;
+    
+    // Dessiner le cadre avec des coins arrondis
+    mobileCtx.beginPath();
+    mobileCtx.moveTo(phoneX + 30, phoneY);
+    mobileCtx.lineTo(phoneX + phoneWidth - 30, phoneY);
+    mobileCtx.quadraticCurveTo(phoneX + phoneWidth, phoneY, phoneX + phoneWidth, phoneY + 30);
+    mobileCtx.lineTo(phoneX + phoneWidth, phoneY + phoneHeight - 30);
+    mobileCtx.quadraticCurveTo(phoneX + phoneWidth, phoneY + phoneHeight, phoneX + phoneWidth - 30, phoneY + phoneHeight);
+    mobileCtx.lineTo(phoneX + 30, phoneY + phoneHeight);
+    mobileCtx.quadraticCurveTo(phoneX, phoneY + phoneHeight, phoneX, phoneY + phoneHeight - 30);
+    mobileCtx.lineTo(phoneX, phoneY + 30);
+    mobileCtx.quadraticCurveTo(phoneX, phoneY, phoneX + 30, phoneY);
+    mobileCtx.closePath();
+    mobileCtx.fill();
+    
+    // Écran du téléphone (blanc)
+    mobileCtx.fillStyle = '#FFFFFF';
+    const screenMargin = 10;
+    const screenX = phoneX + screenMargin;
+    const screenY = phoneY + screenMargin;
+    const screenWidth = phoneWidth - (screenMargin * 2);
+    const screenHeight = phoneHeight - (screenMargin * 2);
+    
+    mobileCtx.beginPath();
+    mobileCtx.moveTo(screenX + 20, screenY);
+    mobileCtx.lineTo(screenX + screenWidth - 20, screenY);
+    mobileCtx.quadraticCurveTo(screenX + screenWidth, screenY, screenX + screenWidth, screenY + 20);
+    mobileCtx.lineTo(screenX + screenWidth, screenY + screenHeight - 20);
+    mobileCtx.quadraticCurveTo(screenX + screenWidth, screenY + screenHeight, screenX + screenWidth - 20, screenY + screenHeight);
+    mobileCtx.lineTo(screenX + 20, screenY + screenHeight);
+    mobileCtx.quadraticCurveTo(screenX, screenY + screenHeight, screenX, screenY + screenHeight - 20);
+    mobileCtx.lineTo(screenX, screenY + 20);
+    mobileCtx.quadraticCurveTo(screenX, screenY, screenX + 20, screenY);
+    mobileCtx.closePath();
+    mobileCtx.fill();
+    
+    // Dessiner une encoche en haut (pour les téléphones modernes)
+    mobileCtx.fillStyle = '#222222';
+    const notchWidth = 100;
+    const notchHeight = 30;
+    const notchX = phoneX + (phoneWidth - notchWidth) / 2;
+    const notchY = phoneY + screenMargin;
+    
+    mobileCtx.beginPath();
+    mobileCtx.moveTo(notchX, notchY);
+    mobileCtx.lineTo(notchX + notchWidth, notchY);
+    mobileCtx.quadraticCurveTo(notchX + notchWidth + 10, notchY + 10, notchX + notchWidth, notchY + notchHeight);
+    mobileCtx.lineTo(notchX, notchY + notchHeight);
+    mobileCtx.quadraticCurveTo(notchX - 10, notchY + 10, notchX, notchY);
+    mobileCtx.closePath();
+    mobileCtx.fill();
+    
+    // Bouton home (pour certains téléphones)
+    mobileCtx.fillStyle = '#444444';
+    const buttonSize = 40;
+    const buttonX = phoneX + (phoneWidth - buttonSize) / 2;
+    const buttonY = phoneY + phoneHeight - 50;
+    
+    mobileCtx.beginPath();
+    mobileCtx.arc(buttonX + buttonSize/2, buttonY, buttonSize/2, 0, Math.PI * 2);
+    mobileCtx.closePath();
+    mobileCtx.fill();
+  }
+  
+  // Calculer les dimensions pour l'image de pronostic
+  const pronoImg = await loadImage(pronosticImage);
+  const imgWidth = pronoImg.width;
+  const imgHeight = pronoImg.height;
+  
+  // Calculer les dimensions à l'intérieur de l'écran
+  const screenPaddingX = 80;  // Marge horizontale
+  const screenPaddingY = 220; // Marge verticale en haut pour la barre d'application
+  const screenWidth = mobileWidth - (screenPaddingX * 2);
+  const screenHeight = mobileHeight - screenPaddingY - 250; // Marge inférieure pour navigation
+  
+  // Calculer le ratio pour redimensionner l'image de pronostic
+  const ratio = Math.min(
+    screenWidth / imgWidth,
+    screenHeight / imgHeight
+  );
+  const newWidth = imgWidth * ratio;
+  const newHeight = imgHeight * ratio;
+  
+  // Centrer l'image sur l'écran
+  const imgX = (mobileWidth - newWidth) / 2;
+  const imgY = screenPaddingY;
+  
+  // Dessiner l'interface de l'application
+  // Barre verte en haut comme dans l'image de référence
+  mobileCtx.fillStyle = '#4CAF50';
+  mobileCtx.fillRect(screenPaddingX, screenPaddingY - 60, screenWidth, 60);
+  
+  // Logo BIGWIN (texte simple au lieu d'une image)
+  mobileCtx.fillStyle = '#FFFFFF';
+  mobileCtx.font = '24px Arial';
+  mobileCtx.fillText('BIGWIN', screenPaddingX + 80, screenPaddingY - 25);
+  
+  // Bouton d'abonnement jaune
+  mobileCtx.fillStyle = '#FFC107';
+  mobileCtx.beginPath();
+  const buttonX = screenPaddingX + screenWidth - 120;
+  const buttonY = screenPaddingY - 45;
+  const buttonWidth = 100;
+  const buttonHeight = 30;
+  mobileCtx.moveTo(buttonX + 10, buttonY);
+  mobileCtx.lineTo(buttonX + buttonWidth - 10, buttonY);
+  mobileCtx.quadraticCurveTo(buttonX + buttonWidth, buttonY, buttonX + buttonWidth, buttonY + 10);
+  mobileCtx.lineTo(buttonX + buttonWidth, buttonY + buttonHeight - 10);
+  mobileCtx.quadraticCurveTo(buttonX + buttonWidth, buttonY + buttonHeight, buttonX + buttonWidth - 10, buttonY + buttonHeight);
+  mobileCtx.lineTo(buttonX + 10, buttonY + buttonHeight);
+  mobileCtx.quadraticCurveTo(buttonX, buttonY + buttonHeight, buttonX, buttonY + buttonHeight - 10);
+  mobileCtx.lineTo(buttonX, buttonY + 10);
+  mobileCtx.quadraticCurveTo(buttonX, buttonY, buttonX + 10, buttonY);
+  mobileCtx.closePath();
+  mobileCtx.fill();
+  
+  mobileCtx.fillStyle = '#333333';
+  mobileCtx.font = '16px Arial';
+  mobileCtx.fillText('Subscribe', buttonX + 15, buttonY + 20);
+  
+  // Icône de menu (trois lignes)
+  mobileCtx.strokeStyle = '#FFFFFF';
+  mobileCtx.lineWidth = 2;
+  for (let i = 0; i < 3; i++) {
+    mobileCtx.beginPath();
+    mobileCtx.moveTo(screenPaddingX + 20, screenPaddingY - 40 + (i * 10));
+    mobileCtx.lineTo(screenPaddingX + 40, screenPaddingY - 40 + (i * 10));
+    mobileCtx.stroke();
+  }
+  
+  // Dessiner l'image de pronostic
+  mobileCtx.drawImage(pronoImg, imgX, imgY, newWidth, newHeight);
+  
+  // Ajouter la barre de navigation en bas
+  mobileCtx.fillStyle = '#F5F5F5';
+  mobileCtx.fillRect(screenPaddingX, mobileHeight - 200, screenWidth, 70);
+  
+  // Quelques icônes de navigation simplifiées
+  const navItems = ['Free Tips', 'VIP Tips', 'Platinum', 'Like', 'Old Tips'];
+  const itemWidth = screenWidth / navItems.length;
+  
+  mobileCtx.fillStyle = '#777777';
+  mobileCtx.font = '12px Arial';
+  navItems.forEach((item, index) => {
+    // Dessiner une icône simplifiée
+    mobileCtx.fillRect(screenPaddingX + (itemWidth * index) + (itemWidth/2) - 10, mobileHeight - 180, 20, 20);
+    
+    // Texte de navigation
+    mobileCtx.fillText(item, screenPaddingX + (itemWidth * index) + (itemWidth/2) - 20, mobileHeight - 150);
+  });
+  
+  // Colorier la dernière icône en vert pour montrer qu'elle est sélectionnée
+  mobileCtx.fillStyle = '#4CAF50';
+  mobileCtx.fillRect(screenPaddingX + (itemWidth * 4) + (itemWidth/2) - 10, mobileHeight - 180, 20, 20);
+  
+  return mobileCanvas.toBuffer('image/png');
+}
+
+// Fonction originale de génération d'images de pronostics
 async function generateImage(data) {
+  // Copie de la fonction originale (votre code existant)
   // Vérifier si data existe et n'est pas vide
   if (!data || data.length === 0) {
     // Créer une image d'erreur si aucune donnée n'est disponible
@@ -71,8 +260,8 @@ async function generateImage(data) {
 
     // Déterminer le titre en fonction des conditions
     const isVip = data[0]?.isVip ?? false; // Utiliser une valeur par défaut si null
-    const resultText = data[0]?.fixture?.score?.fulltime != null ? "résultat " : 'combinaison ';
-    const vipText = isVip ? 'VIP ' : 'Gratuites ';
+    const resultText = data[0]?.fixture?.score?.fulltime != null ? "résultat " : 'pronos ';
+    const vipText = isVip ? 'VIP ' : 'Gratuits';
     const titleText = resultText + vipText;
 
     // Afficher le titre en haut à gauche avec une police plus grande
