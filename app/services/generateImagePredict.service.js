@@ -179,7 +179,7 @@ function drawStatusBlock(ctx, blockX, blockY, blockWidth, blockHeight, color, co
 }
 
 /**
- * Dessine un cadre style iPhone 15 avec une encoche
+ * Dessine un cadre style iPhone 15 avec une encoche et éléments d'interface
  * @param {CanvasRenderingContext2D} ctx Contexte du canvas
  * @param {number} width Largeur du cadre
  * @param {number} height Hauteur du cadre
@@ -242,6 +242,136 @@ function drawIphone15Frame(ctx, width, height, scale) {
   ctx.beginPath();
   ctx.arc(islandX + islandWidth/2, islandY + islandHeight/2, 5 * scale, 0, Math.PI * 2);
   ctx.fill();
+  
+  // Ajouter la barre d'état (heure, indicateurs de réseau, batterie)
+  const statusBarY = frameThickness + islandHeight + 10 * scale;
+  
+  // Ajouter l'heure au milieu en haut
+  ctx.fillStyle = '#000000';
+  ctx.font = `${14 * scale}px Arial`;
+  ctx.textAlign = 'center';
+  
+  // Obtenir l'heure actuelle
+  const now = new Date();
+  const hours = now.getHours().toString().padStart(2, '0');
+  const minutes = now.getMinutes().toString().padStart(2, '0');
+  const timeStr = `${hours}:${minutes}`;
+  
+  ctx.fillText(timeStr, width / 2, statusBarY + 5 * scale);
+  ctx.textAlign = 'left'; // Réinitialiser l'alignement du texte
+  
+  // Ajouter les indicateurs de réseau à gauche
+  // Icône réseau cellulaire
+  const networkX = frameThickness + 10 * scale;
+  const networkY = statusBarY - 2 * scale;
+  
+  // Dessiner les barres de signal (4 barres)
+  ctx.fillStyle = '#000000';
+  for (let i = 0; i < 4; i++) {
+    const barHeight = (i + 1) * 2 * scale;
+    const barWidth = 3 * scale;
+    const barX = networkX + i * 5 * scale;
+    ctx.fillRect(barX, networkY - barHeight, barWidth, barHeight);
+  }
+  
+  // Icône WiFi
+  const wifiX = networkX + 30 * scale;
+  const wifiY = networkY - 2 * scale;
+  
+  // Dessiner un symbole WiFi simplifié
+  ctx.beginPath();
+  ctx.arc(wifiX, wifiY, 8 * scale, Math.PI, 0, false);
+  ctx.lineWidth = 1.5 * scale;
+  ctx.strokeStyle = '#000000';
+  ctx.stroke();
+  
+  ctx.beginPath();
+  ctx.arc(wifiX, wifiY, 5 * scale, Math.PI, 0, false);
+  ctx.stroke();
+  
+  ctx.beginPath();
+  ctx.arc(wifiX, wifiY, 2 * scale, Math.PI, 0, false);
+  ctx.stroke();
+  
+  // Ajouter l'indicateur de batterie à droite
+  const batteryX = width - frameThickness - 45 * scale;
+  const batteryY = statusBarY - 2 * scale;
+  const batteryWidth = 25 * scale;
+  const batteryHeight = 12 * scale;
+  
+  // Corps principal de la batterie
+  ctx.lineWidth = 1 * scale;
+  ctx.strokeStyle = '#000000';
+  roundedRect(ctx, batteryX, batteryY - batteryHeight / 2, batteryWidth, batteryHeight, 2 * scale);
+  ctx.stroke();
+  
+  // Capuchon de la batterie
+  ctx.fillStyle = '#000000';
+  ctx.fillRect(batteryX + batteryWidth, batteryY - batteryHeight / 4, 2 * scale, batteryHeight / 2);
+  
+  // Niveau de la batterie (75%)
+  ctx.fillStyle = '#00C853';
+  roundedRect(ctx, 
+    batteryX + 2 * scale, 
+    batteryY - batteryHeight / 2 + 2 * scale, 
+    (batteryWidth - 4 * scale) * 0.75, 
+    batteryHeight - 4 * scale, 
+    1 * scale
+  );
+  ctx.fill();
+  
+  // Pourcentage de la batterie
+  ctx.fillStyle = '#000000';
+  ctx.font = `${10 * scale}px Arial`;
+  ctx.fillText('75%', batteryX - 30 * scale, batteryY + 3 * scale);
+  
+  // Ajouter une notification WhatsApp en haut (juste sous la barre d'état)
+  const notificationY = statusBarY + 25 * scale;
+  const notificationHeight = 70 * scale;
+  const notificationWidth = width * 0.9;
+  const notificationX = (width - notificationWidth) / 2;
+  
+  // Fond de la notification
+  ctx.fillStyle = 'rgba(240, 240, 240, 0.95)';
+  roundedRect(ctx, notificationX, notificationY, notificationWidth, notificationHeight, 15 * scale);
+  ctx.fill();
+  
+  // Ligne de séparation
+  ctx.strokeStyle = 'rgba(200, 200, 200, 0.8)';
+  ctx.lineWidth = 1 * scale;
+  ctx.beginPath();
+  ctx.moveTo(notificationX + 10 * scale, notificationY + 35 * scale);
+  ctx.lineTo(notificationX + notificationWidth - 10 * scale, notificationY + 35 * scale);
+  ctx.stroke();
+  
+  // Logo WhatsApp (cercle vert)
+  ctx.fillStyle = '#25D366';
+  ctx.beginPath();
+  ctx.arc(notificationX + 25 * scale, notificationY + 20 * scale, 12 * scale, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Téléphone dans le logo WhatsApp (simplifié)
+  ctx.fillStyle = '#FFFFFF';
+  ctx.beginPath();
+  ctx.arc(notificationX + 25 * scale, notificationY + 20 * scale, 6 * scale, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Texte "WhatsApp"
+  ctx.fillStyle = '#000000';
+  ctx.font = `bold ${12 * scale}px Arial`;
+  ctx.fillText('WhatsApp', notificationX + 45 * scale, notificationY + 20 * scale);
+  
+  // Heure du message
+  ctx.fillStyle = '#888888';
+  ctx.font = `${10 * scale}px Arial`;
+  ctx.textAlign = 'right';
+  ctx.fillText('maintenant', notificationX + notificationWidth - 15 * scale, notificationY + 20 * scale);
+  ctx.textAlign = 'left';
+  
+  // Contenu du message
+  ctx.fillStyle = '#000000';
+  ctx.font = `${11 * scale}px Arial`;
+  ctx.fillText('Nouveau pronostic disponible !', notificationX + 20 * scale, notificationY + 55 * scale);
   
   // Restaurer le contexte après avoir terminé
   ctx.restore();
@@ -481,9 +611,9 @@ async function generateBaseImage(data) {
     ctx.fillText(totalInfo, 20, fixtureYStart + 20);
 
     // Ajouter message de responsabilité en bas
-    ctx.font = '15px Arial';
+    ctx.font = '16px Arial';
     ctx.fillStyle = textColor;
-    ctx.fillText("Jouez de manière responsable. Les gains et pertes sont sous votre responsabilité.", 20, canvasHeight - 20);
+    ctx.fillText("Jouez de manière responsable. Les gains ou pertes sont sous la responsabilité des joueurs.", 20, canvasHeight - 20);
 
     return canvas.toBuffer('image/png');
     
@@ -503,6 +633,11 @@ async function generateBaseImage(data) {
  * @param {Buffer} imageBuffer Buffer de l'image à encadrer
  * @returns {Buffer} L'image avec cadre au format PNG
  */
+/**
+ * Place une image dans un cadre d'iPhone 15 avec interface utilisateur réaliste
+ * @param {Buffer} imageBuffer Buffer de l'image à encadrer
+ * @returns {Buffer} L'image avec cadre au format PNG
+ */
 async function generateMobileFramedImage(imageBuffer) {
   try {
     // Charger l'image de pronostic
@@ -513,8 +648,12 @@ async function generateMobileFramedImage(imageBuffer) {
     const pronoHeight = pronosticImage.height;
     const scale = 1.0;
     const frameMargin = 30 * scale;
+    
+    // Ajuster la taille du téléphone pour laisser plus d'espace pour l'interface
     const mobileWidth = pronoWidth + (frameMargin * 2);
-    const mobileHeight = pronoHeight + (frameMargin * 2) + 50 * scale;
+    // Ajouter plus d'espace en haut pour la barre d'état et la notification WhatsApp
+    const notificationSpace = 120 * scale; 
+    const mobileHeight = pronoHeight + (frameMargin * 2) + notificationSpace;
     
     // Créer le canvas pour l'image finale
     const mobileCanvas = createCanvas(mobileWidth, mobileHeight);
@@ -531,18 +670,26 @@ async function generateMobileFramedImage(imageBuffer) {
     // Calculer les dimensions pour l'image
     const screenMargin = 14 * scale;
     const frameThickness = 12 * scale;
-    const encocheOffset = 50 * scale;
+    
+    // Augmenter l'offset pour prendre en compte la notification WhatsApp
+    const statusBarOffset = 40 * scale; // Espace pour la barre d'état
+    const encocheOffset = 50 * scale; // Espace pour la Dynamic Island
+    const whatsappOffset = 80 * scale; // Espace pour la notification WhatsApp
+    
+    const totalTopOffset = encocheOffset + statusBarOffset + whatsappOffset;
+    
+    // Dimensions disponibles pour l'image du pronostic
     const screenWidth = mobileWidth - (frameThickness * 2) - (screenMargin * 2);
-    const screenHeight = mobileHeight - (frameThickness * 2) - (screenMargin * 2) - encocheOffset;
+    const screenHeight = mobileHeight - (frameThickness * 2) - (screenMargin * 2) - totalTopOffset;
     
     // Adapter l'image au screen
     const scaleRatio = Math.min(screenWidth / pronoWidth, screenHeight / pronoHeight);
     const scaledWidth = pronoWidth * scaleRatio;
     const scaledHeight = pronoHeight * scaleRatio;
     
-    // Positionner l'image dans l'écran
+    // Positionner l'image dans l'écran, sous la notification
     const pronoX = frameThickness + screenMargin + (screenWidth - scaledWidth) / 2;
-    const pronoY = frameThickness + screenMargin + encocheOffset + (screenHeight - scaledHeight) / 2;
+    const pronoY = frameThickness + screenMargin + totalTopOffset + 10 * scale; // Ajouter un petit espace supplémentaire
     
     // Dessiner l'image de pronostic
     ctx.drawImage(pronosticImage, pronoX, pronoY, scaledWidth, scaledHeight);
