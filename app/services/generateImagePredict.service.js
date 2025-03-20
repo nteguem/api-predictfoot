@@ -7,12 +7,12 @@ moment.locale('fr');
  * @param {Array} data Les données de pronostics
  * @returns {Buffer} L'image générée au format PNG
  */
-async function generateImage(data) {
+async function generateImage(data,pseudo=null) {
   // Générer d'abord l'image de pronostic normale
   const pronosticImageBuffer = await generateBaseImage(data);
   
   // Ensuite, placer cette image dans un cadre iPhone 15
-  return generateMobileFramedImage(pronosticImageBuffer);
+  return generateMobileFramedImage(pronosticImageBuffer,pseudo);
 }
 
 /**
@@ -185,7 +185,7 @@ function drawStatusBlock(ctx, blockX, blockY, blockWidth, blockHeight, color, co
  * @param {number} height Hauteur du cadre
  * @param {number} scale Facteur d'échelle
  */
-function drawIphone15Frame(ctx, width, height, scale) {
+function drawIphone15Frame(ctx, width, height, scale,pseudo) {
   // Paramètres du cadre
   const frameThickness = 12 * scale;
   const cornerRadius = 40 * scale;
@@ -243,13 +243,13 @@ function drawIphone15Frame(ctx, width, height, scale) {
   ctx.arc(islandX + islandWidth/2, islandY + islandHeight/2, 5 * scale, 0, Math.PI * 2);
   ctx.fill();
   
-  // Ajouter la barre d'état (heure, indicateurs de réseau, batterie)
+  // Ajouter la barre d'état (style iOS actuel avec l'heure à gauche et indicateurs à droite)
   const statusBarY = frameThickness + islandHeight + 10 * scale;
   
-  // Ajouter l'heure au milieu en haut
+  // Ajouter l'heure à gauche en haut
   ctx.fillStyle = '#000000';
-  ctx.font = `${14 * scale}px Arial`;
-  ctx.textAlign = 'center';
+  ctx.font = `bold ${14 * scale}px Arial`;
+  ctx.textAlign = 'left';
   
   // Obtenir l'heure actuelle
   const now = new Date();
@@ -257,77 +257,56 @@ function drawIphone15Frame(ctx, width, height, scale) {
   const minutes = now.getMinutes().toString().padStart(2, '0');
   const timeStr = `${hours}:${minutes}`;
   
-  ctx.fillText(timeStr, width / 2, statusBarY + 5 * scale);
-  ctx.textAlign = 'left'; // Réinitialiser l'alignement du texte
+  const timeX = frameThickness + 15 * scale;
+  ctx.fillText(timeStr, timeX, statusBarY + 5 * scale);
   
-  // Ajouter les indicateurs de réseau à gauche
-  // Icône réseau cellulaire
-  const networkX = frameThickness + 10 * scale;
-  const networkY = statusBarY - 2 * scale;
+  // Ajouter les indicateurs à droite
+  const statusRightX = width - frameThickness - 15 * scale;
+  
+  // Icône réseau cellulaire 
+  const signalX = statusRightX - 60 * scale;
+  const signalY = statusBarY;
   
   // Dessiner les barres de signal (4 barres)
   ctx.fillStyle = '#000000';
   for (let i = 0; i < 4; i++) {
     const barHeight = (i + 1) * 2 * scale;
-    const barWidth = 3 * scale;
-    const barX = networkX + i * 5 * scale;
-    ctx.fillRect(barX, networkY - barHeight, barWidth, barHeight);
+    const barWidth = 2 * scale;
+    const barX = signalX + i * 4 * scale;
+    ctx.fillRect(barX, signalY - barHeight + 2 * scale, barWidth, barHeight);
   }
   
-  // Icône WiFi
-  const wifiX = networkX + 30 * scale;
-  const wifiY = networkY - 2 * scale;
-  
-  // Dessiner un symbole WiFi simplifié
-  ctx.beginPath();
-  ctx.arc(wifiX, wifiY, 8 * scale, Math.PI, 0, false);
-  ctx.lineWidth = 1.5 * scale;
-  ctx.strokeStyle = '#000000';
-  ctx.stroke();
-  
-  ctx.beginPath();
-  ctx.arc(wifiX, wifiY, 5 * scale, Math.PI, 0, false);
-  ctx.stroke();
-  
-  ctx.beginPath();
-  ctx.arc(wifiX, wifiY, 2 * scale, Math.PI, 0, false);
-  ctx.stroke();
-  
   // Ajouter l'indicateur de batterie à droite
-  const batteryX = width - frameThickness - 45 * scale;
-  const batteryY = statusBarY - 2 * scale;
-  const batteryWidth = 25 * scale;
-  const batteryHeight = 12 * scale;
+  const batteryX = statusRightX - 25 * scale;
+  const batteryY = statusBarY;
+  const batteryWidth = 22 * scale;
+  const batteryHeight = 10 * scale;
   
   // Corps principal de la batterie
   ctx.lineWidth = 1 * scale;
   ctx.strokeStyle = '#000000';
-  roundedRect(ctx, batteryX, batteryY - batteryHeight / 2, batteryWidth, batteryHeight, 2 * scale);
+  // Arrondir seulement les coins gauches
+  ctx.beginPath();
+  ctx.moveTo(batteryX, batteryY - batteryHeight/2);
+  ctx.lineTo(batteryX + batteryWidth - 2 * scale, batteryY - batteryHeight/2);
+  ctx.lineTo(batteryX + batteryWidth - 2 * scale, batteryY + batteryHeight/2);
+  ctx.lineTo(batteryX, batteryY + batteryHeight/2);
+  ctx.closePath();
   ctx.stroke();
   
   // Capuchon de la batterie
   ctx.fillStyle = '#000000';
-  ctx.fillRect(batteryX + batteryWidth, batteryY - batteryHeight / 4, 2 * scale, batteryHeight / 2);
+  ctx.fillRect(batteryX + batteryWidth - 2 * scale, batteryY - batteryHeight/4, 2 * scale, batteryHeight/2);
   
-  // Niveau de la batterie (75%)
-  ctx.fillStyle = '#00C853';
-  roundedRect(ctx, 
-    batteryX + 2 * scale, 
-    batteryY - batteryHeight / 2 + 2 * scale, 
-    (batteryWidth - 4 * scale) * 0.75, 
-    batteryHeight - 4 * scale, 
-    1 * scale
-  );
-  ctx.fill();
-  
-  // Pourcentage de la batterie
+  // Niveau de la batterie (85%)
   ctx.fillStyle = '#000000';
-  ctx.font = `${10 * scale}px Arial`;
-  ctx.fillText('75%', batteryX - 30 * scale, batteryY + 3 * scale);
+  const batteryLevel = 0.85; // 85%
+  ctx.fillRect(batteryX + 1 * scale, batteryY - batteryHeight/2 + 1 * scale, 
+    (batteryWidth - 4 * scale) * batteryLevel, batteryHeight - 2 * scale);
   
-  // Ajouter une notification WhatsApp en haut (juste sous la barre d'état)
+  // Ajouter une notification style iOS
   const notificationY = statusBarY + 25 * scale;
-  const notificationHeight = 70 * scale;
+  const notificationHeight = 80 * scale;
   const notificationWidth = width * 0.9;
   const notificationX = (width - notificationWidth) / 2;
   
@@ -336,42 +315,54 @@ function drawIphone15Frame(ctx, width, height, scale) {
   roundedRect(ctx, notificationX, notificationY, notificationWidth, notificationHeight, 15 * scale);
   ctx.fill();
   
-  // Ligne de séparation
-  ctx.strokeStyle = 'rgba(200, 200, 200, 0.8)';
-  ctx.lineWidth = 1 * scale;
-  ctx.beginPath();
-  ctx.moveTo(notificationX + 10 * scale, notificationY + 35 * scale);
-  ctx.lineTo(notificationX + notificationWidth - 10 * scale, notificationY + 35 * scale);
-  ctx.stroke();
+  // Ajouter une image de profil utilisateur (cercle) - corrigée et bien positionnée
+  const userImageSize = 40 * scale; // Légèrement réduit pour ne pas déborder
+  const userImageX = notificationX + 25 * scale;
+  const userImageY = notificationY + notificationHeight/2;
   
-  // Logo WhatsApp (cercle vert)
-  ctx.fillStyle = '#25D366';
+  // Cercle de l'image utilisateur
+  ctx.fillStyle = '#4CAF50'; // Fond vert
   ctx.beginPath();
-  ctx.arc(notificationX + 25 * scale, notificationY + 20 * scale, 12 * scale, 0, Math.PI * 2);
+  ctx.arc(userImageX, userImageY, userImageSize/2, 0, Math.PI * 2);
   ctx.fill();
   
-  // Téléphone dans le logo WhatsApp (simplifié)
+  // Silhouette utilisateur plus simple (forme ovale)
   ctx.fillStyle = '#FFFFFF';
+  // Tête
   ctx.beginPath();
-  ctx.arc(notificationX + 25 * scale, notificationY + 20 * scale, 6 * scale, 0, Math.PI * 2);
+  ctx.arc(userImageX, userImageY - 5 * scale, userImageSize/6, 0, Math.PI * 2);
   ctx.fill();
   
-  // Texte "WhatsApp"
-  ctx.fillStyle = '#000000';
-  ctx.font = `bold ${12 * scale}px Arial`;
-  ctx.fillText('WhatsApp', notificationX + 45 * scale, notificationY + 20 * scale);
+  // Corps - dessiné comme un ovale simple
+  ctx.beginPath();
+  ctx.ellipse(
+    userImageX, 
+    userImageY + 8 * scale, 
+    userImageSize/4, 
+    userImageSize/3.5, 
+    0, 
+    0, 
+    Math.PI * 2
+  );
+  ctx.fill();
   
-  // Heure du message
+  // Texte "Assistant virtuelle BigWin" en gras
+  ctx.fillStyle = '#000000';
+  ctx.font = `bold ${14 * scale}px -apple-system, BlinkMacSystemFont, Arial`;
+  const titleX = userImageX + userImageSize/2 + 15 * scale;
+  ctx.fillText('Assistant virtuel', titleX, notificationY + 30 * scale);
+  
+  // Ligne de "now" (maintenant)
   ctx.fillStyle = '#888888';
-  ctx.font = `${10 * scale}px Arial`;
+  ctx.font = `${12 * scale}px -apple-system, BlinkMacSystemFont, Arial`;
   ctx.textAlign = 'right';
-  ctx.fillText('maintenant', notificationX + notificationWidth - 15 * scale, notificationY + 20 * scale);
+  ctx.fillText('now', notificationX + notificationWidth - 15 * scale, notificationY + 30 * scale);
   ctx.textAlign = 'left';
   
-  // Contenu du message
+  // Texte du message "Nouveau pronostic disponible!"
   ctx.fillStyle = '#000000';
-  ctx.font = `${11 * scale}px Arial`;
-  ctx.fillText('Nouveau pronostic disponible !', notificationX + 20 * scale, notificationY + 55 * scale);
+  ctx.font = `${13 * scale}px -apple-system, BlinkMacSystemFont, Arial`;
+  ctx.fillText(pseudo ? `Pronostic disponible pour toi ${pseudo}` : "Nouveau pronostic disponible", titleX, notificationY + 55 * scale);
   
   // Restaurer le contexte après avoir terminé
   ctx.restore();
@@ -638,7 +629,7 @@ async function generateBaseImage(data) {
  * @param {Buffer} imageBuffer Buffer de l'image à encadrer
  * @returns {Buffer} L'image avec cadre au format PNG
  */
-async function generateMobileFramedImage(imageBuffer) {
+async function generateMobileFramedImage(imageBuffer,pseudo) {
   try {
     // Charger l'image de pronostic
     const pronosticImage = await loadImage(imageBuffer);
@@ -665,7 +656,7 @@ async function generateMobileFramedImage(imageBuffer) {
     ctx.clearRect(0, 0, mobileWidth, mobileHeight);
     
     // Dessiner le cadre
-    drawIphone15Frame(ctx, mobileWidth, mobileHeight, scale);
+    drawIphone15Frame(ctx, mobileWidth, mobileHeight, scale,pseudo);
     
     // Calculer les dimensions pour l'image
     const screenMargin = 14 * scale;

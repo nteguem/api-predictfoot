@@ -84,14 +84,14 @@ const sendPrediction = async (client, vipChoice, user) => {
     if (vipChoice) {
       const { isVip } = await verifyUserVip(user.data.phoneNumber);
       if (isVip) {
-        const imageData = await generateImage(predictions);
+        const imageData = await generateImage(predictions,user.data?.pseudo);
         await sendMediaToNumber(client, user.data.phoneNumber, "image/png", imageData.toString("base64"), "nameMedia");
       } else {
         sendMessageToNumber(client, user.data.phoneNumber, `Vous n'avez pas de forfait VIP activé. Voici les options d'abonnement disponibles :`);
         await handleSubscriptionMenu(client, user);
       }
     } else {
-      const imageData = await generateImage(predictions);
+      const imageData = await generateImage(predictions,user.data?.pseudo);
       await sendMediaToNumber(client, user.data.phoneNumber, "image/png", imageData.toString("base64"), "nameMedia");
     }
   } catch (error) {
