@@ -604,7 +604,7 @@ async function generateBaseImage(data) {
     // Ajouter message de responsabilité en bas
     ctx.font = '16px Arial';
     ctx.fillStyle = textColor;
-    ctx.fillText("Jouez de manière responsable. Les gains ou pertes sont sous la responsabilité des joueurs.", 20, canvasHeight - 20);
+    ctx.fillText("Jouez de manière responsable. Vos gains ou pertes sont sous votre responsabilité.", 20, canvasHeight - 20);
 
     return canvas.toBuffer('image/png');
     
