@@ -137,7 +137,7 @@ class Application {
         }
       });
     });
-  }
+  } 
 
   async start() {
     const port = process.env.PORT || 3001;

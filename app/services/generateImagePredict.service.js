@@ -2,792 +2,128 @@ const { createCanvas, loadImage } = require('canvas');
 const moment = require('moment');
 moment.locale('fr');
 
-// Fonction pour générer une image HD optimisée pour WhatsApp
-async function generateHDImage(data) {
-  // Vérifier si data existe et n'est pas vide
-  if (!data || data.length === 0) {
-    // Créer une image d'erreur si aucune donnée n'est disponible
-    const errorCanvas = createCanvas(1200, 600);
-    const ctx = errorCanvas.getContext('2d');
-    ctx.fillStyle = '#FFFFFF';
-    ctx.fillRect(0, 0, 1200, 600);
-    ctx.fillStyle = '#F44336';
-    ctx.font = '48px Arial';
-    ctx.fillText('Aucune donnée de pronostic disponible', 200, 300);
-    return errorCanvas.toBuffer('image/png', { quality: 0.9, compressionLevel: 6 });
-  }
-
-  // Facteur d'échelle adaptatif - réduit pour les grandes listes
-  const baseScale = 2.0;
-  let scale = baseScale;
+/**
+ * Fonction principale pour générer une image de pronostics dans un cadre iPhone 15
+ * @param {Array} data Les données de pronostics
+ * @returns {Buffer} L'image générée au format PNG
+ */
+async function generateImage(data) {
+  // Générer d'abord l'image de pronostic normale
+  const pronosticImageBuffer = await generateBaseImage(data);
   
-  // Ajustement dynamique de l'échelle en fonction du nombre d'événements
-  if (data.length > 3) {
-    scale = baseScale * (1 - (data.length - 3) * 0.05);
-    scale = Math.max(scale, baseScale * 0.7);
-  }
-  
-  // Espacement adaptatif entre les pronostics
-  const baseSpacing = 60;
-  const spacingBetweenFixtures = baseSpacing * scale * (data.length > 5 ? 0.8 : 1);
-  
-  // Hauteur de base d'un pronostic
-  const baseFixtureHeight = 180;
-  const fixtureHeight = baseFixtureHeight * scale * (data.length > 5 ? 0.9 : 1);
-
-  // Dimensions du canvas
-  const canvasWidth = 600 * scale;
-  
-  // Marges supérieure et inférieure fixes 
-  // Augmentation significative de la marge supérieure pour protéger l'encoche
-  const topMargin = 280 * scale; // Augmenté de 220 à 280 pour laisser plus d'espace en haut
-  const bottomMargin = 100 * scale; // Augmenté de 80 à 100 pour garantir l'espace en bas
-  
-  // Calculer la hauteur disponible pour les pronostics
-  const availableHeight = (data.length * (fixtureHeight + spacingBetweenFixtures));
-  
-  // Calculer la hauteur totale du canvas
-  const canvasHeight = topMargin + availableHeight + bottomMargin;
-  
-  const canvas = createCanvas(canvasWidth, canvasHeight);
-  const ctx = canvas.getContext('2d', { alpha: true });
-
-  // Activer l'anticrénelage pour des lignes plus nettes
-  ctx.imageSmoothingEnabled = true;
-  ctx.imageSmoothingQuality = 'high';
-
-  // Fond blanc
-  ctx.fillStyle = '#FFFFFF';
-  ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-
-  // Couleur du texte
-  const textColor = '#1B5E20';
-
-  try {
-    // Formater la date avec moment.js avec gestion de null
-    const eventDate = data[0]?.fixture?.event_date;
-    const formattedDate = eventDate ? moment(eventDate).format('dddd, MMMM Do YYYY') : 'Date non disponible';
-
-    // Charger le logo du pronostic avec gestion d'erreur
-    let logoPronostic;
-    try {
-      logoPronostic = await loadImage('https://res.cloudinary.com/nwccompany/image/upload/v1742381887/fbx8xkn1zrckulw4djkh.png');
-    } catch (error) {
-      console.error('Erreur lors du chargement du logo pronostic:', error);
-      // Créer un logo de remplacement avec une résolution plus élevée
-      const fallbackCanvas = createCanvas(400 * scale, 200 * scale);
-      const fallbackCtx = fallbackCanvas.getContext('2d');
-      fallbackCtx.fillStyle = '#1B5E20';
-      fallbackCtx.fillRect(0, 0, 400 * scale, 200 * scale);
-      fallbackCtx.fillStyle = '#FFFFFF';
-      fallbackCtx.font = `${40 * scale}px Arial`;
-      fallbackCtx.fillText('PRONOSTIC', 80 * scale, 120 * scale);
-      logoPronostic = fallbackCanvas;
-    }
-
-    // Obtenir les dimensions originales du logo
-    const logoWidth = logoPronostic.width || 200 * scale;
-    const logoHeight = logoPronostic.height || 100 * scale;
-
-    // Calculer la taille de redimensionnement en maintenant le ratio
-    const maxLogoHeight = 80 * scale;
-    const ratio = maxLogoHeight / logoHeight;
-    const newLogoWidth = logoWidth * ratio;
-    const newLogoHeight = maxLogoHeight;
-
-    // Dessiner le logo du pronostic centré en haut
-    const logoX = (canvasWidth - newLogoWidth) / 2;
-    ctx.drawImage(logoPronostic, logoX, 20 * scale, newLogoWidth, newLogoHeight);
-
-    // Déterminer le titre en fonction des conditions
-    const isVip = data[0]?.isVip ?? false;
-    const resultText = data[0]?.fixture?.score?.fulltime != null ? "résultat " : 'pronos ';
-    const vipText = isVip ? 'VIP ' : 'Gratuits';
-    const titleText = resultText + vipText;
-
-    // Afficher le titre en haut à gauche avec une police plus grande
-    ctx.font = `${32 * scale}px Arial`;
-    ctx.fillStyle = textColor;
-    ctx.fillText(titleText, 20 * scale, 130 * scale);
-
-    // Limiter la longueur de la date pour qu'elle ne dépasse pas
-    const maxWidthDate = 450 * scale;
-    ctx.font = `${26 * scale}px Arial`;
-    ctx.fillStyle = textColor;
-    if (ctx.measureText(formattedDate).width > maxWidthDate) {
-      const truncatedDate = formattedDate.slice(0, 30) + '...';
-      ctx.fillText(truncatedDate, canvasWidth - ctx.measureText(truncatedDate).width - 20 * scale, 130 * scale);
-    } else {
-      ctx.fillText(formattedDate, canvasWidth - ctx.measureText(formattedDate).width - 20 * scale, 130 * scale);
-    }
-
-    // Position de départ pour les pronostics - après le topMargin
-    let fixtureYStart = topMargin; 
-    // Hauteur de ligne incluant l'espacement
-    const lineHeight = fixtureHeight + spacingBetweenFixtures;
-
-    let totalCoast = 1;
-    let winCount = 0;
-    
-    // Ajouter une ligne de séparation visuelle entre le haut et les pronostics
-    ctx.strokeStyle = '#CCFBCC';
-    ctx.lineWidth = 2 * scale;
-    ctx.beginPath();
-    ctx.moveTo(30 * scale, fixtureYStart - 40 * scale);
-    ctx.lineTo(canvasWidth - 30 * scale, fixtureYStart - 40 * scale);
-    ctx.stroke();
-
-    // Charger le logo pour le filigrane avec gestion d'erreur
-    let watermark;
-    try {
-      watermark = await loadImage('https://res.cloudinary.com/nwccompany/image/upload/v1739009367/i938xqbcaae0aymqdjgm.png');
-    } catch (error) {
-      console.error('Erreur lors du chargement du filigrane:', error);
-      // Créer un filigrane de remplacement
-      const fallbackCanvas = createCanvas(300 * scale, 300 * scale);
-      const fallbackCtx = fallbackCanvas.getContext('2d');
-      fallbackCtx.fillStyle = '#E0E0E0';
-      fallbackCtx.font = `${30 * scale}px Arial`;
-      fallbackCtx.fillText('PRONOSTIC', 70 * scale, 150 * scale);
-      watermark = fallbackCanvas;
-    }
-
-    // Fonction pour dessiner une image avec border-radius améliorée pour HD
-    const drawImageWithBorderRadius = (img, x, y, width, height, radius) => {
-      if (!img) return; // Éviter les erreurs si l'image est null
-      
-      // Sauvegarder le contexte actuel
-      ctx.save();
-      
-      // Créer le chemin avec border-radius
-      ctx.beginPath();
-      ctx.moveTo(x + radius, y);
-      ctx.lineTo(x + width - radius, y);
-      ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
-      ctx.lineTo(x + width, y + height - radius);
-      ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
-      ctx.lineTo(x + radius, y + height);
-      ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
-      ctx.lineTo(x, y + radius);
-      ctx.quadraticCurveTo(x, y, x + radius, y);
-      ctx.closePath();
-      
-      // Créer un clip pour que l'image ne s'affiche qu'à l'intérieur du chemin
-      ctx.clip();
-      
-      // Dessiner l'image
-      ctx.drawImage(img, x, y, width, height);
-      
-      // Restaurer le contexte
-      ctx.restore();
-    };
-
-    // Ajouter un filigrane centré
-    const watermarkWidth = 300 * scale;
-    const watermarkHeight = 300 * scale;
-    const watermarkX = (canvasWidth - watermarkWidth) / 2;
-    const watermarkY = (canvasHeight - watermarkHeight) / 2;
-    ctx.globalAlpha = 0.1;
-    ctx.drawImage(watermark, watermarkX, watermarkY, watermarkWidth, watermarkHeight);
-    ctx.globalAlpha = 1;
-
-    // Créer une fonction pour charger une image avec gestion d'erreur
-    const safeLoadImage = async (url, fallbackText) => {
-      if (!url) {
-        // Créer une image de remplacement si l'URL est null
-        const fallbackCanvas = createCanvas(55 * scale, 55 * scale);
-        const fallbackCtx = fallbackCanvas.getContext('2d');
-        fallbackCtx.fillStyle = '#E0E0E0';
-        fallbackCtx.fillRect(0, 0, 55 * scale, 55 * scale);
-        fallbackCtx.fillStyle = '#555555';
-        fallbackCtx.font = `${12 * scale}px Arial`;
-        fallbackCtx.fillText(fallbackText || 'N/A', 15 * scale, 30 * scale);
-        return fallbackCanvas;
-      }
-      
-      try {
-        return await loadImage(url);
-      } catch (error) {
-        console.error(`Erreur lors du chargement de l'image (${url}):`, error);
-        // Créer une image de remplacement en cas d'erreur
-        const fallbackCanvas = createCanvas(55 * scale, 55 * scale);
-        const fallbackCtx = fallbackCanvas.getContext('2d');
-        fallbackCtx.fillStyle = '#E0E0E0';
-        fallbackCtx.fillRect(0, 0, 55 * scale, 55 * scale);
-        fallbackCtx.fillStyle = '#555555';
-        fallbackCtx.font = `${12 * scale}px Arial`;
-        fallbackCtx.fillText(fallbackText || 'Erreur', 10 * scale, 30 * scale);
-        return fallbackCanvas;
-      }
-    };
-
-    for (const item of data) {
-      // Utiliser des valeurs par défaut pour les objets potentiellement null
-      const fixture = item?.fixture || {};
-      const homeTeam = fixture?.homeTeam || { team_name: 'Équipe à domicile', logo: null };
-      const awayTeam = fixture?.awayTeam || { team_name: 'Équipe à l\'extérieur', logo: null };
-      const championship = item?.championship || { name: 'Championnat', logo: null };
-      const country = item?.country || { name: 'Pays', logo: null };
-      const prediction = item?.prediction || { description_fr: 'Pronostic non disponible' };
-      const coast = item?.coast || 1.00;
-      const iswin = item?.iswin;
-
-      // Charger les logos avec gestion d'erreur
-      const homeTeamLogo = await safeLoadImage(homeTeam.logo, 'Home');
-      const awayTeamLogo = await safeLoadImage(awayTeam.logo, 'Away');
-      const leagueLogo = await safeLoadImage(championship.logo, 'League');
-      const countryLogo = await safeLoadImage(country.logo, 'Country');
-
-      // Hauteur du bloc de pronostic - augmentée pour éviter les débordements
-      const blockHeight = fixtureHeight - 10 * scale; // Augmenté de 30*scale à 10*scale
-      
-      // Ajouter plus d'espace pour les informations
-      const leftMargin = 30 * scale;
-      const rightMargin = 30 * scale;
-      const topOffset = 20 * scale;
-      const bottomPadding = 30 * scale; // Espace supplémentaire en bas
-      
-      // Fond vert ciel clair pour chaque pronostic avec border radius
-      ctx.fillStyle = '#E0FBE0';
-      
-      // Améliorer le rendu des coins arrondis en utilisant arcTo pour des courbes plus douces
-      const cornerRadius = 20 * scale;
-      ctx.beginPath();
-      // Haut gauche
-      ctx.moveTo(leftMargin, fixtureYStart - topOffset + cornerRadius);
-      ctx.arcTo(
-        leftMargin, fixtureYStart - topOffset,
-        leftMargin + cornerRadius, fixtureYStart - topOffset,
-        cornerRadius
-      );
-      // Haut droit
-      ctx.arcTo(
-        canvasWidth - rightMargin, fixtureYStart - topOffset,
-        canvasWidth - rightMargin, fixtureYStart - topOffset + cornerRadius,
-        cornerRadius
-      );
-      // Bas droit
-      ctx.arcTo(
-        canvasWidth - rightMargin, fixtureYStart + blockHeight + bottomPadding,
-        canvasWidth - rightMargin - cornerRadius, fixtureYStart + blockHeight + bottomPadding,
-        cornerRadius
-      );
-      // Bas gauche
-      ctx.arcTo(
-        leftMargin, fixtureYStart + blockHeight + bottomPadding,
-        leftMargin, fixtureYStart + blockHeight + bottomPadding - cornerRadius,
-        cornerRadius
-      );
-      // Fermer
-      ctx.closePath();
-      ctx.fill();
-
-      // Country Logo and Name à gauche avec border-radius - déplacé un peu plus à gauche
-      const countryLogoSize = 30 * scale;
-      const countryLogoX = 40 * scale; // Déplacé de 20*scale à 40*scale
-      drawImageWithBorderRadius(
-        countryLogo, 
-        countryLogoX, 
-        fixtureYStart - 35 * scale, 
-        countryLogoSize, 
-        countryLogoSize, 
-        5 * scale
-      );
-      ctx.font = `${18 * scale}px Arial`;
-      ctx.fillStyle = textColor;
-      
-      // Limiter la taille du texte du pays pour éviter le débordement
-      const countryName = country.name || 'Pays non spécifié';
-      const countryTextX = countryLogoX + countryLogoSize + 5 * scale;
-      const maxCountryWidth = (canvasWidth / 2) - countryTextX - 10 * scale;
-      
-      // Tronquer le nom du pays si nécessaire
-      let displayCountryName = countryName;
-      if (ctx.measureText(countryName).width > maxCountryWidth) {
-        // Tronquer si trop long
-        let i = countryName.length - 1;
-        while (i > 0 && ctx.measureText(countryName.substring(0, i) + '...').width > maxCountryWidth) {
-          i--;
-        }
-        displayCountryName = countryName.substring(0, i) + '...';
-      }
-      
-      ctx.fillText(displayCountryName, countryTextX, fixtureYStart - 15 * scale);
-
-      // League Logo and Name à droite avec border-radius - déplacé un peu plus à droite
-      const leagueLogoSize = 30 * scale;
-      ctx.font = `${18 * scale}px Arial`;
-      const leagueText = championship.name || 'Championnat non spécifié';
-      const leagueNameWidth = ctx.measureText(leagueText).width;
-      
-      // S'assurer que le logo de la ligue n'est pas trop près du bord droit
-      const leagueLogoRightX = canvasWidth - 50 * scale - leagueLogoSize; // Déplacé de 20*scale à 50*scale
-      
-      // Limiter la taille du texte de la ligue
-      const maxLeagueWidth = (canvasWidth / 2) - 40 * scale;
-      let displayLeagueText = leagueText;
-      
-      if (leagueNameWidth > maxLeagueWidth) {
-        // Tronquer si trop long
-        let i = leagueText.length - 1;
-        while (i > 0 && ctx.measureText(leagueText.substring(0, i) + '...').width > maxLeagueWidth) {
-          i--;
-        }
-        displayLeagueText = leagueText.substring(0, i) + '...';
-      }
-      
-      // Recalculer la largeur après troncature possible
-      const finalLeagueWidth = ctx.measureText(displayLeagueText).width;
-      
-      drawImageWithBorderRadius(
-        leagueLogo, 
-        leagueLogoRightX, 
-        fixtureYStart - 35 * scale, 
-        leagueLogoSize, 
-        leagueLogoSize, 
-        5 * scale
-      );
-      
-      ctx.fillText(
-        displayLeagueText, 
-        leagueLogoRightX - finalLeagueWidth - 5 * scale, 
-        fixtureYStart - 15 * scale
-      );
-
-      // Home Team Logo and Name avec police diminuée - repositionné
-      const homeTeamLogoX = 40 * scale; // Déplacé de 20*scale à 40*scale
-      const teamLogoSize = 55 * scale;
-      
-      drawImageWithBorderRadius(
-        homeTeamLogo, 
-        homeTeamLogoX, 
-        fixtureYStart, 
-        teamLogoSize, 
-        teamLogoSize, 
-        8 * scale
-      );
-      
-      ctx.font = `${20 * scale}px Arial`;
-      ctx.fillStyle = textColor;
-      
-      // Limiter la taille du nom de l'équipe à domicile
-      const homeTeamText = homeTeam.team_name || 'Équipe à domicile';
-      const maxHomeTeamWidth = (canvasWidth / 2) - 150 * scale; // Laisser de l'espace pour le temps/score au centre
-      
-      let displayHomeTeamText = homeTeamText;
-      if (ctx.measureText(homeTeamText).width > maxHomeTeamWidth) {
-        // Tronquer si trop long
-        let i = homeTeamText.length - 1;
-        while (i > 0 && ctx.measureText(homeTeamText.substring(0, i) + '...').width > maxHomeTeamWidth) {
-          i--;
-        }
-        displayHomeTeamText = homeTeamText.substring(0, i) + '...';
-      }
-      
-      ctx.fillText(displayHomeTeamText, homeTeamLogoX + teamLogoSize + 10 * scale, fixtureYStart + 32 * scale);
-
-      // Away Team Name avec police diminuée
-      const awayTeamText = awayTeam.team_name || 'Équipe à l\'extérieur';
-      ctx.font = `${20 * scale}px Arial`;
-      
-      // Limiter la taille du nom de l'équipe à l'extérieur
-      const maxAwayTeamWidth = (canvasWidth / 2) - 150 * scale;
-      
-      let displayAwayTeamText = awayTeamText;
-      if (ctx.measureText(awayTeamText).width > maxAwayTeamWidth) {
-        // Tronquer si trop long
-        let i = awayTeamText.length - 1;
-        while (i > 0 && ctx.measureText(awayTeamText.substring(0, i) + '...').width > maxAwayTeamWidth) {
-          i--;
-        }
-        displayAwayTeamText = awayTeamText.substring(0, i) + '...';
-      }
-      
-      const awayTeamNameWidth = ctx.measureText(displayAwayTeamText).width;
-
-      // Away Team Logo avec border-radius - repositionné
-      const awayTeamLogoX = canvasWidth - teamLogoSize - 40 * scale; // Déplacé pour éviter le débordement
-      drawImageWithBorderRadius(
-        awayTeamLogo, 
-        awayTeamLogoX, 
-        fixtureYStart, 
-        teamLogoSize, 
-        teamLogoSize, 
-        8 * scale
-      );
-
-      // Positionner le nom de l'équipe à l'extérieur de manière à ce qu'il prenne de l'espace vers la gauche
-      const awayTeamNameX = awayTeamLogoX - 10 * scale - awayTeamNameWidth;
-      ctx.fillText(displayAwayTeamText, awayTeamNameX, fixtureYStart + 32 * scale);
-
-      // Match Time or Score
-      let matchInfo = '';
-      if (fixture.score?.fulltime != null) {
-        matchInfo = `${fixture.score.fulltime}`;
-      } else if (fixture.event_date) {
-        matchInfo = moment(fixture.event_date).format('HH:mm');
-      } else {
-        matchInfo = 'Heure N/A';
-      }
-      ctx.font = `${20 * scale}px Arial`; 
-      ctx.fillStyle = textColor;
-   
-      // Calculer la position X du temps de match pour qu'il soit centré
-      const blockCenterX = canvasWidth / 2 - ctx.measureText(matchInfo).width / 2;
-      ctx.fillText(matchInfo, blockCenterX, fixtureYStart + 32 * scale);
-
-      // Prediction aligned below home team logo with larger font - avec limitation de la longueur
-      ctx.font = `${28 * scale}px Arial`;
-      
-      // Limiter la longueur du pronostic pour éviter le débordement
-      const predictionText = prediction.description_fr || 'Pronostic non disponible';
-      
-      // Calculer l'espace disponible pour le pronostic (en évitant le bloc de cote)
-      const blockWidth = 90 * scale; // Légèrement plus large pour plus d'espace
-      const availableWidth = canvasWidth - 90 * scale - blockWidth - 40 * scale;
-      
-      // Vérifier si le texte dépasse l'espace disponible
-      let displayPredictionText = predictionText;
-      if (ctx.measureText(predictionText).width > availableWidth) {
-        // Tronquer si trop long
-        let i = predictionText.length - 1;
-        while (i > 0 && ctx.measureText(predictionText.substring(0, i) + '...').width > availableWidth) {
-          i--;
-        }
-        displayPredictionText = predictionText.substring(0, i) + '...';
-      }
-      
-      ctx.fillText(
-        displayPredictionText, 
-        40 * scale, // Augmenté de 20*scale à 40*scale pour correspondre aux autres éléments
-        fixtureYStart + 105 * scale
-      );
-
-      // Affichage de la cote et du statut
-      const coastText = `${coast.toFixed(2)}`;
-      // Gestion des valeurs nulles pour le statut
-      let statusText;
-      if (iswin === true) {
-        statusText = 'Gagné';
-      } else if (iswin === false && fixture.score?.fulltime != null) {
-        statusText = 'Perdu';
-      } else {
-        statusText = 'En attente';
-      }
-
-      // Augmenter légèrement la taille du bloc et le déplacer un peu plus à droite
-      const statusBlockHeight = 70 * scale;
-      const blockX = canvasWidth - blockWidth - 40 * scale; // Augmenté de 20*scale à 40*scale
-      const blockY = fixtureYStart + 70 * scale;
-
-      // Couleur en fonction du statut, avec gestion des nulls
-      let blockColor;
-      if (iswin === true) {
-        blockColor = '#4CAF50'; // Vert pour gagné
-      } else if (iswin === false && fixture.score?.fulltime != null) {
-        blockColor = '#F44336'; // Rouge pour perdu
-      } else {
-        blockColor = '#0F5784'; // Bleu pour en attente
-      }
-      
-      // Assurer que le bloc n'est pas trop près du bord
-      const safeBlockX = Math.min(blockX, canvasWidth - blockWidth - 30 * scale);
-      
-      ctx.fillStyle = blockColor;
-      const blockRadius = 8 * scale;
-      ctx.beginPath();
-      // Haut gauche
-      ctx.moveTo(safeBlockX + blockRadius, blockY);
-      ctx.arcTo(
-        safeBlockX, blockY,
-        safeBlockX, blockY + blockRadius,
-        blockRadius
-      );
-      // Bas gauche
-      ctx.arcTo(
-        safeBlockX, blockY + statusBlockHeight,
-        safeBlockX + blockRadius, blockY + statusBlockHeight,
-        blockRadius
-      );
-      // Bas droit
-      ctx.arcTo(
-        safeBlockX + blockWidth, blockY + statusBlockHeight,
-        safeBlockX + blockWidth, blockY + statusBlockHeight - blockRadius,
-        blockRadius
-      );
-      // Haut droit
-      ctx.arcTo(
-        safeBlockX + blockWidth, blockY,
-        safeBlockX + blockWidth - blockRadius, blockY,
-        blockRadius
-      );
-      ctx.closePath();
-      ctx.fill();
-
-      ctx.fillStyle = '#FFFFFF'; // Texte blanc
-      ctx.font = `${26 * scale}px Arial`;
-      const coastTextWidth = ctx.measureText(coastText).width;
-      const coastTextX = safeBlockX + (blockWidth - coastTextWidth) / 2;
-      ctx.fillText(coastText, coastTextX, blockY + 30 * scale);
-
-      ctx.font = `${16 * scale}px Arial`;
-      const statusTextWidth = ctx.measureText(statusText).width;
-      const statusTextX = safeBlockX + (blockWidth - statusTextWidth) / 2;
-      ctx.fillText(statusText, statusTextX, blockY + 52 * scale);
-
-      // Calculating total coast
-      totalCoast *= coast;
-      if (iswin === true) {
-        winCount++;
-      }
-
-      // Ajuster la position Y pour le prochain pronostic avec un espacement supplémentaire
-      fixtureYStart += lineHeight + 30 * scale; // Ajout de 30*scale d'espacement supplémentaire entre chaque bloc
-    }
-
-    // Afficher la cote cumulée ou le ratio de réussite
-    let totalInfo = '';
-    if (data[0]?.fixture?.score?.fulltime != null) {
-      totalInfo = `Ratio: ${winCount}/${data.length} (${((winCount / data.length) * 100).toFixed(2)}%)`;
-    } else {
-      totalInfo = `Cote totale : ${totalCoast.toFixed(2)}`;
-    }
-    
-    // Réserver un espace fixe en bas pour la cote totale/ratio et le message NB
-    // Calculer la position Y maximale pour le dernier pronostic
-    const reservedBottomSpace = 100 * scale;
-    
-    // Vérifier si le dernier pronostic déborde sur l'espace réservé
-    const lastPronosticBottom = fixtureYStart;
-    const maxAllowedBottom = canvasHeight - reservedBottomSpace;
-    
-    // Si le dernier pronostic déborde, le déplacer vers le haut
-    if (lastPronosticBottom > maxAllowedBottom) {
-      // Ajuster la position de toutes les prédictions
-      const offsetY = lastPronosticBottom - maxAllowedBottom;
-      // Cette correction n'est pas appliquée directement ici car cela nécessiterait
-      // de redessiner tous les éléments, mais c'est à considérer pour une refonte future
-      console.log(`Avertissement: Débordement de ${offsetY / scale}px détecté, ajustement automatique nécessaire.`);
-    }
-    
-    // Positionner le texte total à une position fixe par rapport au bas
-    const totalInfoY = canvasHeight - reservedBottomSpace + 30 * scale;
-    
-    ctx.font = `${24 * scale}px Arial`;
-    ctx.fillStyle = textColor;
-    ctx.fillText(totalInfo, 20 * scale, totalInfoY);
-
-    // Ajouter le message NB toujours en bas absolu
-    ctx.font = `${14 * scale}px Arial`;
-    ctx.fillStyle = textColor;
-    ctx.fillText(
-      "Jouez de manière responsable. Les gains ou pertes sont sous la responsabilité des joueurs.", 
-      20 * scale, 
-      canvasHeight - 20 * scale
-    );
-
-    // Enregistrer avec compression optimisée
-    const buffer = canvas.toBuffer('image/png', { 
-      quality: 0.9,             // Qualité légèrement réduite pour JPEG (non utilisé pour PNG)
-      compressionLevel: 6,      // Compression modérée pour PNG (0=none, 9=max)
-      resolution: 144           // Résolution DPI réduite mais suffisante
-    });
-    
-    return buffer;
-    
-  } catch (error) {
-    // Gérer toute erreur inattendue
-    console.error('Erreur lors de la génération de l\'image HD:', error);
-    
-    // Créer une image d'erreur
-    const errorCanvas = createCanvas(1200, 800);
-    const errorCtx = errorCanvas.getContext('2d');
-    errorCtx.fillStyle = '#FFFFFF';
-    errorCtx.fillRect(0, 0, 1200, 800);
-    errorCtx.fillStyle = '#F44336';
-    errorCtx.font = '48px Arial';
-    errorCtx.fillText('Erreur lors de la génération de l\'image', 200, 360);
-    errorCtx.fillStyle = '#000000';
-    errorCtx.font = '32px Arial';
-    errorCtx.fillText('Veuillez vérifier vos données et réessayer.', 300, 440);
-    
-    return errorCanvas.toBuffer('image/png', { quality: 1.0, compressionLevel: 0 });
-  }
+  // Ensuite, placer cette image dans un cadre iPhone 15
+  return generateMobileFramedImage(pronosticImageBuffer);
 }
 
-// Version HD de la fonction mobile qui place l'image dans un cadre iPhone 15
-// avec optimisation pour éviter les superpositions avec l'encoche
-async function generateHDMobileImage(data) {
-  try {
-    // Générer l'image de pronostic HD
-    const pronosticImageBuffer = await generateHDImage(data);
-    const pronosticImage = await loadImage(pronosticImageBuffer);
-    
-    // Dimensions du pronostic
-    const pronoWidth = pronosticImage.width;
-    const pronoHeight = pronosticImage.height;
-    
-    // Facteur d'échelle adaptatif
-    const baseScale = 2.0;
-    let scale = baseScale;
-    
-    // Ajustement dynamique de l'échelle en fonction du nombre d'événements
-    if (data.length > 3) {
-      scale = baseScale * (1 - (data.length - 3) * 0.05);
-      scale = Math.max(scale, baseScale * 0.7);
-    }
-    
-    // Calculer les dimensions du téléphone
-    const frameMargin = 30 * scale;
-    const mobileWidth = pronoWidth + (frameMargin * 2);
-    const mobileHeight = pronoHeight + (frameMargin * 2) + 50 * scale;
-    
-    const mobileCanvas = createCanvas(mobileWidth, mobileHeight);
-    const ctx = mobileCanvas.getContext('2d', { alpha: true });
-    
-    // Activer l'anticrénelage
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = 'high';
-    
-    // Fond transparent
-    ctx.clearRect(0, 0, mobileWidth, mobileHeight);
-    
-    // Dessiner le cadre d'iPhone 15 HD avec une encoche plus grande
-    drawHDIphone15Frame(ctx, mobileWidth, mobileHeight, scale);
-    
-    // Dessiner le contenu dans le "téléphone" avec des marges plus importantes
-    const screenMargin = 14 * scale;
-    
-    // Calculer les dimensions de l'écran avec un espace supplémentaire en haut
-    const frameThickness = 12 * scale;
-    // Ajouter un offset pour éviter de dessiner dans la zone de l'encoche
-    const encocheOffset = 50 * scale; // Zone de sécurité pour l'encoche
-    
-    const screenWidth = mobileWidth - (frameThickness * 2) - (screenMargin * 2);
-    const screenHeight = mobileHeight - (frameThickness * 2) - (screenMargin * 2) - encocheOffset;
-    
-    // Adapter l'image au screen
-    const scaleRatio = Math.min(screenWidth / pronoWidth, screenHeight / pronoHeight);
-    const scaledWidth = pronoWidth * scaleRatio;
-    const scaledHeight = pronoHeight * scaleRatio;
-    
-    // Centrer l'image dans l'écran, mais plus bas pour éviter l'encoche
-    const pronoX = frameThickness + screenMargin + (screenWidth - scaledWidth) / 2;
-    // Ajouter l'offset de l'encoche à la position Y
-    const pronoY = frameThickness + screenMargin + encocheOffset + (screenHeight - scaledHeight) / 2;
-    
-    // Dessiner l'image de pronostic
-    ctx.drawImage(pronosticImage, pronoX, pronoY, scaledWidth, scaledHeight);
-    
-    // Retourner l'image avec compression modérée
-    return mobileCanvas.toBuffer('image/png', { 
-      quality: 0.9,
-      compressionLevel: 6,
-      resolution: 144
-    });
-  } catch (error) {
-    console.error('Erreur lors de la génération de l\'image mobile HD:', error);
-    
-    // Créer une image d'erreur
-    const errorCanvas = createCanvas(1050, 1750);
-    const errorCtx = errorCanvas.getContext('2d');
-    errorCtx.fillStyle = '#FFFFFF';
-    errorCtx.fillRect(0, 0, 1050, 1750);
-    errorCtx.fillStyle = '#F44336';
-    errorCtx.font = '60px Arial';
-    errorCtx.fillText('Erreur lors de la génération', 125, 875);
-    errorCtx.fillText('de l\'image mobile HD', 250, 950);
-    
-    return errorCanvas.toBuffer('image/png', { quality: 0.9, compressionLevel: 6 });
+/**
+ * Crée une image de remplacement en cas d'erreur
+ * @param {number} width Largeur du canvas
+ * @param {number} height Hauteur du canvas
+ * @param {string} message Message d'erreur à afficher
+ * @returns {Buffer} Image d'erreur au format PNG
+ */
+function createErrorImage(width, height, message) {
+  const errorCanvas = createCanvas(width, height);
+  const ctx = errorCanvas.getContext('2d');
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillRect(0, 0, width, height);
+  ctx.fillStyle = '#F44336';
+  ctx.font = '24px Arial';
+  ctx.fillText(message, width / 6, height / 2);
+  
+  if (arguments.length > 3) {
+    ctx.fillStyle = '#000000';
+    ctx.font = '16px Arial';
+    ctx.fillText(arguments[3], width / 4, height / 2 + 40);
   }
+  
+  return errorCanvas.toBuffer('image/png');
 }
 
-// Fonction pour dessiner un cadre style iPhone 15 en HD avec une encoche améliorée
-function drawHDIphone15Frame(ctx, width, height, scale) {
-  // Paramètres du cadre
-  const frameThickness = 12 * scale;
-  const cornerRadius = 40 * scale;
+/**
+ * Dessine une image avec border-radius
+ * @param {CanvasRenderingContext2D} ctx Contexte du canvas
+ * @param {Image} img Image à dessiner
+ * @param {number} x Position X
+ * @param {number} y Position Y
+ * @param {number} width Largeur
+ * @param {number} height Hauteur
+ * @param {number} radius Rayon des coins
+ */
+function drawImageWithBorderRadius(ctx, img, x, y, width, height, radius) {
+  if (!img) return; // Éviter les erreurs si l'image est null
   
-  // Couleur du cadre (noir comme iPhone 15 Pro)
-  const frameColor = '#1A1A1A';
-  
-  // Couleur ROUGE pour le capteur de la Dynamic Island
-  const cameraRed = '#F44336';
-  
-  // Dessiner le cadre externe avec un clip pour éviter les coins blancs
+  // Sauvegarder le contexte actuel
   ctx.save();
   
-  // Créer le chemin pour le cadre externe avec arc pour des coins plus lisses
-  roundedRectHD(ctx, 0, 0, width, height, cornerRadius);
+  // Créer le chemin avec border-radius
+  ctx.beginPath();
+  ctx.moveTo(x + radius, y);
+  ctx.lineTo(x + width - radius, y);
+  ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+  ctx.lineTo(x + width, y + height - radius);
+  ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+  ctx.lineTo(x + radius, y + height);
+  ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+  ctx.lineTo(x, y + radius);
+  ctx.quadraticCurveTo(x, y, x + radius, y);
+  ctx.closePath();
   
-  // Le dessiner et le remplir
-  ctx.fillStyle = frameColor;
-  ctx.fill();
-  
-  // Créer un clip pour que rien ne soit dessiné en dehors
+  // Créer un clip pour que l'image ne s'affiche qu'à l'intérieur du chemin
   ctx.clip();
   
-  // Dessiner l'écran intérieur
-  ctx.fillStyle = '#FFFFFF';
-  roundedRectHD(
-    ctx, 
-    frameThickness, 
-    frameThickness, 
-    width - (frameThickness * 2), 
-    height - (frameThickness * 2), 
-    cornerRadius - 5 * scale
-  );
-  ctx.fill();
+  // Dessiner l'image
+  ctx.drawImage(img, x, y, width, height);
   
-  // Ajouter la Dynamic Island (Apple iPhone 15)
-  // Augmenter significativement la taille de l'encoche
-  const islandWidth = width * 0.30; // Augmenté de 0.25 à 0.30
-  const islandHeight = 40 * scale; // Augmenté de 35 à 40
-  const islandX = (width - islandWidth) / 2;
-  const islandY = frameThickness + 4 * scale;
-  const islandRadius = islandHeight / 2;
-  
-  ctx.fillStyle = frameColor;
-  roundedRectHD(ctx, islandX, islandY, islandWidth, islandHeight, islandRadius);
-  ctx.fill();
-  
-  // Ajouter les détails de la Dynamic Island
-  // Cercle pour caméra - EN ROUGE
-  ctx.fillStyle = cameraRed;
-  ctx.beginPath();
-  ctx.arc(islandX + islandWidth - islandHeight/2, islandY + islandHeight/2, 6 * scale, 0, Math.PI * 2);
-  ctx.fill();
-  
-  // Ajouter un deuxième capteur (pour plus de réalisme)
-  ctx.fillStyle = '#000000';
-  ctx.beginPath();
-  ctx.arc(islandX + islandWidth/2, islandY + islandHeight/2, 5 * scale, 0, Math.PI * 2);
-  ctx.fill();
-  
-  // Restaurer le contexte après avoir terminé
-  ctx.restore();
-  
-  // Ajouter un léger effet de brillance sur les bords du cadre
-  ctx.save();
-  roundedRectHD(ctx, 0, 0, width, height, cornerRadius);
-  ctx.clip();
-  
-  // Effet subtil de reflet sur le bord
-  const gradient = ctx.createLinearGradient(0, 0, width, height);
-  gradient.addColorStop(0, 'rgba(255, 255, 255, 0.1)');
-  gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0)');
-  gradient.addColorStop(1, 'rgba(255, 255, 255, 0.05)');
-  
-  ctx.strokeStyle = gradient;
-  ctx.lineWidth = 1 * scale;
-  roundedRectHD(ctx, 1 * scale, 1 * scale, width - 2 * scale, height - 2 * scale, cornerRadius - 1 * scale);
-  ctx.stroke();
-  
+  // Restaurer le contexte
   ctx.restore();
 }
 
-// Fonction utilitaire améliorée pour dessiner un rectangle avec des coins arrondis en HD
-function roundedRectHD(ctx, x, y, width, height, radius) {
+/**
+ * Charge une image avec gestion d'erreur
+ * @param {string} url URL de l'image à charger
+ * @param {string} fallbackText Texte de remplacement en cas d'erreur
+ * @returns {Promise<Image>} L'image chargée ou une image de remplacement
+ */
+async function safeLoadImage(url, fallbackText) {
+  if (!url) {
+    // Créer une image de remplacement si l'URL est null
+    const fallbackCanvas = createCanvas(55, 55);
+    const fallbackCtx = fallbackCanvas.getContext('2d');
+    fallbackCtx.fillStyle = '#E0E0E0';
+    fallbackCtx.fillRect(0, 0, 55, 55);
+    fallbackCtx.fillStyle = '#555555';
+    fallbackCtx.font = '12px Arial';
+    fallbackCtx.fillText(fallbackText || 'N/A', 15, 30);
+    return fallbackCanvas;
+  }
+  
+  try {
+    return await loadImage(url);
+  } catch (error) {
+    console.error(`Erreur lors du chargement de l'image (${url}):`, error);
+    // Créer une image de remplacement en cas d'erreur
+    const fallbackCanvas = createCanvas(55, 55);
+    const fallbackCtx = fallbackCanvas.getContext('2d');
+    fallbackCtx.fillStyle = '#E0E0E0';
+    fallbackCtx.fillRect(0, 0, 55, 55);
+    fallbackCtx.fillStyle = '#555555';
+    fallbackCtx.font = '12px Arial';
+    fallbackCtx.fillText(fallbackText || 'Erreur', 10, 30);
+    return fallbackCanvas;
+  }
+}
+
+/**
+ * Fonction pour dessiner un rectangle avec des coins arrondis
+ * @param {CanvasRenderingContext2D} ctx Contexte du canvas
+ * @param {number} x Position X
+ * @param {number} y Position Y
+ * @param {number} width Largeur
+ * @param {number} height Hauteur
+ * @param {number} radius Rayon des coins
+ */
+function roundedRect(ctx, x, y, width, height, radius) {
   ctx.beginPath();
   ctx.moveTo(x + radius, y);
   ctx.lineTo(x + width - radius, y);
@@ -801,74 +137,434 @@ function roundedRectHD(ctx, x, y, width, height, radius) {
   ctx.closePath();
 }
 
-// Optimiser les images pour le partage WhatsApp
-async function optimizeForWhatsApp(imageBuffer) {
+/**
+ * Dessine un bloc de statut avec couleur selon le résultat
+ * @param {CanvasRenderingContext2D} ctx Contexte du canvas
+ * @param {number} blockX Position X
+ * @param {number} blockY Position Y
+ * @param {number} blockWidth Largeur du bloc
+ * @param {number} blockHeight Hauteur du bloc
+ * @param {string} color Couleur du bloc
+ * @param {string} coastText Texte de la cote
+ * @param {string} statusText Texte du statut
+ */
+function drawStatusBlock(ctx, blockX, blockY, blockWidth, blockHeight, color, coastText, statusText) {
+  // Dessiner le bloc avec coins arrondis
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(blockX + 8, blockY);
+  ctx.lineTo(blockX + blockWidth - 8, blockY);
+  ctx.quadraticCurveTo(blockX + blockWidth, blockY, blockX + blockWidth, blockY + 8);
+  ctx.lineTo(blockX + blockWidth, blockY + blockHeight - 8);
+  ctx.quadraticCurveTo(blockX + blockWidth, blockY + blockHeight, blockX + blockWidth - 8, blockY + blockHeight);
+  ctx.lineTo(blockX + 8, blockY + blockHeight);
+  ctx.quadraticCurveTo(blockX, blockY + blockHeight, blockX, blockY + blockHeight - 8);
+  ctx.lineTo(blockX, blockY + 8);
+  ctx.quadraticCurveTo(blockX, blockY, blockX + 8, blockY);
+  ctx.closePath();
+  ctx.fill();
+
+  // Texte de la cote
+  ctx.fillStyle = '#FFFFFF';
+  ctx.font = '26px Arial';
+  const coastTextWidth = ctx.measureText(coastText).width;
+  const coastTextX = blockX + (blockWidth - coastTextWidth) / 2;
+  ctx.fillText(coastText, coastTextX, blockY + 30);
+
+  // Texte du statut
+  ctx.font = '16px Arial';
+  const statusTextWidth = ctx.measureText(statusText).width;
+  const statusTextX = blockX + (blockWidth - statusTextWidth) / 2;
+  ctx.fillText(statusText, statusTextX, blockY + 52);
+}
+
+/**
+ * Dessine un cadre style iPhone 15 avec une encoche
+ * @param {CanvasRenderingContext2D} ctx Contexte du canvas
+ * @param {number} width Largeur du cadre
+ * @param {number} height Hauteur du cadre
+ * @param {number} scale Facteur d'échelle
+ */
+function drawIphone15Frame(ctx, width, height, scale) {
+  // Paramètres du cadre
+  const frameThickness = 12 * scale;
+  const cornerRadius = 40 * scale;
+  
+  // Couleur du cadre (noir comme iPhone 15 Pro)
+  const frameColor = '#1A1A1A';
+  const cameraRed = '#F44336';
+  
+  // Dessiner le cadre externe avec un clip pour éviter les coins blancs
+  ctx.save();
+  
+  // Créer le chemin pour le cadre externe avec arc pour des coins plus lisses
+  roundedRect(ctx, 0, 0, width, height, cornerRadius);
+  
+  // Le dessiner et le remplir
+  ctx.fillStyle = frameColor;
+  ctx.fill();
+  
+  // Créer un clip pour que rien ne soit dessiné en dehors
+  ctx.clip();
+  
+  // Dessiner l'écran intérieur
+  ctx.fillStyle = '#FFFFFF';
+  roundedRect(
+    ctx, 
+    frameThickness, 
+    frameThickness, 
+    width - (frameThickness * 2), 
+    height - (frameThickness * 2), 
+    cornerRadius - 5 * scale
+  );
+  ctx.fill();
+  
+  // Ajouter la Dynamic Island (Apple iPhone 15)
+  const islandWidth = width * 0.30;
+  const islandHeight = 40 * scale;
+  const islandX = (width - islandWidth) / 2;
+  const islandY = frameThickness + 4 * scale;
+  const islandRadius = islandHeight / 2;
+  
+  ctx.fillStyle = frameColor;
+  roundedRect(ctx, islandX, islandY, islandWidth, islandHeight, islandRadius);
+  ctx.fill();
+  
+  // Ajouter les détails de la Dynamic Island
+  // Cercle pour caméra - EN ROUGE
+  ctx.fillStyle = cameraRed;
+  ctx.beginPath();
+  ctx.arc(islandX + islandWidth - islandHeight/2, islandY + islandHeight/2, 6 * scale, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Ajouter un deuxième capteur
+  ctx.fillStyle = '#000000';
+  ctx.beginPath();
+  ctx.arc(islandX + islandWidth/2, islandY + islandHeight/2, 5 * scale, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Restaurer le contexte après avoir terminé
+  ctx.restore();
+  
+  // Ajouter un léger effet de brillance sur les bords du cadre
+  ctx.save();
+  roundedRect(ctx, 0, 0, width, height, cornerRadius);
+  ctx.clip();
+  
+  // Effet subtil de reflet sur le bord
+  const gradient = ctx.createLinearGradient(0, 0, width, height);
+  gradient.addColorStop(0, 'rgba(255, 255, 255, 0.1)');
+  gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0)');
+  gradient.addColorStop(1, 'rgba(255, 255, 255, 0.05)');
+  
+  ctx.strokeStyle = gradient;
+  ctx.lineWidth = 1 * scale;
+  roundedRect(ctx, 1 * scale, 1 * scale, width - 2 * scale, height - 2 * scale, cornerRadius - 1 * scale);
+  ctx.stroke();
+  
+  ctx.restore();
+}
+
+/**
+ * Fonction originale génération d'image sans cadre iPhone
+ * @param {Array} data Les données de pronostics
+ * @returns {Buffer} L'image générée au format PNG
+ */
+async function generateBaseImage(data) {
+  // Vérifier si data existe et n'est pas vide
+  if (!data || data.length === 0) {
+    return createErrorImage(600, 300, 'Aucune donnée de pronostic disponible');
+  }
+
+  // Configuration des constantes
+  const spacingBetweenFixtures = 30;
+  const fixtureHeight = 180;
+  const canvasWidth = 600;
+  const canvasHeight = 400 + (data.length * (fixtureHeight + spacingBetweenFixtures));
+  const canvas = createCanvas(canvasWidth, canvasHeight);
+  const ctx = canvas.getContext('2d');
+  const textColor = '#1B5E20';
+
+  // Fond blanc
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
   try {
-    // Charger l'image générée
-    const image = await loadImage(imageBuffer);
-    
-    // Déterminer la taille idéale pour WhatsApp
-    // WhatsApp compresse moins les images qui respectent certaines dimensions
-    // 1920x1080 est une résolution idéale pour le partage mobile
-    const maxWidth = 1920;
-    const maxHeight = 1080;
-    
-    // Calculer les dimensions tout en conservant le ratio
-    let newWidth, newHeight;
-    if (image.width / image.height > maxWidth / maxHeight) {
-      // L'image est plus large que haute
-      newWidth = maxWidth;
-      newHeight = (image.height * maxWidth) / image.width;
-    } else {
-      // L'image est plus haute que large
-      newHeight = maxHeight;
-      newWidth = (image.width * maxHeight) / image.height;
+    // Préparation des données de base
+    const eventDate = data[0]?.fixture?.event_date;
+    const formattedDate = eventDate ? moment(eventDate).format('dddd, MMMM Do YYYY') : 'Date non disponible';
+    const isVip = data[0]?.isVip ?? false;
+    const resultText = data[0]?.fixture?.score?.fulltime != null ? "résultat " : 'pronos ';
+    const vipText = isVip ? 'VIP ' : 'Gratuits ';
+    const titleText = resultText + vipText;
+
+    // Charger et dessiner le logo
+    let logoPronostic;
+    try {
+      logoPronostic = await loadImage('https://res.cloudinary.com/nwccompany/image/upload/v1739009050/nmyxfglhznextbg4jiok.png');
+    } catch (error) {
+      console.error('Erreur lors du chargement du logo pronostic:', error);
+      const fallbackCanvas = createCanvas(200, 100);
+      const fallbackCtx = fallbackCanvas.getContext('2d');
+      fallbackCtx.fillStyle = '#1B5E20';
+      fallbackCtx.fillRect(0, 0, 200, 100);
+      fallbackCtx.fillStyle = '#FFFFFF';
+      fallbackCtx.font = '20px Arial';
+      fallbackCtx.fillText('PRONOSTIC', 40, 60);
+      logoPronostic = fallbackCanvas;
     }
+
+    // Obtenir les dimensions originales du logo et le dessiner
+    const logoWidth = logoPronostic.width || 200;
+    const logoHeight = logoPronostic.height || 100;
+    const maxLogoHeight = 80;
+    const ratio = maxLogoHeight / logoHeight;
+    const newLogoWidth = logoWidth * ratio;
+    const newLogoHeight = maxLogoHeight;
+    const logoX = (canvasWidth - newLogoWidth) / 2;
+    ctx.drawImage(logoPronostic, logoX, 20, newLogoWidth, newLogoHeight);
+
+    // Afficher le titre
+    ctx.font = '32px Arial';
+    ctx.fillStyle = textColor;
+    ctx.fillText(titleText, 20, 130);
+
+    // Afficher la date avec gestion de la longueur
+    const maxWidthDate = 450;
+    ctx.font = '26px Arial';
+    if (ctx.measureText(formattedDate).width > maxWidthDate) {
+      const truncatedDate = formattedDate.slice(0, 30) + '...';
+      ctx.fillText(truncatedDate, canvasWidth - ctx.measureText(truncatedDate).width - 20, 130);
+    } else {
+      ctx.fillText(formattedDate, canvasWidth - ctx.measureText(formattedDate).width - 20, 130);
+    }
+
+    // Initialisation des variables pour les pronostics
+    let fixtureYStart = 180;
+    const lineHeight = fixtureHeight + spacingBetweenFixtures;
+    let totalCoast = 1;
+    let winCount = 0;
+
+    // Traitement de chaque item de pronostic
+    for (const item of data) {
+      // Extraire les données avec gestion null
+      const fixture = item?.fixture || {};
+      const homeTeam = fixture?.homeTeam || { team_name: 'Équipe à domicile', logo: null };
+      const awayTeam = fixture?.awayTeam || { team_name: 'Équipe à l\'extérieur', logo: null };
+      const championship = item?.championship || { name: 'Championnat', logo: null };
+      const country = item?.country || { name: 'Pays', logo: null };
+      const prediction = item?.prediction || { description_fr: 'Pronostic non disponible' };
+      const coast = item?.coast || 1.00;
+      const iswin = item?.iswin;
+
+      // Charger les logos
+      const homeTeamLogo = await safeLoadImage(homeTeam.logo, 'Home');
+      const awayTeamLogo = await safeLoadImage(awayTeam.logo, 'Away');
+      const leagueLogo = await safeLoadImage(championship.logo, 'League');
+      const countryLogo = await safeLoadImage(country.logo, 'Country');
+
+      // Hauteur du bloc de pronostic
+      const blockHeight = fixtureHeight - 30;
+
+      // Fond vert ciel clair pour chaque pronostic avec border radius
+      ctx.fillStyle = '#E0FBE0';
+      ctx.beginPath();
+      ctx.moveTo(30, fixtureYStart - 20);
+      ctx.lineTo(canvasWidth - 30, fixtureYStart - 20);
+      ctx.quadraticCurveTo(canvasWidth - 10, fixtureYStart - 20, canvasWidth - 10, fixtureYStart);
+      ctx.lineTo(canvasWidth - 10, fixtureYStart + blockHeight);
+      ctx.quadraticCurveTo(canvasWidth - 10, fixtureYStart + blockHeight + 20, canvasWidth - 30, fixtureYStart + blockHeight + 20);
+      ctx.lineTo(30, fixtureYStart + blockHeight + 20);
+      ctx.quadraticCurveTo(10, fixtureYStart + blockHeight + 20, 10, fixtureYStart + blockHeight);
+      ctx.lineTo(10, fixtureYStart);
+      ctx.quadraticCurveTo(10, fixtureYStart - 20, 30, fixtureYStart - 20);
+      ctx.closePath();
+      ctx.fill();
+
+      // Country Logo and Name à gauche
+      const countryLogoSize = 30;
+      drawImageWithBorderRadius(ctx, countryLogo, 20, fixtureYStart - 35, countryLogoSize, countryLogoSize, 5);
+      ctx.font = '18px Arial';
+      ctx.fillStyle = textColor;
+      ctx.fillText(country.name || 'Pays non spécifié', 55, fixtureYStart - 15);
+
+      // League Logo and Name à droite
+      const leagueLogoSize = 30;
+      ctx.font = '18px Arial';
+      const leagueNameWidth = ctx.measureText(championship.name || 'Championnat non spécifié').width;
+      const leagueLogoRightX = canvasWidth - 20 - leagueLogoSize;
+      drawImageWithBorderRadius(ctx, leagueLogo, leagueLogoRightX, fixtureYStart - 35, leagueLogoSize, leagueLogoSize, 5);
+      ctx.fillText(championship.name || 'Championnat non spécifié', leagueLogoRightX - leagueNameWidth - 5, fixtureYStart - 15);
+
+      // Home Team Logo and Name
+      drawImageWithBorderRadius(ctx, homeTeamLogo, 20, fixtureYStart, 55, 55, 8);
+      ctx.font = '20px Arial';
+      ctx.fillStyle = textColor;
+      ctx.fillText(homeTeam.team_name || 'Équipe à domicile', 85, fixtureYStart + 32);
+
+      // Away Team Logo and Name
+      const awayTeamName = awayTeam.team_name || 'Équipe à l\'extérieur';
+      ctx.font = '20px Arial';
+      const awayTeamNameWidth = ctx.measureText(awayTeamName).width;
+      const awayTeamLogoX = canvasWidth - 80;
+      drawImageWithBorderRadius(ctx, awayTeamLogo, awayTeamLogoX, fixtureYStart, 55, 55, 8);
+      const awayTeamNameX = awayTeamLogoX - 10 - awayTeamNameWidth;
+      ctx.fillText(awayTeamName, awayTeamNameX, fixtureYStart + 32);
+
+      // Match Time or Score
+      let matchInfo = '';
+      if (fixture.score?.fulltime != null) {
+        matchInfo = `${fixture.score.fulltime}`;
+      } else if (fixture.event_date) {
+        matchInfo = moment(fixture.event_date).format('HH:mm');
+      } else {
+        matchInfo = 'Heure N/A';
+      }
+      ctx.font = '20px Arial'; 
+      ctx.fillStyle = textColor;
+      const blockCenterX = canvasWidth / 2 - ctx.measureText(matchInfo).width / 2;
+      ctx.fillText(matchInfo, blockCenterX, fixtureYStart + 32);
+
+      // Prediction
+      ctx.font = '28px Arial';
+      ctx.fillText(prediction.description_fr || 'Pronostic non disponible', 20, fixtureYStart + 105);
+
+      // Affichage de la cote et du statut
+      const coastText = `${coast.toFixed(2)}`;
+      let statusText;
+      if (iswin === true) {
+        statusText = 'Gagné';
+      } else if (iswin === false && fixture.score?.fulltime != null) {
+        statusText = 'Perdu';
+      } else {
+        statusText = 'En attente';
+      }
+
+      // Bloc de statut
+      const blockWidth = 80;
+      const statusBlockHeight = 70;
+      const blockX = canvasWidth - blockWidth - 20;
+      const blockY = fixtureYStart + 70;
+
+      // Couleur en fonction du statut
+      let blockColor;
+      if (iswin === true) {
+        blockColor = '#4CAF50'; // Vert pour gagné
+      } else if (iswin === false && fixture.score?.fulltime != null) {
+        blockColor = '#F44336'; // Rouge pour perdu
+      } else {
+        blockColor = '#0F5784'; // Bleu pour en attente
+      }
+      
+      // Dessiner le bloc de statut
+      drawStatusBlock(ctx, blockX, blockY, blockWidth, statusBlockHeight, blockColor, coastText, statusText);
+
+      // Mise à jour des totaux
+      totalCoast *= coast;
+      if (iswin === true) {
+        winCount++;
+      }
+
+      // Ajuster la position Y pour le prochain pronostic
+      fixtureYStart += lineHeight;
+    }
+
+    // Afficher la cote cumulée ou le ratio de réussite
+    let totalInfo = '';
+    if (data[0]?.fixture?.score?.fulltime != null) {
+      totalInfo = `Ratio: ${winCount}/${data.length} (${((winCount / data.length) * 100).toFixed(2)}%)`;
+    } else {
+      totalInfo = `Cote totale : ${totalCoast.toFixed(2)}`;
+    }
+    ctx.font = '28px Arial';
+    ctx.fillStyle = textColor;
+    ctx.fillText(totalInfo, 20, fixtureYStart + 20);
+
+    // Ajouter message de responsabilité en bas
+    ctx.font = '15px Arial';
+    ctx.fillStyle = textColor;
+    ctx.fillText("Jouez de manière responsable. Les gains et pertes sont sous votre responsabilité.", 20, canvasHeight - 20);
+
+    return canvas.toBuffer('image/png');
     
-    // Créer un nouveau canvas aux dimensions optimisées
-    const canvas = createCanvas(newWidth, newHeight);
-    const ctx = canvas.getContext('2d', { alpha: true });
+  } catch (error) {
+    console.error('Erreur lors de la génération de l\'image:', error);
+    return createErrorImage(
+      600, 
+      400, 
+      'Erreur lors de la génération de l\'image', 
+      'Veuillez vérifier vos données et réessayer.'
+    );
+  }
+}
+
+/**
+ * Place une image dans un cadre d'iPhone 15
+ * @param {Buffer} imageBuffer Buffer de l'image à encadrer
+ * @returns {Buffer} L'image avec cadre au format PNG
+ */
+async function generateMobileFramedImage(imageBuffer) {
+  try {
+    // Charger l'image de pronostic
+    const pronosticImage = await loadImage(imageBuffer);
     
-    // Activer l'anticrénelage pour des lignes plus nettes
+    // Dimensions et configuration
+    const pronoWidth = pronosticImage.width;
+    const pronoHeight = pronosticImage.height;
+    const scale = 1.0;
+    const frameMargin = 30 * scale;
+    const mobileWidth = pronoWidth + (frameMargin * 2);
+    const mobileHeight = pronoHeight + (frameMargin * 2) + 50 * scale;
+    
+    // Créer le canvas pour l'image finale
+    const mobileCanvas = createCanvas(mobileWidth, mobileHeight);
+    const ctx = mobileCanvas.getContext('2d', { alpha: true });
+    
+    // Configuration du rendu
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
+    ctx.clearRect(0, 0, mobileWidth, mobileHeight);
     
-    // Dessiner l'image
-    ctx.drawImage(image, 0, 0, newWidth, newHeight);
+    // Dessiner le cadre
+    drawIphone15Frame(ctx, mobileWidth, mobileHeight, scale);
     
-    // Améliorer la netteté
-    // Note: la méthode d'amélioration de netteté est limitée dans node-canvas
-    // Nous utilisons un petit hack pour simuler un effet de netteté
-    const imageData = ctx.getImageData(0, 0, newWidth, newHeight);
-    const data = imageData.data;
+    // Calculer les dimensions pour l'image
+    const screenMargin = 14 * scale;
+    const frameThickness = 12 * scale;
+    const encocheOffset = 50 * scale;
+    const screenWidth = mobileWidth - (frameThickness * 2) - (screenMargin * 2);
+    const screenHeight = mobileHeight - (frameThickness * 2) - (screenMargin * 2) - encocheOffset;
     
-    // Appliquer un filtre de netteté simplifié (simulation)
-    // Ce n'est pas un vrai filtre de netteté, mais il peut aider un peu
-    for (let i = 0; i < data.length; i += 4) {
-      // Augmenter légèrement le contraste
-      data[i] = Math.min(255, Math.max(0, data[i] * 1.05));         // R
-      data[i + 1] = Math.min(255, Math.max(0, data[i + 1] * 1.05)); // G
-      data[i + 2] = Math.min(255, Math.max(0, data[i + 2] * 1.05)); // B
-    }
+    // Adapter l'image au screen
+    const scaleRatio = Math.min(screenWidth / pronoWidth, screenHeight / pronoHeight);
+    const scaledWidth = pronoWidth * scaleRatio;
+    const scaledHeight = pronoHeight * scaleRatio;
     
-    ctx.putImageData(imageData, 0, 0);
+    // Positionner l'image dans l'écran
+    const pronoX = frameThickness + screenMargin + (screenWidth - scaledWidth) / 2;
+    const pronoY = frameThickness + screenMargin + encocheOffset + (screenHeight - scaledHeight) / 2;
     
-    // Retourner l'image optimisée avec paramètres de qualité modérée
-    return canvas.toBuffer('image/png', { 
-      quality: 0.9,             // Qualité légèrement réduite
-      compressionLevel: 6,      // Compression modérée pour PNG (0=none, 9=max)
-      resolution: 144           // Résolution DPI standard pour web
+    // Dessiner l'image de pronostic
+    ctx.drawImage(pronosticImage, pronoX, pronoY, scaledWidth, scaledHeight);
+    
+    // Retourner l'image avec compression optimisée
+    return mobileCanvas.toBuffer('image/png', { 
+      quality: 0.9,
+      compressionLevel: 6
     });
   } catch (error) {
-    console.error('Erreur lors de l\'optimisation pour WhatsApp:', error);
-    return imageBuffer; // Retourner l'image originale en cas d'erreur
+    console.error('Erreur lors de la génération de l\'image mobile:', error);
+    return createErrorImage(
+      700, 
+      1000, 
+      'Erreur lors de la génération de l\'image mobile'
+    );
   }
 }
 
 // Exporter les fonctions
 module.exports = { 
-  generateImage: generateHDMobileImage,
-  generateHDImage,
-  generateOriginalImage: generateHDImage,
-  optimizeForWhatsApp
+  generateImage,
+  generateBaseImage, 
+  generateMobileFramedImage 
 };
