@@ -453,7 +453,7 @@ const UserCommander = async (user, msg, client) => {
           `🌟 *Notre expertise*\n` +
           `Notre équipe d'analystes et nos algorithmes d'intelligence artificielle travaillent ensemble pour vous offrir les meilleures prédictions possibles avec un taux de réussite moyen de 80%.\n\n` +
           `📞 *Nous contacter*\n` +
-          `• WhatsApp Support: +237 6 94 75 11 62\n` +
+          `• WhatsApp Support: +237 6 50 46 68 15\n` +
           `• Email: contact@bigwinpronos.com\n` +
           `⏱️ *Disponibilité du service client 7jours/7*\n` +
           `_Tapez # pour revenir au menu principal._`
