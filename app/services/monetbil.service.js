@@ -7,23 +7,23 @@ const monetbilService = process.env.PAYMENT_SERVICE_ID;
 const notify_url = process.env.NOTIFICATION_URL_PAIEMENT || "";
 const paiement_url = process.env.PAYMENT_API_ENDPOINT;
 
-const makePayment = async (user, mobileMoneyPhone, plan,fcmToken = null) => {
+const makePayment = async (user, mobileMoneyPhone, plan, fcmToken = null) => {
   const payload = {
     service: monetbilService,
-    user:user?.pseudo.slice(0,30),
+    user: user?.pseudo.slice(0, 30),
     phonenumber: mobileMoneyPhone,
     // amount:1,
-    amount:plan.price,
+    amount: plan.price,
     item_ref: JSON.stringify({
-       plan,
-       user,
-       fcmToken
+      plan,
+      user,
+      fcmToken
     }),
     notify_url
   };
 
   try {
-    const response = await fetch(paiement_url, {
+    const response = await fetch(paiement_url+"placePayment/", {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -39,15 +39,15 @@ const makePayment = async (user, mobileMoneyPhone, plan,fcmToken = null) => {
     const data = await response.json();
 
     const transactionPayload = {
-      paymentId:data.paymentId,
-      status:data.status,
-      paymentMethod:data.channel,
-      amount:plan.price,
-      phoneNumber:mobileMoneyPhone,
-      notifyUrl:payload.notify_url,
-      type:'MONETBIL',
-      plan:plan._id || plan.id,
-      user:user._id
+      paymentId: data.paymentId,
+      status: data.status,
+      paymentMethod: data.channel,
+      amount: plan.price,
+      phoneNumber: mobileMoneyPhone,
+      notifyUrl: payload.notify_url,
+      type: 'MONETBIL',
+      plan: plan._id || plan.id,
+      user: user._id
     };
     await createTransaction(transactionPayload);
 
@@ -58,28 +58,68 @@ const makePayment = async (user, mobileMoneyPhone, plan,fcmToken = null) => {
       'makePayment',
       'error'
     );
-    throw error; 
+    throw error;
   }
 };
 
-const requestPaiement = async (user ,mobileMoneyPhone, plan,fcmToken = null) => {
-  const paymentResponse = await makePayment(user, mobileMoneyPhone, plan,fcmToken);
-
+const requestPaiement = async (user, mobileMoneyPhone, plan, fcmToken = null) => {
   try {
-      if (paymentResponse.status === "REQUEST_ACCEPTED") {
-          return `Paiement en cours. Utilisez le code USSD ${paymentResponse.channel_ussd} pour compléter le paiement via ${paymentResponse.channel_name}.\n\n_Tapez # pour revenir au menu principal._`;
-      } else {
-          return `Erreur lors de l'initiation du paiement : ${paymentResponse.message} \n\n_Tapez * pour revenir en arrière, # pour revenir au menu principal._`;
-      }
-  }
-  catch (error) {
-      await logService.addLog(
-          `${error.message}`,
-          'requestPaiement',
-          'error'
-      );
-      return `Erreur lors de l'initiation du paiement`;
-  }
-}
+    const paymentResponse = await makePayment(user, mobileMoneyPhone, plan, fcmToken);
 
-module.exports = { makePayment,requestPaiement };
+    if (paymentResponse.status === "REQUEST_ACCEPTED") {
+      return {
+        success: true,
+        message: `Paiement en cours. Utilisez le code USSD ${paymentResponse.channel_ussd} pour compléter le paiement via ${paymentResponse.channel_name}.`,
+        paymentId: paymentResponse.paymentId,
+        data: paymentResponse
+      };
+    } else {
+      return {
+        success: false,
+        message: `Erreur lors de l'initiation du paiement : ${paymentResponse.message}`,
+        error: paymentResponse.message
+      };
+    }
+  } catch (error) {
+    await logService.addLog(
+      `${error.message}`,
+      'requestPaiement',
+      'error'
+    );
+    return {
+      success: false,
+      message: "Erreur lors de l'initiation du paiement",
+      error: error.message
+    };
+  }
+};
+
+const verifyPayment = async (paymentId) => {
+  try {
+    const response = await fetch(`${paiement_url}/checkPayment`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ paymentId })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Payment verification API returned status ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    await logService.addLog(
+      `${error.message}`,
+      'verifyPayment',
+      'error'
+    );
+  }
+};
+
+module.exports = {
+  makePayment,
+  requestPaiement,
+  verifyPayment
+};

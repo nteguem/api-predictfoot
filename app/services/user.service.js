@@ -200,6 +200,24 @@ async function addUser(req, res) {
   }
 }
 
+async function getUserById(userId) {
+  try {
+    const user = await User.findById(userId);
+    if (user) {
+      return user;
+    } else {
+      return null;
+    }
+  } catch (error) {
+    await addLog(
+      `${error.message}`,
+      'getUserById',
+      'error'
+    );
+    return null;
+  }
+}
+
 module.exports = {
   save,
   login,
@@ -207,5 +225,6 @@ module.exports = {
   update,
   deleteUser,
   getOne,
-  addUser
+  addUser,
+  getUserById
 };

@@ -53,10 +53,26 @@ async function ensureDefaultPlansExist() {
     }
   }
 
+  /**
+ * Récupère un plan par son ID
+ * @param {string} planId - L'ID du plan à récupérer
+ * @returns {Promise<Object|null>} Le plan trouvé ou null si non trouvé
+ */
+async function getPlanById(planId) {
+  try {
+    const plan = await Plan.findById(planId);
+    return plan;
+  } catch (error) {
+    console.log('Error fetching plan by ID:', error);
+    return null;
+  }
+}
+
 module.exports = {
   getAllPlans,
   createPlan,
   updatePlan,
   deletePlan,
-  ensureDefaultPlansExist
+  ensureDefaultPlansExist,
+  getPlanById
 };

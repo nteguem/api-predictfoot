@@ -18,6 +18,7 @@ const {setupWalletRoutes} = require('./wallet.route');
 const {setupBotRoutes}  = require('./bot.route');
 const {setupReferralRoutes} = require("./referral.routes");
 const {setupInfluencerRoutes} = require('./influencer.routes');
+const {setupMonetbil} = require('./monetbil.route');
 /* GET home page. */
 // Define a route for the home page ('/') that renders the 'index' template with the title 'Predictfoot'.
 router.get('/', function (req, res, next) {
@@ -45,13 +46,26 @@ const globalAuthenticate = (excludedPaths = []) => {
 const setupAppRoutes = (client) => {
   const app = router;
   // Apply the global middleware to all routes with specified exclusions
-  app.use(globalAuthenticate(['/user/login', '/predict/list', '/subscription/notification-payment','/plan/list','/subscription/is-vip','/user/getOne','/bot/info','/bot/disconnect','/bot/reconnect','/referrals/installation']));
+  app.use(globalAuthenticate([
+    '/user/login',
+    '/predict/list',
+    '/subscription/notification-payment',
+    '/plan/list','/subscription/is-vip',
+    '/user/getOne',
+    '/bot/info',
+    '/bot/disconnect',
+    '/bot/reconnect',
+    '/referrals/installation',
+    'payment/initiate',
+    '/payment/status',
+]));
 
   setupUserRoutes(app, client);
   setupGroup(app, client);
   setupFixture(app, client);
   setupPredict(app, client);
   setupUpload(app);
+  setupMonetbil(app);
   setupCampaign(app, client);
   setupEvent(app, client);
   setupSubscription(app, client);
