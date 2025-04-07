@@ -193,8 +193,8 @@ async function addUser(req, res) {
   try {
     const dataUser = req.body;
     const newUser = new User(dataUser);
-    await newUser.save();
-    return ResponseService.created(res, { message: 'utilisateur créée avec succès' });
+    const result = await newUser.save();
+    return ResponseService.created(res, { message: 'utilisateur créée avec succès',result });
   } catch (error) {
     return ResponseService.internalServerError(res, { error: error.message });
   }
