@@ -13,7 +13,7 @@ const sendWithTyping = async (client, chatId, message, isMedia = false, options 
     const typingDuration = Math.min(5000, message.length * 100);
     
     // Prepare message with assistant prefix if not media
-    const automatedMessage = isMedia ? message : `*_[Assistant virtuel]_*\n\n${message}`;
+    const automatedMessage = isMedia ? message : `${message}`;
     
     setTimeout(async () => {
       // Reset presence after typing
@@ -42,7 +42,7 @@ const sendMessageToNumber = async (client, phoneNumber, message) => {
 const sendMediaToNumber = async (client, phoneNumber, mediaType, mediaBase64, filename, caption = '') => {
   try {
     const jid = `${phoneNumber}@s.whatsapp.net`;
-    const formattedCaption = caption ? `*_[Assistant virtuel]_*\n\n${caption}` : '';
+    const formattedCaption = caption ? `${caption}` : '';
     
     // Créer le message selon le type de média
     let messageContent;
@@ -90,7 +90,7 @@ const sendMediaToNumber = async (client, phoneNumber, mediaType, mediaBase64, fi
 const sendLinkWithPreview = async (client, phoneNumber, url, caption = '') => {
   try {
     const jid = `${phoneNumber}@s.whatsapp.net`;
-    const formattedCaption = caption ? `*_[Assistant virtuel]_*\n\n${caption}` : '';
+    const formattedCaption = caption ? `${caption}` : '';
     
     // Message avec lien pour afficher la prévisualisation
     const messageContent = {
