@@ -356,7 +356,7 @@ const UserCommander = async (user, msg, client) => {
                   Steps[user.data.phoneNumber].pendingOrder.fcmToken,
                 );
                 await sendMessageToNumber(client, user.data.phoneNumber,
-                  paymentResult?.message
+                  paymentResult
                 );
                 reset(user);
               } catch (error) {

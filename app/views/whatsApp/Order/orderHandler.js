@@ -146,7 +146,7 @@ class OrderHandler {
         
         return {
             type: 'COMPLETE',
-            message: paymentResult?.message
+            message: paymentResult
         };
     }
 }
