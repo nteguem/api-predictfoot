@@ -34,7 +34,7 @@ const makePayment = async (user, mobileMoneyPhone, plan,fcmToken = null) => {
     console.log("payload:", payload);
     console.log("Payment API URL:", paiement_url);
     if (!response.ok) {
-      console.log(`HTTP error! status: ${response.status}`);
+      console.log(`HTTP error! status: ${response}`);
       throw new Error(`Payment API returned status ${response.status}`);
     }
    
