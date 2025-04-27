@@ -14,11 +14,11 @@ const makePayment = async (user, mobileMoneyPhone, plan,fcmToken = null) => {
     phonenumber: mobileMoneyPhone,
     // amount:1,
     amount:plan.price,
-    item_ref: {
+    item_ref: JSON.stringify({
        plan,
        user,
        fcmToken
-    },
+    }),
     notify_url
   };
 
@@ -30,13 +30,14 @@ const makePayment = async (user, mobileMoneyPhone, plan,fcmToken = null) => {
       },
       body: JSON.stringify(payload)
     });
+    console.log("Payment API paiement_url:", paiement_url);
     if (!response.ok) {
-      console.log(`HTTP error! status: ${JSON.stringify(response)}`);
+      console.log(`HTTP error! status: ${response.status}`);
       throw new Error(`Payment API returned status ${response.status}`);
     }
-   
+
     const data = await response.json();
-    console.log("Payment response data:", data);
+
     const transactionPayload = {
       paymentId:data.paymentId,
       status:data.status,
