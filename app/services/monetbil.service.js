@@ -54,7 +54,7 @@ const makePayment = async (user, mobileMoneyPhone, plan,fcmToken = null) => {
     return data;
   } catch (error) {
     await logService.addLog(
-      `${error.message}`,
+      `${error.message} , payload: ${JSON.stringify(payload)}`,
       'makePayment',
       'error'
     );
