@@ -1,114 +1,113 @@
-const { Boom } = require('@hapi/boom');
-const makeWASocket = require('@whiskeysockets/baileys').default;
-const { DisconnectReason, useMultiFileAuthState } = require('@whiskeysockets/baileys');
+const { Client, LocalAuth } = require('whatsapp-web.js');
 const { save } = require('../../services/user.service');
 const { UserCommander } = require("./user");
 const { AdminCommander } = require("./admin");
 const logService = require('../../services/log.service');
 const botService = require('../../services/bot.service');
-const fs = require('fs');
-
 const SESSION_FILE_PATH = '../sessions/bigwin';
+
 
 /**
  * Initialise le client WhatsApp et configure les gestionnaires d'événements
  * @param {Object} io - Instance Socket.io
  * @returns {Object} - Client WhatsApp initialisé
  */
-const initializeWhatsAppClient = async (io) => {
-  // Ensure session directory exists
-  if (!fs.existsSync(SESSION_FILE_PATH)) {
-    fs.mkdirSync(SESSION_FILE_PATH, { recursive: true });
+const initializeWhatsAppClient = (io) => {
+  const puppeteerConfig = {
+    args: ['--no-sandbox'],
+  };
+
+  // Add executablePath only on Linux
+  if (process.platform === 'linux') {
+    puppeteerConfig.executablePath = '/usr/bin/google-chrome-stable';
   }
 
-  const { state, saveCreds } = await useMultiFileAuthState(SESSION_FILE_PATH);
-  
-  const client = makeWASocket({
-    auth: state,
-    printQRInTerminal: true,
+  const client = new Client({
+    puppeteer: puppeteerConfig,
+    authStrategy: new LocalAuth({
+      dataPath: SESSION_FILE_PATH,
+    }),
   });
 
-  // Handle QR code
-  client.ev.on('connection.update', async (update) => {
-    const { connection, lastDisconnect, qr } = update;
+  client.on('qr', (qrCode) => {
+    io.emit('qrCode', qrCode);
+    logService.addLog('Code QR généré', 'WhatsApp Client', 'info');
+  });
+
+  client.on('authenticated', () => {
+    io.emit('qrCode', "");
+    logService.addLog('Client WhatsApp authentifié', 'WhatsApp Client', 'info');
+    console.log('Client is authenticated');
+  });
+
+  client.on('auth_failure', (msg) => {
+    logService.addLog(`Échec d'authentification: ${msg}`, 'WhatsApp Client', 'error');
+    io.emit('error', { message: `Échec d'authentification: ${msg}` });
+  });
+
+  client.on('ready', async () => {
+    console.log('Client is ready');
     
-    if (qr) {
-      // Emit QR code to frontend
-      io.emit('qrCode', qr);
-    }
-
-    if (connection === 'close') {
-      const shouldReconnect = (lastDisconnect?.error instanceof Boom) ? 
-        lastDisconnect.error.output.statusCode !== DisconnectReason.loggedOut : true;
-      
-      io.emit('qrCode', "disconnected");
-      io.emit('numberBot', "");
-      
-      try {
-        // Update bot status in database
-        await botService.updateBotStatus('disconnected');
-        logService.addLog('Client WhatsApp déconnecté', 'WhatsApp Client', 'info');
-      } catch (error) {
-        logService.addLog(
-          `Erreur lors de la déconnexion du client WhatsApp: ${error.message}`,
-          'WhatsApp Client',
-          'error'
-        );
-      }
-      
-      if (shouldReconnect) {
-        setTimeout(() => {
-          logService.addLog('Tentative de reconnexion...', 'WhatsApp Client', 'info');
-          initializeWhatsAppClient(io);
-        }, 2000);
-      }
+    // Récupérer les informations du bot
+    const botNumber = client.info?.wid?.user;
+    const botName = client.info?.pushname;
+    
+    // Sauvegarder les informations dans MongoDB
+    try {
+      await botService.saveOrUpdateBotInfo({
+        phoneNumber: botNumber,
+        name: botName,
+        status: 'connected'
+      });
+      logService.addLog(`Bot WhatsApp connecté: ${botNumber} (${botName})`, 'WhatsApp Client', 'info');
+    } catch (error) {
+      logService.addLog(
+        `Erreur lors de la sauvegarde des informations du bot: ${error.message}`,
+        'WhatsApp Client',
+        'error'
+      );
     }
     
-    if (connection === 'open') {
-      console.log('Client is ready');
-      io.emit('qrCode', "connected");
-      
-      // Get bot information
-      const botNumber = client.user?.id?.split(':')[0];
-      const botName = client.user?.name || 'Bot WhatsApp';
-      
-      // Save bot info to MongoDB
-      try {
-        await botService.saveOrUpdateBotInfo({
-          phoneNumber: botNumber,
-          name: botName,
-          status: 'connected'
-        });
-      } catch (error) {
-        logService.addLog(
-          `Erreur lors de la sauvegarde des informations du bot: ${error.message}`,
-          'WhatsApp Client',
-          'error'
-        );
-      }
-      
-      // Inform all clients of the connection
-      io.emit('numberBot', `${botNumber} (${botName})`);
-    }
+    // Informer tous les clients de la connexion
+    io.emit('numberBot', `${botNumber} (${botName})`);
+    io.emit('qrCode', "connected");
   });
 
-  // Handle auth updates
-  client.ev.on('creds.update', saveCreds);
-  
-  client.ev.on('messages.upsert', async ({ messages }) => {
-    for (const message of messages) {
-      // Only process new messages
-      if (message.key.fromMe) continue;
-      handleMessage(client, message);
+  client.on('disconnected', async () => {
+    io.emit('qrCode', "disconnected");
+    io.emit('numberBot', "");
+    
+    try {
+      // Mettre à jour le statut dans la base de données
+      await botService.updateBotStatus('disconnected');
+      logService.addLog('Client WhatsApp déconnecté', 'WhatsApp Client', 'info');
+      
+      // Déconnexion propre du client
+      await client.logout();
+    } catch (error) {
+      logService.addLog(
+        `Erreur lors de la déconnexion du client WhatsApp: ${error.message}`,
+        'WhatsApp Client',
+        'error'
+      );
     }
+    
+    setTimeout(() => {
+      client.initialize();
+    }, 2000);
   });
 
-  // Handle message status updates
-  client.ev.on('message.update', (updates) => {
-    for (const update of updates) {
-      if (update.status === 3) { // Read status in Baileys
-        logService.addLog(`Message lu par le destinataire: ${update.key.remoteJid}`, 'WhatsApp Client', 'info');
-      }
+  // Gérer les erreurs potentielles
+  client.on('change_state', (state) => {
+    logService.addLog(`Changement d'état: ${state}`, 'WhatsApp Client', 'info');
+    console.log('State changed to:', state);
+  });
+
+  client.on('message_ack', (msg, ack) => {
+    // Statut d'envoi des messages
+    // 0: non envoyé, 1: envoyé, 2: reçu, 3: lu
+    if (ack === 3) {
+      logService.addLog(`Message lu par le destinataire: ${msg.to}`, 'WhatsApp Client', 'info');
     }
   });
 
@@ -116,49 +115,34 @@ const initializeWhatsAppClient = async (io) => {
 };
 
 /**
- * Traite un message individuel
+ * Configure le gestionnaire de messages entrants
  * @param {Object} client - Client WhatsApp
- * @param {Object} message - Message reçu
  */
-const handleMessage = async (client, message) => {
-  try {
-    const senderJid = message.key.remoteJid;
-    const messageContent = message.message;
-
-    // Extract sender's number from JID (remove "@s.whatsapp.net")
-    const senderNumber = senderJid.split('@')[0];
-    
-    // Get sender's name from message info or use default
-    const senderName = message.pushName || 'Unknown';
-    
-    const response = await save(senderNumber, senderName);
-    if (response?.data?.role === "user") {
-      await UserCommander(response, { 
-        from: senderJid, 
-        body: messageContent?.conversation || messageContent?.extendedTextMessage?.text || '', 
-        _data: message 
-      }, client);
-    } else if (response?.data?.role === "admin") {
-      await AdminCommander(response, { 
-        from: senderJid, 
-        body: messageContent?.conversation || messageContent?.extendedTextMessage?.text || '', 
-        _data: message 
-      }, client);
-    } else {
-      // Reply to the message
-      await client.sendMessage(senderJid, { text: response?.message });
+const handleIncomingMessages = (client) => {
+  client.on('message', async (msg) => {
+    try {
+      const contact = await msg.getContact();
+      const response = await save(contact.number, contact.pushname);
+      
+      if (response?.data?.role === "user") {
+        await UserCommander(response, msg, client);
+      } else if (response?.data?.role === "admin") {
+        await AdminCommander(response, msg, client);
+      } else { 
+        msg.reply(response?.message);
+      }
+    } catch (error) {
+      await logService.addLog(
+        `${error.message}`,
+        'handleIncomingMessages',
+        'error'
+      );
     }
-  } catch (error) {
-    await logService.addLog(
-      `${error.message}`,
-      'handleMessage',
-      'error'
-    );
-  }
+  });
 };
-
 
 module.exports = {
   initializeWhatsAppClient,
+  handleIncomingMessages,
   SESSION_FILE_PATH
 };

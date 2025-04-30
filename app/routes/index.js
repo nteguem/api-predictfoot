@@ -19,6 +19,7 @@ const {setupBotRoutes}  = require('./bot.route');
 const {setupReferralRoutes} = require("./referral.routes");
 const {setupInfluencerRoutes} = require('./influencer.routes');
 const {setupMonetbil} = require('./monetbil.route');
+const { setupPaymentRoutes } = require('./payment.routes');
 /* GET home page. */
 // Define a route for the home page ('/') that renders the 'index' template with the title 'Predictfoot'.
 router.get('/', function (req, res, next) {
@@ -59,6 +60,9 @@ const setupAppRoutes = (client) => {
     '/referrals/installation',
     'payment/initiate',
     '/payment/status',
+    '/payments/smobilpay/status',
+    '/payments/smobilpay/webhook',
+    '/payments/smobilpay/services'
 ]));
 
   setupUserRoutes(app, client);
@@ -71,6 +75,7 @@ const setupAppRoutes = (client) => {
   setupEvent(app, client);
   setupSubscription(app, client);
   setupPlan(app);
+  setupPaymentRoutes(app);
   setupNotification(app,client);
   setupLogRoutes(app);
   setupTransactionRoutes(app,client);

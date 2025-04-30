@@ -67,10 +67,10 @@ function stopAllTasks() {
 async function scheduleAllTasks(client) {
   await scheduleTask('fetchAndSaveMatches', '32 02 * * *', fetchAndSaveMatches);
   await scheduleTask('correctPrediction', '33 02 * * *', correctPrediction);
-  await scheduleTask('publishAllPredictions', '30 10 * * *', async () => {
-    await publishPrediction(client, getYesterdayDate());  // Envoi des résultats de la veille
-    await publishPrediction(client, getTodayDate());      // Envoi des prédictions du jour
-  });
+  // await scheduleTask('publishAllPredictions', '30 10 * * *', async () => {
+  //   await publishPrediction(client, getYesterdayDate());  // Envoi des résultats de la veille
+  //   await publishPrediction(client, getTodayDate());      // Envoi des prédictions du jour
+  // });
  Object.keys(tasks).forEach(task => startTask(task));
 }
 
