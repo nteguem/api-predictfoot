@@ -1,71 +1,110 @@
-const { MessageMedia } = require('whatsapp-web.js');
-
+const { downloadContentFromMessage } = require('@whiskeysockets/baileys');
+const logService = require('../../services/log.service');
+const fs = require('fs');
+const path = require('path');
+const fetch = require('node-fetch');
 
 const sendWithTyping = async (client, chatId, message, isMedia = false, options = {}) => {
   try {
+    // Simulate typing in Baileys
+    await client.sendPresenceUpdate('composing', chatId);
+    
+    // Calculate typing duration based on message length
     const typingDuration = Math.min(5000, message.length * 100);
-    const chat = await client.getChatById(chatId);
-    await chat.sendStateTyping();
-
-    const automatedMessage = `${message}`;
-
+    
+    // Prepare message with assistant prefix if not media
+    const automatedMessage = isMedia ? message : `${message}`;
+    
     setTimeout(async () => {
+      // Reset presence after typing
+      await client.sendPresenceUpdate('paused', chatId);
+      
       if (isMedia) {
-        await client.sendMessage(chatId, message, options);
+        await client.sendMessage(chatId, automatedMessage, options);
       } else {
-        await client.sendMessage(chatId, automatedMessage);
+        await client.sendMessage(chatId, { text: automatedMessage });
       }
     }, typingDuration);
   } catch (error) {
- console.log("error", error);
+    await logService.addLog(
+      `${error.message}`,
+      'sendWithTyping',
+      'error'
+    );
   }
 };
 
 const sendMessageToNumber = async (client, phoneNumber, message) => {
-  await sendWithTyping(client, `${phoneNumber}`, message);
+  const jid = `${phoneNumber}@s.whatsapp.net`;
+  await sendWithTyping(client, jid, message);
 };
 
 const sendMediaToNumber = async (client, phoneNumber, mediaType, mediaBase64, filename, caption = '') => {
-  const media = new MessageMedia(mediaType, mediaBase64, filename);
-  await sendWithTyping(client, `${phoneNumber}`, media, true, { caption: caption });
-};
-
-const replyToMessage = async (client, message, replyText) => {
-  await sendWithTyping(client, message.from, replyText);
-};
-
-
-/**
- * Envoie un lien avec prévisualisation
- * @param {Object} client - Client WhatsApp
- * @param {String} phoneNumber - Numéro de téléphone du destinataire
- * @param {String} url - URL à envoyer
- * @param {String} caption - Texte accompagnant le lien (optionnel)
- */
-const sendLinkWithPreview = async (client, phoneNumber, url, caption = '') => {
   try {
-    // Formater le numéro de téléphone pour WhatsApp Web JS
-    let chatId = phoneNumber;
-    if (!chatId.includes('@')) {
-      chatId = `${chatId}@c.us`;
+    const jid = `${phoneNumber}@s.whatsapp.net`;
+    const formattedCaption = caption ? `${caption}` : '';
+    
+    // Créer le message selon le type de média
+    let messageContent;
+    
+    if (mediaType === 'application/pdf') {
+      messageContent = {
+        document: Buffer.from(mediaBase64, 'base64'),
+        mimetype: 'application/pdf',
+        fileName: `${filename}.pdf`,
+        caption: formattedCaption
+      };
+    } else if (mediaType.startsWith('image/')) {
+      messageContent = {
+        image: Buffer.from(mediaBase64, 'base64'),
+        caption: formattedCaption,
+        mimetype: mediaType, 
+        jpegThumbnail: null,
+        viewOnce: false,
+        isQuotedMessage: false,
+        jpegQuality: 100, 
+      };
+    } else {
+      // Document générique
+      messageContent = {
+        document: Buffer.from(mediaBase64, 'base64'),
+        mimetype: mediaType,
+        fileName: filename,
+        caption: formattedCaption
+      };
     }
     
-    // Construire le message avec le lien
-    const message = caption ? `${caption}\n\n${url}` : url;
-    
-    // Envoyer le message (WhatsApp Web JS génère automatiquement la prévisualisation)
-    const result = await client.sendMessage(chatId, message);
-    
-    await logService.addLog(
-      `Lien envoyé avec succès à ${phoneNumber}`,
-      'sendLinkWithPreview',
-      'info'
-    );
-    
-    return result;
+    // Envoyer le message directement
+    return await client.sendMessage(jid, messageContent);
   } catch (error) {
     await logService.addLog(
-      `Échec de l'envoi du lien à ${phoneNumber}: ${error.message}`,
+      `Failed to send media to ${phoneNumber}: ${error.message}`,
+      'sendMediaToNumber',
+      'error'
+    );
+    throw error;
+  }
+};
+
+// Nouvelle fonction pour envoyer un lien avec prévisualisation
+const sendLinkWithPreview = async (client, phoneNumber, url, caption = '') => {
+  try {
+    const jid = `${phoneNumber}@s.whatsapp.net`;
+    const formattedCaption = caption ? `${caption}` : '';
+    
+    // Message avec lien pour afficher la prévisualisation
+    const messageContent = {
+      text: formattedCaption,
+      canonicalUrl: url, // Pour la prévisualisation du lien
+      matchedText: url,
+      detectLinks: true // Assure que Baileys détecte les liens
+    };
+    
+    // Envoyer le message avec prévisualisation
+    return await client.sendMessage(jid, messageContent);
+  } catch (error) {
+    await logService.addLog(
+      `Failed to send link preview to ${phoneNumber}: ${error.message}`,
       'sendLinkWithPreview',
       'error'
     );
@@ -73,6 +112,20 @@ const sendLinkWithPreview = async (client, phoneNumber, url, caption = '') => {
   }
 };
 
+const replyToMessage = async (client, message, replyText) => {
+  try {
+    const jid = message.from;
+    const quotedMessage = message._data;
+    
+    await sendWithTyping(client, jid, replyText);
+  } catch (error) {
+    await logService.addLog(
+      `${error.message}`,
+      'replyToMessage',
+      'error'
+    );
+  }
+};
 
 module.exports = {
   sendMessageToNumber,
