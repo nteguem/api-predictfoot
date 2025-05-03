@@ -65,7 +65,7 @@ function stopAllTasks() {
 
 // Planifier les tâches
 async function scheduleAllTasks(client) {
-  await scheduleTask('fetchAndSaveMatches', '30 05 * * *', fetchAndSaveMatches);
+  await scheduleTask('fetchAndSaveMatches', '39 05 * * *', fetchAndSaveMatches);
   await scheduleTask('correctPrediction', '33 02 * * *', correctPrediction);
   // await scheduleTask('publishAllPredictions', '30 10 * * *', async () => {
   //   await publishPrediction(client, getYesterdayDate());  // Envoi des résultats de la veille

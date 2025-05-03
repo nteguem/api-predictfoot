@@ -14,7 +14,7 @@ async function getMatchesPerDay(date) {
         },
       });
       const { api: { fixtures, results } } = await response.json();
-      const matchesByCountry = fixtures.reduce((acc, fixture) => {
+      const matchesByCountry = fixtures?.reduce((acc, fixture) => {
         const {
           league: { country, name: leagueName, logo: leagueLogo, flag: leagueFlag },
           event_date,
