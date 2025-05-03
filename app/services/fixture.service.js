@@ -38,7 +38,7 @@ async function getMatchesPerDay(date) {
         status: item.fixture.status.long,
         statusShort: item.fixture.status.short,
         elapsed: item.fixture.status.elapsed,
-        venue: item.fixture.venue.name,
+        venue: item.fixture.venue?.name || '',
         referee: item.fixture.referee,
         homeTeam: {
           team_id: item.teams.home.id,
@@ -94,9 +94,16 @@ async function getMatchesPerDay(date) {
     }
 }
 
-// Le reste des fonctions reste identique...
 async function extractCountries(data) {
-    const countries = Object.entries(data.fixtures || {}).reduce((acc, [countryName, country]) => {
+    // Vérifier si le format est l'ancien ou le nouveau
+    const fixtures = data.api ? data.api.fixtures : data.fixtures;
+    
+    if (!fixtures) {
+      console.log('No fixtures found in data:', data);
+      return [];
+    }
+    
+    const countries = Object.entries(fixtures).reduce((acc, [countryName, country]) => {
       acc[countryName] = {
         name: countryName,
         logo: country.logo || null, 
@@ -108,10 +115,19 @@ async function extractCountries(data) {
 }
 
 async function extractLeaguesByCountry(data, countryName) {
-    const countryData = data.fixtures?.[countryName];
+    // Vérifier si le format est l'ancien ou le nouveau
+    const fixtures = data.api ? data.api.fixtures : data.fixtures;
+    
+    if (!fixtures) {
+      console.log('No fixtures found in data:', data);
+      return `Data structure error`;
+    }
+    
+    const countryData = fixtures[countryName];
     if (!countryData) {
       return `Country ${countryName} not found in the data.`;
     }
+    
     const leagues = Object.keys(countryData.leagues).map(leagueName => {
       const league = countryData.leagues[leagueName];
       const totalMatches = league.fixtures?.length || 0; 
@@ -124,10 +140,18 @@ async function extractLeaguesByCountry(data, countryName) {
     return leagues;
 }
 
-async function extractMatchesByLeague(data, leagueName,logo) {
-    for (const countryName in data.fixtures) {
-        const country = data.fixtures[countryName];
-        console.log("country",country)
+async function extractMatchesByLeague(data, leagueName, logo) {
+    // Vérifier si le format est l'ancien ou le nouveau
+    const fixtures = data.api ? data.api.fixtures : data.fixtures;
+    
+    if (!fixtures) {
+      console.log('No fixtures found in data:', data);
+      return `Data structure error`;
+    }
+    
+    for (const countryName in fixtures) {
+        const country = fixtures[countryName];
+        console.log("country", country);
         if (country.leagues[leagueName] && country.leagues[leagueName].logo === logo) {
             const league = country.leagues[leagueName];
             return league.fixtures;
@@ -168,6 +192,7 @@ async function getAvailableMatchDays() {
     return availableDays;
   } catch (error) {
     console.log('Error fetching available match days:', error);
+    return {};
   }
 }
 
@@ -175,11 +200,19 @@ async function fetchAndSaveMatches() {
     const today = new Date();
     const yesterday = new Date(today);
     yesterday.setDate(today.getDate() - 1);
-    const dates = Array.from({ length: 6 }).map((_, i) => new Date(yesterday).setDate(yesterday.getDate() + i)).map(date => new Date(date).toISOString().split('T')[0]);
+    const dates = Array.from({ length: 6 }).map((_, i) => {
+      const newDate = new Date(yesterday);
+      newDate.setDate(yesterday.getDate() + i);
+      return newDate.toISOString().split('T')[0];
+    });
+    
     try {
       await fs.mkdir(directoryData, { recursive: true });
       const files = await fs.readdir(directoryData);
-      await Promise.all(files.map(file => fs.unlink(path.join(directoryData, file))));
+      // Ne supprimer que les fichiers qui correspondent aux dates qu'on va récupérer
+      const filesToDelete = files.filter(file => dates.includes(file.split('.')[0]));
+      await Promise.all(filesToDelete.map(file => fs.unlink(path.join(directoryData, file))));
+      
       for (const date of dates) {
         const filename = path.join(directoryData, `${date}.json`);
         const matches = await getMatchesPerDay(date);
@@ -198,15 +231,21 @@ async function loadFixtureData(date) {
         return JSON.parse(data);
     } catch (error) {
         console.log(`Error loading fixture data for date ${date}:`, error);
+        return null;
     }
 }
 
 function findFixtureByTeamId(fixtureData, teamId) {
-  for (const countryKey in fixtureData.fixtures) {
-    const leagues = fixtureData.fixtures[countryKey].leagues;
+  // Vérifier si le format est l'ancien ou le nouveau
+  const fixtures = fixtureData.api ? fixtureData.api.fixtures : fixtureData.fixtures;
+  
+  if (!fixtures) return null;
+  
+  for (const countryKey in fixtures) {
+    const leagues = fixtures[countryKey].leagues;
     for (const leagueKey in leagues) {
-      const fixtures = leagues[leagueKey].fixtures;
-      const fixture = fixtures.find(fix => fix.homeTeam.team_id === teamId);
+      const leagueFixtures = leagues[leagueKey].fixtures;
+      const fixture = leagueFixtures.find(fix => fix.homeTeam.team_id === teamId);
       if (fixture) {
         return fixture;
       }
