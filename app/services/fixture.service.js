@@ -7,14 +7,61 @@ const directoryData = 'data-football';
 
 async function getMatchesPerDay(date) {
     try {
-      const response = await fetch(`https://${process.env.RAPID_API_HOST}/v2/fixtures/date/${date}`, {
+      const response = await fetch(`https://${process.env.RAPID_API_HOST}/v3/fixtures?date=${date}`, {
         headers: {
           'x-rapidapi-host': process.env.RAPID_API_HOST,
           'x-rapidapi-key': process.env.RAPID_API_KEY,
         },
       });
-      const { api: { fixtures, results } } = await response.json();
-      const matchesByCountry = fixtures?.reduce((acc, fixture) => {
+      const data = await response.json();
+      
+      if (data.errors && data.errors.length > 0) {
+        console.log("Erreur API:", data.errors);
+        throw new Error(data.errors);
+      }
+      
+      // Transformer les données v3 en format v2
+      const fixturesV2Format = data.response.map(item => ({
+        fixture_id: item.fixture.id,
+        league_id: item.league.id,
+        league: {
+          name: item.league.name,
+          country: item.league.country,
+          logo: item.league.logo,
+          flag: item.league.flag
+        },
+        event_date: item.fixture.date,
+        event_timestamp: item.fixture.timestamp,
+        firstHalfStart: null,
+        secondHalfStart: null,
+        round: item.league.round,
+        status: item.fixture.status.long,
+        statusShort: item.fixture.status.short,
+        elapsed: item.fixture.status.elapsed,
+        venue: item.fixture.venue.name,
+        referee: item.fixture.referee,
+        homeTeam: {
+          team_id: item.teams.home.id,
+          team_name: item.teams.home.name,
+          logo: item.teams.home.logo
+        },
+        awayTeam: {
+          team_id: item.teams.away.id,
+          team_name: item.teams.away.name,
+          logo: item.teams.away.logo
+        },
+        goalsHomeTeam: item.goals.home,
+        goalsAwayTeam: item.goals.away,
+        score: {
+          halftime: item.score.halftime.home !== null ? `${item.score.halftime.home}-${item.score.halftime.away}` : null,
+          fulltime: item.score.fulltime.home !== null ? `${item.score.fulltime.home}-${item.score.fulltime.away}` : null,
+          extratime: item.score.extratime.home !== null ? `${item.score.extratime.home}-${item.score.extratime.away}` : null,
+          penalty: item.score.penalty.home !== null ? `${item.score.penalty.home}-${item.score.penalty.away}` : null
+        }
+      }));
+      
+      // Organiser par pays et ligues comme dans v2
+      const matchesByCountry = fixturesV2Format.reduce((acc, fixture) => {
         const {
           league: { country, name: leagueName, logo: leagueLogo, flag: leagueFlag },
           event_date,
@@ -33,13 +80,21 @@ async function getMatchesPerDay(date) {
         acc[country].leagues[leagueName].fixtures.push(matchDetails);
         return acc;
       }, {});
-      return { results, fixtures: matchesByCountry };
+      
+      // Retourner dans le format exact de v2
+      return { 
+        api: {
+          results: data.results,
+          fixtures: matchesByCountry
+        }
+      };
     } catch (error) {
       console.log('Erreur lors de la récupération des données :', error);
       throw error;
     }
-  }
-  
+}
+
+// Le reste des fonctions reste identique...
 async function extractCountries(data) {
     const countries = Object.entries(data.fixtures || {}).reduce((acc, [countryName, country]) => {
       acc[countryName] = {
@@ -50,7 +105,7 @@ async function extractCountries(data) {
       return acc;
     }, {});
     return Object.values(countries);
-  }
+}
 
 async function extractLeaguesByCountry(data, countryName) {
     const countryData = data.fixtures?.[countryName];
@@ -67,9 +122,9 @@ async function extractLeaguesByCountry(data, countryName) {
       };
     });  
     return leagues;
-  }
+}
 
-  async function extractMatchesByLeague(data, leagueName,logo) {
+async function extractMatchesByLeague(data, leagueName,logo) {
     for (const countryName in data.fixtures) {
         const country = data.fixtures[countryName];
         console.log("country",country)
@@ -134,9 +189,9 @@ async function fetchAndSaveMatches() {
     } catch (error) {
       console.log('Error fetching and saving matches:', error);
     }
-  }
+}
 
-  async function loadFixtureData(date) {
+async function loadFixtureData(date) {
     const filePath = path.join(directoryData, `${date}.json`);
     try {
         const data = await fs.readFile(filePath, 'utf8');
@@ -159,7 +214,6 @@ function findFixtureByTeamId(fixtureData, teamId) {
   }
   return null;
 }
-  
   
 module.exports = {
     getMatchesPerDay,
