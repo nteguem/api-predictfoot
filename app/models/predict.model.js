@@ -141,6 +141,13 @@ PredictSchema.post('findOneAndUpdate', async function(doc) {
     case 'Second Half Goals Under 1.5':
       iswin = fulltimeHome + fulltimeAway - (halftimeHome + halftimeAway) <= 1;
       break;
+      case 'Home Team Over 1.5':
+        iswin = fulltimeHome > 1;
+        break;
+      
+      case 'Away Team Over 1.5':
+        iswin = fulltimeAway > 1;
+        break;
     // Ajoute d'autres cas ici...
     default:
       iswin = false;
