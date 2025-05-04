@@ -424,6 +424,48 @@ async function oldTips(isVisible = true, isVip = false) {
    }
 }
 
+async function sendTodayPredictionsNotification() {
+  try {
+    // Notification en anglais pour le reste du monde
+    const notificationDataEnglish = {
+      title: '🔥 Today\'s Predictions Available!',
+      body: [
+        'Check out today\'s football predictions.',
+        '👉 TAP to see your predictions'
+      ].join('\n'),
+      data: {
+        type: 'predictions_notification',
+        status: 'available'
+      }
+    };
+    
+    // Notification en français pour le Cameroun
+    const notificationDataFrench = {
+      title: '🔥 Pronostics du jour disponibles !',
+      body: [
+        'Consultez les pronostics de football du jour.',
+        '👉 CLIQUEZ pour voir vos pronostics'
+      ].join('\n'),
+      data: {
+        type: 'predictions_notification',
+        status: 'available',
+        region: 'cameroon'
+      }
+    };
+    
+    // Envoyer la notification générale en anglais
+    await sendGeneralNotification(notificationDataEnglish);
+    
+    // Envoyer la notification spécifique au Cameroun en français
+    await sendTopicNotification('all_devices_cameroon', notificationDataFrench);
+    
+    console.log('Notifications des pronostics du jour envoyées avec succès.');
+    
+  } catch (error) {
+    console.error('Erreur lors de l\'envoi des notifications:', error);
+    throw error;
+  }
+}
 
 module.exports = {
   createPrediction,
@@ -434,4 +476,5 @@ module.exports = {
   publishPrediction,
   listLastTenDaysPredictions,
   oldTips,
+  sendTodayPredictionsNotification
 };

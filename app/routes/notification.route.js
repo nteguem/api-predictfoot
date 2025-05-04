@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const NotificationController = require('../controllers/notification.controller');
+const predictHandler = require('../controllers/predict.controller');
 
 const setupNotification = (app, client) => {
   app.use("/notification", router);
@@ -33,6 +34,11 @@ const setupNotification = (app, client) => {
   router.post('/topic/handle-expired', (req, res) => {
     NotificationController.handleExpiredSubscriptions(req, res, client);
   });
+
+  router.post('/today-predictions', (req, res) => {
+    predictHandler.sendTodayPredictionsNotification(req, res);
+});
+
 };
 
 module.exports = { setupNotification };

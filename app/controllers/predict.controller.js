@@ -119,6 +119,27 @@ async function oldTips(req, res) {
   }
 }
 
+async function sendTodayPredictionsNotification(req, res) {
+  try {
+    const response = await PredictService.sendTodayPredictionsNotification();
+    
+    if (response.success) {
+      return ResponseService.success(res, { 
+        message: 'Today\'s predictions notifications sent successfully',
+        details: response.details 
+      });
+    } else {
+      return ResponseService.internalServerError(res, { 
+        error: response.error || 'Failed to send notifications'
+      });
+    }
+  } catch (error) {
+    console.log('Error sending today predictions notification:', error);
+    return ResponseService.internalServerError(res, { 
+      error: 'Error sending notifications: ' + error.message 
+    });
+  }
+}
 
 module.exports = {
   createPrediction,
@@ -126,5 +147,6 @@ module.exports = {
   deletePrediction,
   listPredictions,
   listLastTenDaysPredictions,
-  oldTips
+  oldTips,
+  sendTodayPredictionsNotification
 };
