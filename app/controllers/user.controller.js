@@ -42,6 +42,19 @@ const login = async (req, res,client) => {
   }
 };
 
+const loginMobile = async (req, res, client) => {
+  const { phoneNumber, password } = req.body;
+  const response = await userService.loginMobile(phoneNumber, password, client);
+  
+  if (response.success) {
+    return ResponseService.success(res, { token: response.token, user: response.user });
+  } else if (response.error === "Invalid credentials") {
+    return ResponseService.unauthorized(res, { error: response.error });
+  } else {
+    return ResponseService.notFound(res, { error: response.error });
+  }
+};
+
 async function addUser(req, res) {
   const response = await userService.addUser(req, res);
   return response;
@@ -85,6 +98,7 @@ module.exports = {
   login,
   updateUser,
   login,
+  loginMobile,
   addUser,
   getOneUser,
   deleteUser

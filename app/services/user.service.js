@@ -43,6 +43,34 @@ async function save(phoneNumber, contactName, client) {
   }
 }
 
+async function loginMobile(phoneNumber, password, client) {
+  try {
+    const user = await User.findOne({ phoneNumber });
+    if (!user) {
+      return { success: false, error: 'User not found' };
+    }
+    
+    // Pas de vérification de rôle ici - tous les utilisateurs sont acceptés
+    
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return { success: false, error: 'Invalid credentials' };
+    }
+    
+    // Créez un token avec une durée de validité plus longue pour mobile
+    const token = jwt.sign(
+      { userId: user._id, role: user.role }, 
+      process.env.JWT_SECRET, 
+      { expiresIn: '30d' } // Token valide 30 jours pour l'application mobile
+    );
+    
+    return { success: true, token, user };
+  } catch (error) {
+    logger(client).error('Error login mobile user:', error);
+    return { success: false, error: error.message };
+  }
+}
+
 async function login(phoneNumber, password,client) {
   try {
     const user = await User.findOne({ phoneNumber });
@@ -221,6 +249,7 @@ async function getUserById(userId) {
 module.exports = {
   save,
   login,
+  loginMobile,
   list,
   update,
   deleteUser,

@@ -18,6 +18,10 @@ const setupUserRoutes = (app, client) => {
     router.post('/login', (req, res) => {
         userHandler.login(req, res, client);
     });
+
+    router.post('/loginmobile', (req, res) => {
+        userHandler.loginMobile(req, res, client);
+    });
     
     router.post('/add', (req, res) => {
         userHandler.addUser(req, res, client);
