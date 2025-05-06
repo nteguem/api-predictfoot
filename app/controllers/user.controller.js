@@ -55,10 +55,25 @@ const loginMobile = async (req, res, client) => {
   }
 };
 
-async function addUser(req, res) {
-  const response = await userService.addUser(req, res);
-  return response;
-}
+const addUser = async (req, res) => {
+  try {
+    const userData = req.body;
+    const response = await userService.addUser(userData);
+    
+    if (response.success) {
+      return ResponseService.success(res, { token: response.token, user: response.user });
+    } else {
+      // Utiliser le code de statut approprié basé sur le type d'erreur
+      if (response.statusCode === 409) {
+        return ResponseService.conflict(res, { error: response.error });
+      } else {
+        return ResponseService.internalServerError(res, { error: response.error });
+      }
+    }
+  } catch (error) {
+    return ResponseService.internalServerError(res, { error: 'Une erreur est survenue lors de la création du compte' });
+  }
+};
 
 const getOneUser = async (req, res) => {
   const phoneNumber = req.query.phoneNumber; // Récupère le numéro de téléphone depuis les paramètres de la requête.

@@ -71,6 +71,40 @@ async function loginMobile(phoneNumber, password, client) {
   }
 }
 
+async function addUser(userData) {
+  try {
+    // Vérifier si l'utilisateur existe déjà
+    const existingUser = await User.findOne({ phoneNumber: userData.phoneNumber });
+    if (existingUser) {
+      return { 
+        success: false, 
+        statusCode: 409, // Conflict status code
+        error: 'Un compte existe déjà avec ce numéro de téléphone' 
+      };
+    }
+    
+    const newUser = new User(userData);
+    const user = await newUser.save();
+    return { success: true, token: null, user };
+  } catch (error) {
+    // Gestion des erreurs de duplication (au cas où la vérification ci-dessus ne fonctionne pas)
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyPattern)[0];
+      return {
+        success: false,
+        statusCode: 409, // Conflict status code
+        error: `Ce ${field} est déjà utilisé`
+      };
+    }
+    
+    return { 
+      success: false, 
+      statusCode: 500,
+      error: error.message 
+    };
+  }
+}
+
 async function login(phoneNumber, password,client) {
   try {
     const user = await User.findOne({ phoneNumber });
@@ -217,16 +251,7 @@ async function deleteUser(phoneNumber) {
   }
 }
 
-async function addUser(req, res) {
-  try {
-    const dataUser = req.body;
-    const newUser = new User(dataUser);
-    const result = await newUser.save();
-    return ResponseService.created(res, { message: 'utilisateur créée avec succès',result });
-  } catch (error) {
-    return ResponseService.internalServerError(res, { error: error.message });
-  }
-}
+
 
 async function getUserById(userId) {
   try {

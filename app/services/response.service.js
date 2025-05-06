@@ -48,6 +48,13 @@ function success(res, data = null) {
       message: message
     });
   }
+
+  const conflict = (res, data = {}) => {
+    return res.status(409).json({
+      status: 409,
+      message: data
+    });
+  };
   
   module.exports = {
     success,
@@ -56,6 +63,7 @@ function success(res, data = null) {
     unauthorized,
     forbidden,
     notFound,
-    internalServerError
+    internalServerError,
+    conflict
   };
   
