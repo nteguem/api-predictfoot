@@ -3,7 +3,6 @@ const mongoose = require('mongoose');
 const walletSchema = new mongoose.Schema({
     operator: {
         type: String,
-        enum: ['CM_ORANGEMONEY', 'CM_MTNMOBILEMONEY'],
         required: true
     },
     totalRevenue: {
