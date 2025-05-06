@@ -43,10 +43,6 @@ const smobilpayTransactionSchema = new mongoose.Schema({
         type: String,
         default: 'XAF'
     },
-    country: {
-        type: String,
-        required: true
-    },
     status: {
         type: String,
         enum: ['PENDING', 'SUCCESS', 'FAILED', 'CANCELED', 'EXPIRED'],

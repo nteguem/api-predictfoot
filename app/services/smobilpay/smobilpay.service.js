@@ -319,7 +319,7 @@ async function createSubscription(smobilpayTransaction) {
 
 // Initialiser un paiement (flux complet)
 async function initiatePayment(transactionData) {
-    const { userId, planId, operatorId, operatorName, phoneNumber, email, customerName, country } = transactionData;
+    const { userId, planId, operatorId, phoneNumber, customerName, email } = transactionData;
     
     try {
         // 1. Récupérer les détails du service
@@ -338,6 +338,9 @@ async function initiatePayment(transactionData) {
             );
         }
         
+        // Extraire operatorName du service
+        const operatorName = service.name || service.serviceName;
+    
         // 2. Récupérer le plan
         const plan = await Plan.findById(planId);
         if (!plan) {
@@ -352,7 +355,6 @@ async function initiatePayment(transactionData) {
             payItemId: service.payItemId,
             operatorName,
             operatorId,
-            country,
             status: 'PENDING',
             amount: plan.price,
             currency: 'XAF',
@@ -401,7 +403,6 @@ async function initiatePayment(transactionData) {
         throw error;
     }
 }
-
 /**
  * Vérifie le statut d'une transaction par paymentId
  * 

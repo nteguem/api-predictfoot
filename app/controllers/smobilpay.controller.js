@@ -68,17 +68,18 @@ exports.getServices = async (req, res) => {
 // Initialiser un paiement
 exports.initiatePayment = async (req, res) => {
     try {
-        const { planId, operatorId, operatorName, phoneNumber, email, customerName, country } = req.body;
+        const { planId, operatorId, phoneNumber } = req.body;
         const userId = req.user.userId;
+        const customerName = req.user.pseudo; // Use user's pseudo from auth
+        const email = `${req.user.pseudo.replace(/\s+/g, '').replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '')}@gmail.com`;        
+        console.log(`Initiating payment for user: ${JSON.stringify(req.user)}, operator ID: ${operatorId}`);
         
-        console.log(`Initiating payment for user: ${JSON.stringify(req.user)}, operator: ${operatorName}`);
-        
-        if (!planId || !operatorId || !operatorName || !phoneNumber || !email || !customerName || !country) {
+        if (!planId || !operatorId || !phoneNumber) {
             return ResponseService.badRequest(res, { message: 'Missing required fields' });
         }
         
         const paymentResult = await smobilpayService.initiatePayment({
-            userId, planId, operatorId, operatorName, phoneNumber, email, customerName, country
+            userId, planId, operatorId, phoneNumber, customerName, email
         });
         
         return ResponseService.success(res, paymentResult);

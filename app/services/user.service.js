@@ -59,9 +59,9 @@ async function loginMobile(phoneNumber, password, client) {
     
     // Créez un token avec une durée de validité plus longue pour mobile
     const token = jwt.sign(
-      { userId: user._id, role: user.role }, 
+      { userId: user._id,pseudo:user.pseudo, role: user.role }, 
       process.env.JWT_SECRET, 
-      { expiresIn: '30d' } // Token valide 30 jours pour l'application mobile
+      { expiresIn: '40d' } 
     );
     
     return { success: true, token, user };
