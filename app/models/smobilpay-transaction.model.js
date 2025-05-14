@@ -45,7 +45,7 @@ const smobilpayTransactionSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['PENDING', 'SUCCESS', 'FAILED', 'CANCELED', 'EXPIRED'],
+        enum: ['PENDING', 'SUCCESS', 'CANCELED','ERRORED', 'REVERSED'],
         default: 'PENDING'
     },
     phoneNumber: {

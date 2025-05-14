@@ -69,67 +69,144 @@ function generateAuthHeader(method, url, params = {}, data = null) {
     return authHeader;
 }
 
-// Fonction simplifiée pour récupérer les services (avec ou sans filtrage par serviceid)
-async function getServices(serviceId = null) {
-    try {
-        console.log(`Service: Getting services${serviceId ? ` for serviceId: ${serviceId}` : ''}`);
-        console.log(`API URL: ${API_URL}`);
-        
-        const endpoint = '/cashin';
-        const fullUrl = `${API_URL}${endpoint}`;
-        
-        // Paramètres de requête - filtrer par serviceId si fourni
-        const queryParams = serviceId ? { serviceid: serviceId } : {};
-        
-        const authHeader = generateAuthHeader(
-            'GET', 
-            fullUrl,
-            queryParams ? queryParams : null
-        );
-        
-        console.log(`Auth header generated: ${authHeader.substring(0, 50)}...`);
-        
-        const response = await axios.get(fullUrl, {
-            headers: {
-                'Authorization': authHeader,
-                'Content-Type': 'application/json'
-            },
-            params: queryParams ? queryParams : null
+// Fonction pour organiser les services par pays
+function organizeServicesByCountry(services) {
+    const countryCodes = {
+      'CM': 'Cameroun',
+      'GAB': 'Gabon',
+      'TCD': 'Tchad',
+      'RCA': 'République Centrafricaine',
+      'CG': 'Congo',
+      // Ajouter d'autres correspondances si nécessaire
+    };
+  
+    // Structure pour stocker les services par pays
+    const servicesByCountry = {
+      'CM': [],
+      'GAB': [],
+      'TCD': [],
+      'RCA': [],
+      'CG': [],
+      'OTHER': [], // Pour les services sans code pays identifiable
+    };
+  
+    // Parcourir chaque service et le classer par pays
+    services.forEach(service => {
+      let countryCode = 'OTHER';
+      const merchantCode = service.merchant || '';
+  
+      // Extraire le code pays du merchant
+      if (merchantCode.startsWith('CM')) {
+        countryCode = 'CM';
+      } else if (merchantCode.startsWith('GAB')) {
+        countryCode = 'GAB';
+      } else if (merchantCode.startsWith('TCD')) {
+        countryCode = 'TCD';
+      } else if (merchantCode.startsWith('RCA')) {
+        countryCode = 'RCA';
+      } else if (merchantCode.startsWith('CG')) {
+        countryCode = 'CG';
+      } else {
+        // Essayer de détecter d'autres formats possibles
+        Object.keys(countryCodes).forEach(code => {
+          if (merchantCode.includes(code)) {
+            countryCode = code;
+          }
         });
+      }
+  
+      // Ajouter le service au pays correspondant
+      if (servicesByCountry[countryCode]) {
+        servicesByCountry[countryCode].push(service);
+      } else {
+        servicesByCountry['OTHER'].push(service);
+      }
+    });
+  
+    return {
+      countryCodes, // Renvoyer aussi les noms des pays
+      servicesByCountry
+    };
+  }
+  
+  // Fonction complète pour récupérer les services avec filtrage par pays
+  async function getServices(serviceId = null, countryCode = null) {
+    try {
+      const endpoint = '/cashout';
+      const fullUrl = `${API_URL}${endpoint}`;
+      
+      // Paramètres de requête - filtrer par serviceId si fourni
+      const queryParams = serviceId ? { serviceid: serviceId } : {};
+      
+      const authHeader = generateAuthHeader(
+        'GET', 
+        fullUrl,
+        queryParams ? queryParams : null
+      );
+      
+      const response = await axios.get(fullUrl, {
+        headers: {
+          'Authorization': authHeader,
+          'Content-Type': 'application/json'
+        },
+        params: queryParams ? queryParams : null
+      });
+      
+      // EXTRACTION DES DONNÉES SELON LA STRUCTURE CORRECTE
+      let services = [];
+      
+      if (response.data && response.data.data && Array.isArray(response.data.data)) {
+        // Structure: { status: 200, message: "Success", data: [...] }
+        services = response.data.data;
+      } else if (response.data && Array.isArray(response.data)) {
+        // Structure: [...] (directement un tableau)
+        services = response.data;
+      } else {
+        return []; // Retourner un tableau vide en cas de structure inattendue
+      }
+      
+      // Si aucun service n'est trouvé
+      if (services.length === 0) {
+        return [];
+      }
+      
+      // Si un serviceId spécifique est demandé, retourner directement les services
+      if (serviceId) {
+        return services;
+      }
+  
+      // Organiser les services par pays
+      const organizedServices = organizeServicesByCountry(services);
+      
+      // Si un code pays est spécifié, retourner seulement les services de ce pays
+      if (countryCode) {
+        const upperCountryCode = countryCode.toUpperCase();
         
-        console.log(`Response status: ${response.status}`);
-        
-        // Si aucun service n'est trouvé, retourner un tableau vide
-        if (!response.data || !Array.isArray(response.data)) {
-            console.log('No services found or invalid response format');
-            return [];
+        if (organizedServices.servicesByCountry[upperCountryCode]) {
+          // Retourner directement le tableau des services pour ce pays
+          return organizedServices.servicesByCountry[upperCountryCode];
+        } else {
+          // Retourner un tableau vide si le pays n'existe pas
+          return [];
         }
-        
-        console.log(`Found ${response.data.length} services`);
-        
-        // Retourner les services tels quels, sans aucune tentative de filtrage par pays
-        return response.data;
+      }
+  
+      // Sinon, retourner tous les services (non triés par pays)
+      return services;
     } catch (error) {
-        console.error('Error in getServices:', error.message);
-        
-        // Traitement spécifique pour les erreurs de l'API
-        if (error.response) {
-            console.error('Response status:', error.response.status);
-            console.error('Response data:', error.response.data);
-            
-            // Créer une erreur SmobilpayError avec les détails de l'API
-            throw new SmobilpayError(
-                error.response.data.usrMsg || error.response.data.devMsg || error.message,
-                error.response.status,
-                error.response.data
-            );
-        }
-        
-        await addLog(`Error fetching services: ${error.message}`, 'SmobilpayService.getServices', 'error');
-        throw error; // Relancer l'erreur originale si ce n'est pas une erreur d'API
+      if (error.response) {
+        throw new SmobilpayError(
+          error.response.data.usrMsg || error.response.data.devMsg || error.message,
+          error.response.status,
+          error.response.data
+        );
+      }
+      
+      await addLog(`Error fetching services: ${error.message}`, 'SmobilpayService.getServices', 'error');
+      throw error;
     }
-}
-
+  }
+  
 
 // Demander un devis (Quote)
 async function requestQuote(payItemId, amount) {
@@ -564,7 +641,7 @@ module.exports = {
     verifyTransaction,
     initiatePayment,
     checkTransactionStatus,
-    processWebhook,
+    processWebhook, 
     createSubscription,
     SmobilpayError // Exporter la classe d'erreur pour la vérification dans le contrôleur
 };
