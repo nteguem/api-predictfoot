@@ -67,8 +67,23 @@ exports.initiatePayment = async (req, res) => {
         const { planId, operatorId, phoneNumber } = req.body;
         const userId = req.user.userId;
         const customerName = req.user.pseudo; // Use user's pseudo from auth
-        const email = `${req.user.pseudo.replace}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '')}@gmail.com`;        
+        
+        // Générer une adresse email valide à partir du pseudo
+        let emailUsername = req.user.pseudo
+            .toLowerCase()
+            .replace(/\s+/g, '.') // Remplacer les espaces par des points
+            .replace(/[^\w.-]/g, ''); // Supprimer tous les caractères spéciaux
+        
+        // S'assurer qu'il y a au moins un caractère dans le nom d'utilisateur
+        if (!emailUsername || emailUsername.length === 0) {
+            emailUsername = `user${Date.now()}`;
+        }
+        
+        // Créer l'adresse email complète
+        const email = `${emailUsername}@gmail.com`;
+        
         console.log(`Initiating payment for user: ${JSON.stringify(req.user)}, operator ID: ${operatorId}`);
+        console.log(`Generated email: ${email}`);
         
         if (!planId || !operatorId || !phoneNumber) {
             return ResponseService.badRequest(res, { message: 'Missing required fields' });

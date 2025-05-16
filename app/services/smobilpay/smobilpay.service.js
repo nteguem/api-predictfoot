@@ -9,9 +9,9 @@ const Wallet = require('../../models/wallet.model');
 const { addLog } = require('../../services/log.service');
 
 // Configuration
-const API_URL = process.env.SMOBILPAY_API_URL || 'https://s3p.smobilpay.staging.maviance.info/v2';
-const API_KEY = process.env.SMOBILPAY_API_KEY || '112-948';
-const API_SECRET = process.env.SMOBILPAY_API_SECRET || 'test-secret';
+const API_URL = process.env.SMOBILPAY_API_URL;
+const API_KEY = process.env.SMOBILPAY_API_KEY;
+const API_SECRET = process.env.SMOBILPAY_API_SECRET;
 
 // Classe d'erreur personnalisée pour Smobilpay
 class SmobilpayError extends Error {
