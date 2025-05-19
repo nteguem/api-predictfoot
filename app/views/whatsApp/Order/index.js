@@ -34,14 +34,13 @@ const orderCommander = async (user, msg, client) => {
 
 const sendStepMessage = async (client, phoneNumber) => {
     try {
-
         if (!orderStateManager.getCurrentState(phoneNumber)) {
             orderStateManager.initializeOrder(phoneNumber);
         }
         const response = await orderHandler.getStepMessage(phoneNumber);
         if (response && response.message) {
             await sendMessageToNumber(client, phoneNumber, response.message);
-        }   
+        }
     } catch (error) {
         await logService.addLog(
             `${error.message}`,
@@ -50,8 +49,7 @@ const sendStepMessage = async (client, phoneNumber) => {
         );
     }
 };
-
-
+ 
 module.exports = {
     orderCommander,
     sendStepMessage

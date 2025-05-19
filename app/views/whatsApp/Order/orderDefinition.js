@@ -1,50 +1,41 @@
-const {getAllPlans } = require('../../../services/plan.service');
+const { getAllPlans } = require('../../../services/plan.service');
+const { getServices } = require('../../../services/smobilpay/smobilpay.service');
 const { parsePhoneNumber } = require('libphonenumber-js');
 const { JSDOM } = require("jsdom");
 
-const countryConfigs = {
-    '237': {  // Cameroun
-        name: 'Cameroun',
-        regex: /^6[0-9]{8}$/,
-        operators: 'MTN, Orange, Express Union Finance',
-        message: 'Veuillez fournir votre numéro MTN, Orange ou Express Union Finance:'
-    },
-    '243': {  // RD Congo
-        name: 'RD Congo',
-        regex: /^0[89][0-9]{7}$/,
-        operators: 'Orange, Airtel, Africell',
-        message: 'Veuillez fournir votre numéro Orange, Airtel ou Africell:'
-    },
-    '221': {  // Sénégal
-        name: 'Sénégal',
-        regex: /^7[67,8][0-9]{7}$/,
-        operators: 'Orange',
-        message: 'Veuillez fournir votre numéro Orange:'
-    },
-    '231': {  // Libéria
-        name: 'Libéria',
-        regex: /^(88[68])[0-9]{6}$/,
-        operators: 'Lonestar Cell MTN',
-        message: 'Veuillez fournir votre numéro Lonestar Cell MTN:'
-    },
-    '229': {  // Bénin
-        name: 'Bénin',
-        regex: /^[59][1-9][0-9]{6}$/,
-        operators: 'MTN, Moov',
-        message: 'Veuillez fournir votre numéro MTN ou Moov:'
-    },
-    '242': {  // Congo Brazzaville
-        name: 'Congo Brazzaville',
-        regex: /^0[456][0-9]{7}$/,
-        operators: 'MTN, Airtel',
-        message: 'Veuillez fournir votre numéro MTN ou Airtel:'
-    },
-    '256': {  // Ouganda
-        name: 'Ouganda',
-        regex: /^7[578][0-9]{7}$/,
-        operators: 'Airtel, MTN',
-        message: 'Veuillez fournir votre numéro Airtel ou MTN:'
-    }
+// Mapping des codes pays aux codes pays Smobilpay
+const countryMapping = {
+    '237': 'CM',  // Cameroun
+    '241': 'GAB', // Gabon
+    '235': 'TCD', // Tchad
+    '236': 'RCA', // République Centrafricaine
+    '242': 'CG',  // Congo Brazzaville
+    // Vous pouvez ajouter d'autres pays si nécessaire
+};
+
+// Mapping des codes merchant vers des noms plus présentables
+const operatorNames = {
+    // Cameroun
+    'CMMTNMOMOCC': 'MTN Mobile Money',
+    'CMORANGEOMCC': 'Orange Money',
+    'CMEXPRESSUNIONCC': 'Express Union',
+    'CMYOOMEEMONEYCC': 'Yoomee Money',
+    
+    // Gabon
+    'GABMOOVMONEY': 'Moov Money (Gabon)',
+    'GABAIRTELMONEY': 'Airtel Money (Gabon)',
+    
+    // Tchad
+    'TCDMOOVMONEY': 'Moov Money (Tchad)',
+    
+    // République Centrafricaine
+    'RCAOM': 'Orange Money (RCA)',
+    
+    // Congo
+    'CGMTNCONGO': 'MTN Money (Congo)',
+    
+    // Valeur par défaut
+    'default': 'Mobile Money'
 };
 
 function stripHtml(html) {
@@ -52,48 +43,35 @@ function stripHtml(html) {
     return dom.window.document.body.textContent || "";
 }
 
-const generatePaymentMessage = (userPhoneNumber) => {
-    // Extraire l'indicatif (les 3 premiers chiffres après le +)
-    const countryCode = userPhoneNumber.substring(0, 3);
-    if (countryConfigs[countryCode]) {
-        return countryConfigs[countryCode].message;
-    }
-
-    // Identifier le pays
-    try {
-        const phoneInfo = parsePhoneNumber(userPhoneNumber);
-        if (phoneInfo && phoneInfo.country) {
-            countryName = new Intl.DisplayNames(['fr'], { type: 'region' }).of(phoneInfo.country);
-        }
-    } catch (error) {
-        // Silently handle error
-    }
-
-    // Message avec invitation à continuer
-    let message = 
-        `Le numéro WhatsApp que vous avez utilisé (${countryName}) n'est pas éligible. Cependant, vous pouvez utiliser un numéro Mobile Money d'un des opérateurs suivants :\n\n`;
-
-    Object.values(countryConfigs).forEach(country => {
-        message += `- ${country.name} (${country.operators})\n`;
-    });
-    message += "\nEntrez votre numéro Mobile Money d'un de ces operateurs pour continuer.";
+// Fonction pour obtenir un nom d'opérateur plus présentable
+function getOperatorDisplayName(service) {
+    if (!service || !service.merchant) return 'Mobile Money';
     
-    return message;
-};
-
-const validatePhoneNumber = (input, data) => {
-    // Vérifier si le numéro correspond à l'un des formats acceptés
-    const isValidForAnyCountry = Object.values(countryConfigs).some(
-        country => country.regex.test(input)
-    );
-
-    return {
-        isValid: isValidForAnyCountry,
-        message: isValidForAnyCountry ? 
-            'Numéro valide' : 
-            'Numéro Mobile Money invalide. Veuillez vérifier le format selon votre pays.'
-    };
-};
+    // Essayer de trouver le nom dans le mapping
+    if (operatorNames[service.merchant]) {
+        return operatorNames[service.merchant];
+    }
+    
+    // Si non trouvé dans le mapping, utiliser le nom du service si disponible
+    if (service.name && service.name !== 'Custom Amount') {
+        return service.name;
+    }
+    
+    // Dernier recours: extraire un nom de l'identifiant merchant
+    // Par exemple, transformer "CMMTNMOMOCC" en "MTN MOMO"
+    const merchantCode = service.merchant;
+    let extractedName = merchantCode.substring(2); // Enlever le code pays
+    
+    // Supprimer "CC" à la fin si présent
+    if (extractedName.endsWith('CC')) {
+        extractedName = extractedName.substring(0, extractedName.length - 2);
+    }
+    
+    // Insérer des espaces entre les mots (basé sur les majuscules)
+    extractedName = extractedName.replace(/([A-Z])/g, ' $1').trim();
+    
+    return extractedName;
+}
 
 const OrderStepDefinition = {
     steps: [
@@ -122,16 +100,88 @@ const OrderStepDefinition = {
             }
         },
         {
+            id: 'operatorSelection',
+            title: 'Sélection de l\'Opérateur',
+            type: 'operatorList',
+            message: async (data) => {
+                // Déterminer le pays basé sur le numéro WhatsApp de l'utilisateur
+                let countryCode = null;
+                try {
+                    const phoneInfo = parsePhoneNumber(data.user.phoneNumber);
+                    if (phoneInfo && phoneInfo.country) {
+                        const dialCode = phoneInfo.countryCallingCode;
+                        countryCode = countryMapping[dialCode];
+                    }
+                } catch (error) {
+                    // Gérer silencieusement l'erreur
+                }
+
+                // Si le pays n'est pas pris en charge, proposer tous les opérateurs
+                const services = await getServices(null, countryCode);
+                
+                if (services.length === 0) {
+                    return {
+                        text: "Aucun opérateur disponible pour votre pays. Veuillez contacter le support.",
+                        options: 0,
+                        services: []
+                    };
+                }
+
+                let text = "🔄 Sélectionnez votre opérateur de paiement :\n\n";
+                services.forEach((service, index) => {
+                    const displayName = getOperatorDisplayName(service);
+                    text += `${index + 1} - *${displayName}* , tapez ${index + 1}\n`;
+                });
+
+                return {
+                    text,
+                    options: services.length,
+                    services // Store services for reference
+                };
+            },
+            validator: (input, options) => {
+                const choice = parseInt(input);
+                return {
+                    isValid: choice > 0 && choice <= options,
+                    message: 'Veuillez choisir une option valide'
+                };
+            }
+        },
+        {
+            id: 'phoneNumber',
+            title: 'Numéro de téléphone',
+            type: 'phoneNumber',
+            message: (data) => {
+                const service = data.selectedOperator;
+                const displayName = getOperatorDisplayName(service);
+                return `📱 Veuillez entrer votre numéro ${displayName} pour effectuer le paiement:`;
+            },
+            validator: (input, data) => {
+                // Validation simple pour s'assurer que c'est un numéro
+                const isNumber = /^[0-9]{8,9}$/.test(input);
+                return {
+                    isValid: isNumber,
+                    message: isNumber ? 'Numéro valide' : 'Veuillez entrer un numéro valide (8 ou 9 chiffres)'
+                };
+            }
+        },
+        {
             id: 'confirmation',
             title: 'Confirmation',
             type: 'summary',
             message: async (data) => {
                 const plan = data.selectedPlan;
+                const service = data.selectedOperator;
+                const phoneNumber = data.phoneNumber;
                 const cleanDescription = stripHtml(plan.description);
-                return `📝 Récapitulatif de votre abonnement:\n\n` +
+                const displayName = getOperatorDisplayName(service);
+                
+                return `📝 Récapitulatif de votre commande:\n\n` +
                        `Forfait: ${plan.name}\n` +
                        `Description: ${cleanDescription}\n` +
-                       `Prix: ${plan.price} XAF\n\n` +
+                       `Prix: ${plan.price} XAF\n` +
+                       `Opérateur: ${displayName}\n` +
+                       `Numéro: ${phoneNumber}\n\n` +
                        `Confirmez-vous la souscription ?\n` +
                        `Répondez par *Oui* ou *Non*`;
             },
@@ -139,13 +189,6 @@ const OrderStepDefinition = {
                 isValid: ['oui', 'non'].includes(input.toLowerCase()),
                 message: 'Veuillez répondre par Oui ou Non'
             })
-        },
-        { 
-            id: 'payment',
-            title: 'Paiement',
-            type: 'phoneNumber',
-            message: (data) => generatePaymentMessage(data.user.phoneNumber),
-            validator: validatePhoneNumber
         }
     ]
 };

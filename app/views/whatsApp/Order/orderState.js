@@ -2,7 +2,7 @@ class OrderStateManager {
     constructor() {
         this.orders = new Map();
     }
-
+    
     initializeOrder(phoneNumber, initialData = {}) {
         this.orders.set(phoneNumber, {
             step: 0,
@@ -10,11 +10,11 @@ class OrderStateManager {
             timestamp: Date.now()
         });
     }
-
+    
     getCurrentState(phoneNumber) {
         return this.orders.get(phoneNumber);
     }
-
+    
     updateOrderData(phoneNumber, data) {
         const currentOrder = this.orders.get(phoneNumber);
         if (currentOrder) {
@@ -25,7 +25,7 @@ class OrderStateManager {
             });
         }
     }
-
+    
     setStep(phoneNumber, step) {
         const order = this.orders.get(phoneNumber);
         if (order) {
@@ -33,7 +33,7 @@ class OrderStateManager {
             this.orders.set(phoneNumber, order);
         }
     }
-
+    
     resetOrder(phoneNumber) {
         const currentOrder = this.orders.get(phoneNumber);
         if (currentOrder) {
@@ -42,6 +42,5 @@ class OrderStateManager {
         }
     }
 }
-
-
+ 
 module.exports = OrderStateManager;
