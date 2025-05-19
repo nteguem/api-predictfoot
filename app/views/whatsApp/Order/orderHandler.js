@@ -7,7 +7,8 @@ const { sendMessageToNumber, replyToMessage, sendMediaToNumber } = require('../.
 const { fillPdfFields } = require("../../../services/fillFormPdf.service");
 const userService = require("../../../services/user.service");
 const moment = require("moment");
-const pathInvoice = "../../../templates-pdf/invoice.pdf";
+const path = require('path');
+const pathInvoice = path.join(__dirname, '../../../templates-pdf/invoice.pdf');
 
 const NAVIGATION_SUFFIX = "\n\n_Tapez * pour revenir en arrière, # pour revenir au menu principal._";
 
