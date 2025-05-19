@@ -4,6 +4,9 @@ const { v4: uuidv4 } = require('uuid');
 const crypto = require('crypto');
 const SmobilpayTransaction = require('../../models/smobilpay-transaction.model');
 const Plan = require('../../models/plan.model');
+const User = require('../../models/user.model');
+const { sendDeviceNotification } = require('../../services/notification.service');
+const moment = require('moment');
 const Subscription = require('../../models/subscription.model');
 const Wallet = require('../../models/wallet.model');
 const { addLog } = require('../../services/log.service');
@@ -546,6 +549,48 @@ async function checkTransactionStatus(paymentId) {
                     // Créer la souscription
                     await createSubscription(smobilpayTransaction);
                     
+                    // Envoyer une notification mobile si fcmToken est disponible
+                    try {
+                        // Charger les données complètes de l'utilisateur et du plan
+                        const user = await User.findById(smobilpayTransaction.user);
+                        const plan = await Plan.findById(smobilpayTransaction.plan);
+                        
+                        if (user && user.fcmToken) {
+                            // Préparer la notification                
+                            const currentDate = moment().format('dddd D MMMM YYYY');
+                            const expire = moment().add(plan.duration, 'days').format('dddd D MMMM YYYY');
+                            
+                            const notificationData = {
+                                title: '🌟 Pronos PREMIUM Activés !',
+                                body: [
+                                    `Forfait actif pour ${plan.duration} jours.`,
+                                    '👉 APPUYEZ pour voir vos pronos premium !'
+                                ].join('\n'),
+                                data: {
+                                    type: 'subscription_notification',
+                                    subscriptionId: smobilpayTransaction.paymentId,
+                                    packageType: 'VIP',
+                                    user: JSON.stringify(user),
+                                    startDate: currentDate,
+                                    expiryDate: expire,
+                                    features: [
+                                        'predictions_vip',
+                                    ].join(','),
+                                    status: 'active',
+                                    price: String(plan.price),
+                                    currency: 'XAF'
+                                }
+                            };
+                            
+                            await sendDeviceNotification(user.fcmToken, notificationData);
+                            console.log(`Mobile notification sent to user ${user._id}`);
+                        }
+                    } catch (notificationError) {
+                        console.error(`Error sending notification: ${notificationError.message}`);
+                        await addLog(`Error sending notification: ${notificationError.message}`, 'SmobilpayService.checkTransactionStatus', 'error');
+                        // Ne pas bloquer le processus si l'envoi de notification échoue
+                    }
+                    
                     // Marquer comme traitée
                     smobilpayTransaction.processed = true;
                     await smobilpayTransaction.save();
@@ -581,6 +626,7 @@ async function checkTransactionStatus(paymentId) {
         throw error;
     }
 }
+
 // Traitement du webhook (callback)
 async function processWebhook(webhookData) {
     try {
