@@ -3,18 +3,106 @@ const logService = require('../../../services/log.service');
 const { initiatePayment, checkTransactionStatus } = require('../../../services/smobilpay/smobilpay.service');
 const { getMainMenu } = require("../../../data"); 
 const OrderStateManager = require('./orderState');
+const { sendMessageToNumber, replyToMessage } = require('../../whatsApp/whatsappMessaging');
 
 class OrderHandler {
     constructor(stateManager = new OrderStateManager()) {
         this.stateManager = stateManager;
         this.definition = OrderStepDefinition;
+        this.client = null;
     }
     
     async handleMessage(msg, client, user) {
         try {
             const phoneNumber = user.data.phoneNumber;
             const input = msg.body;
+            this.client = client; // Stocker le client pour l'utiliser plus tard
             this.stateManager.updateOrderData(phoneNumber, {user: user.data});
+
+            // Initialize subscription state if needed
+            let currentState = this.stateManager.getCurrentState(phoneNumber);
+            if (!currentState) {
+                this.stateManager.initializeOrder(phoneNumber, { user: user.data });
+                currentState = this.stateManager.getCurrentState(phoneNumber);
+            }
+
+            // Vérifier si nous attendons une réponse pour la vérification manuelle
+            if (currentState.data.pendingVerification === true) {
+                // Récupérer le paymentId stocké précédemment
+                const paymentId = currentState.data.pendingPaymentId;
+                
+                // Quelle que soit la réponse (oui ou non), vérifier le statut réel du paiement
+                try {
+                    // Vérifier le statut du paiement
+                    const verificationResult = await checkTransactionStatus(paymentId);
+                    const transaction = verificationResult.transaction;
+                    
+                    // Vérifier si le paiement a réussi
+                    if (transaction.status === 'SUCCESS') {
+                        // Paiement réussi
+                        const plan = currentState.data.selectedPlan;
+                        const message = `🎉 Félicitations! Votre paiement a été confirmé.\n\n` +
+                                      `✅ Votre forfait *${plan.name}* est maintenant actif.\n` +
+                                      `⏱️ Durée: ${plan.duration} jours\n` +
+                                      `💰 Montant payé: ${transaction.amount} ${transaction.currency}\n\n` +
+                                      `Vous allez maintenant recevoir nos pronostics VIP. Bonne chance!`;
+                        
+                        // Réinitialiser la commande
+                        this.stateManager.resetOrder(phoneNumber);
+                        
+                        return {
+                            type: 'COMPLETE',
+                            message: message
+                        };
+                    } else {
+                        // Paiement non réussi
+                        let statusMessage;
+                        switch(transaction.status) {
+                            case 'PENDING':
+                                statusMessage = "Votre paiement est toujours en attente de confirmation.";
+                                break;
+                            case 'FAILED':
+                                statusMessage = "Votre paiement a échoué. Cela peut être dû à des fonds insuffisants ou à un problème de réseau.";
+                                break;
+                            case 'CANCELLED':
+                                statusMessage = "Votre paiement a été annulé.";
+                                break;
+                            default:
+                                statusMessage = `Statut du paiement: ${transaction.status}`;
+                        }
+                        
+                        const message = `❌ Le paiement n'a pas été validé.\n\n` +
+                                      `${statusMessage}\n\n` +
+                                      `Vous pouvez réessayer en sélectionnant à nouveau un forfait.`;
+                        
+                        // Réinitialiser la commande
+                        this.stateManager.resetOrder(phoneNumber);
+                        
+                        return {
+                            type: 'ERROR',
+                            message: message
+                        };
+                    }
+                } catch (error) {
+                    // Erreur lors de la vérification
+                    await logService.addLog(
+                        `Error verifying payment: ${error.message}`,
+                        'OrderHandler.handleMessage.verification',
+                        'error'
+                    );
+                    
+                    const message = `❌ Une erreur est survenue lors de la vérification du paiement.\n\n` +
+                                  `Vous pouvez réessayer ultérieurement ou contacter le support.`;
+                    
+                    // Réinitialiser la commande
+                    this.stateManager.resetOrder(phoneNumber);
+                    
+                    return {
+                        type: 'ERROR',
+                        message: message
+                    };
+                }
+            }
 
             // Handle reset command
             if (input === '#') {
@@ -23,13 +111,6 @@ class OrderHandler {
                     type: 'RESET',
                     message: await getMainMenu(false, phoneNumber)
                 };
-            }
-
-            // Initialize subscription state if needed
-            let currentState = this.stateManager.getCurrentState(phoneNumber);
-            if (!currentState) {
-                this.stateManager.initializeOrder(phoneNumber, { user: user.data });
-                currentState = this.stateManager.getCurrentState(phoneNumber);
             }
 
             // Handle back navigation
@@ -140,6 +221,31 @@ class OrderHandler {
         return `Étape ${step + 1}/${this.definition.steps.length}\n\n${message}${navigationHelp}`;
     }
 
+    async verifyPaymentManually(client, phoneNumber, paymentId) {
+        try {
+            // Attendre 5 secondes avant d'envoyer le message
+            await new Promise(resolve => setTimeout(resolve, 5000));
+            
+            // Envoyer un message pour demander la confirmation
+            await sendMessageToNumber(client, phoneNumber, 
+                "Avez-vous payé le forfait? Répondez par *Oui* ou *Non*");
+            
+            // Nous allons gérer la réponse dans une autre fonction
+            // La réponse sera traitée par handleMessage, mais nous allons
+            // stocker le paymentId dans l'état pour pouvoir le récupérer plus tard
+            this.stateManager.updateOrderData(phoneNumber, { 
+                pendingVerification: true,
+                pendingPaymentId: paymentId 
+            });
+        } catch (error) {
+            await logService.addLog(
+                `Error sending manual verification message: ${error.message}`,
+                'OrderHandler.verifyPaymentManually',
+                'error'
+            );
+        }
+    }
+
     async processCompletedOrder(phoneNumber) {
         const state = this.stateManager.getCurrentState(phoneNumber);
         const orderData = state.data;
@@ -159,26 +265,32 @@ class OrderHandler {
             const paymentResult = await initiatePayment(paymentData);
             
             // Enregistrer l'ID de paiement pour la vérification ultérieure
+            const paymentId = paymentResult.transaction.paymentId;
             this.stateManager.updateOrderData(phoneNumber, { 
-                paymentId: paymentResult.transaction.paymentId,
+                paymentId: paymentId,
                 ptn: paymentResult.transaction.ptn
             });
             
             // Message de succès avec instructions
             let message = `✅ Votre paiement a été initié avec succès!\n\n` +
-                        `🔢 Référence: ${paymentResult.transaction.ptn || paymentResult.transaction.paymentId}\n` +
+                        `🔢 Référence: ${paymentResult.transaction.ptn || paymentId}\n` +
                         `💰 Montant: ${paymentResult.transaction.amount} ${paymentResult.transaction.currency}\n\n` +
                         `📱 Veuillez suivre les instructions sur votre téléphone pour confirmer le paiement.\n` +
                         `Une fois confirmé, votre abonnement sera activé automatiquement.`;
-            
-            // Réinitialiser la commande
-            this.stateManager.resetOrder(phoneNumber);
             
             await logService.addLog(
                 `Payment initiated successfully for user ${orderData.user._id}, amount: ${paymentResult.transaction.amount}`,
                 'OrderHandler.processCompletedOrder',
                 'info'
             );
+            
+            // Planifier la vérification manuelle
+            setTimeout(() => {
+                this.verifyPaymentManually(this.client, phoneNumber, paymentId);
+            }, 5000);
+            
+            // Nous ne réinitialisons PAS la commande tout de suite
+            // this.stateManager.resetOrder(phoneNumber);
             
             return {
                 type: 'COMPLETE',
