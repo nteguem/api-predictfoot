@@ -3,7 +3,13 @@ const logService = require('../../../services/log.service');
 const { initiatePayment, checkTransactionStatus } = require('../../../services/smobilpay/smobilpay.service');
 const { getMainMenu } = require("../../../data"); 
 const OrderStateManager = require('./orderState');
-const { sendMessageToNumber, replyToMessage } = require('../../whatsApp/whatsappMessaging');
+const { sendMessageToNumber, replyToMessage, sendMediaToNumber } = require('../../whatsApp/whatsappMessaging');
+const { fillPdfFields } = require("../../../services/fillFormPdf.service");
+const userService = require("../../../services/user.service");
+const moment = require("moment");
+const pathInvoice = "../../../templates-pdf/invoice.pdf";
+
+const NAVIGATION_SUFFIX = "\n\n_Tapez * pour revenir en arrière, # pour revenir au menu principal._";
 
 class OrderHandler {
     constructor(stateManager = new OrderStateManager()) {
@@ -26,86 +32,109 @@ class OrderHandler {
                 currentState = this.stateManager.getCurrentState(phoneNumber);
             }
 
-            // Vérifier si nous attendons une réponse pour la vérification manuelle
-            if (currentState.data.pendingVerification === true) {
-                // Récupérer le paymentId stocké précédemment
-                const paymentId = currentState.data.pendingPaymentId;
-                
-                // Quelle que soit la réponse (oui ou non), vérifier le statut réel du paiement
-                try {
-                    // Vérifier le statut du paiement
-                    const verificationResult = await checkTransactionStatus(paymentId);
-                    const transaction = verificationResult.transaction;
-                    
-                    // Vérifier si le paiement a réussi
-                    if (transaction.status === 'SUCCESS') {
-                        // Paiement réussi
+            // Vérifier si nous avons un paiement en attente
+            if (currentState.data.pendingPayment === true) {
+                // Si l'utilisateur a répondu "oui" ou "non", vérifier le paiement
+                if (["OUI", "NON", "oui", "non"].includes(input.toLowerCase())) {
+                    try {
+                        const paymentId = currentState.data.paymentId;
                         const plan = currentState.data.selectedPlan;
-                        const message = `🎉 Félicitations! Votre paiement a été confirmé.\n\n` +
-                        `✅ Votre forfait *${plan.name}* est maintenant actif.\n` +
-                        `⏱️ Durée: ${plan.duration} jours\n` +
-                        `💰 Montant payé: ${transaction.amount} ${transaction.currency}\n\n` +
-                        `Pour consulter vos pronostics VIP:\n` +
-                        `1️⃣ Tapez *#* pour revenir au menu principal\n` +
-                        `2️⃣ Puis tapez *1* pour accéder aux Prédictions du Jour\n` +
-                        `3️⃣ Enfin tapez *2* pour voir vos Prédictions VIP\n\n` +
-                        `Vous pouvez également ouvrir l'application et aller directement à la section VIP.\n\n` +
-                        `Bonne chance! 🍀`;
                         
-                        // Réinitialiser la commande
-                        this.stateManager.resetOrder(phoneNumber);
+                        // Informer l'utilisateur que nous vérifions
+                        await sendMessageToNumber(client, phoneNumber, "⏳ Vérification en cours...");
                         
-                        return {
-                            type: 'COMPLETE',
-                            message: message
-                        };
-                    } else {
-                        // Paiement non réussi
-                        let statusMessage;
-                        switch(transaction.status) {
-                            case 'PENDING':
-                                statusMessage = "Votre paiement est toujours en attente de confirmation.";
-                                break;
-                            case 'FAILED':
-                                statusMessage = "Votre paiement a échoué. Cela peut être dû à des fonds insuffisants ou à un problème de réseau.";
-                                break;
-                            case 'CANCELLED':
-                                statusMessage = "Votre paiement a été annulé.";
-                                break;
-                            default:
-                                statusMessage = `Statut du paiement: ${transaction.status}`;
+                        // Vérifier le statut du paiement
+                        const verificationResult = await checkTransactionStatus(paymentId);
+                        const transaction = verificationResult.transaction;
+                        
+                        // Vérifier si le paiement a réussi
+                        if (transaction.status === 'SUCCESS') {
+                            // Paiement réussi
+                            const successMessage = `🎉 Félicitations! Votre paiement a été confirmé.\n\n` +
+                                         `✅ Votre forfait *${plan.name}* est maintenant actif.\n` +
+                                         `⏱️ Durée: ${plan.duration} jours\n` +
+                                         `💰 Montant payé: ${transaction.amount} ${transaction.currency}\n\n` +
+                                         `Pour consulter vos pronostics VIP:\n` +
+                                         `1️⃣ Tapez *#* pour revenir au menu principal\n` +
+                                         `2️⃣ Puis tapez *1* pour accéder aux Prédictions du Jour\n` +
+                                         `3️⃣ Enfin tapez *2* pour voir vos Prédictions VIP\n\n` +
+                                         `Vous pouvez également ouvrir l'application et aller directement à la section VIP.\n\n` +
+                                         `Bonne chance! 🍀`;
+                            
+                            // Générer et envoyer la facture
+                            await this.generateAndSendInvoice(
+                                client, 
+                                user.data, 
+                                plan, 
+                                transaction, 
+                                successMessage
+                            );
+                            
+                            // Réinitialiser l'état
+                            this.stateManager.resetOrder(phoneNumber);
+                            
+                            // Ne pas retourner de message car nous avons déjà envoyé la facture
+                            return null;
+                        } else if (transaction.status === 'PENDING') {
+                            // Paiement toujours en attente
+                            const message = `⏳ Votre paiement est toujours en attente de confirmation.\n\n` +
+                                         `Cela peut prendre quelques instants pour être traité par l'opérateur.\n\n` +
+                                         `Vous pouvez continuer à vérifier l'état de votre paiement en répondant *Oui* quand vous avez confirmé le paiement sur votre téléphone, ou *Non* si vous rencontrez des difficultés.\n\n` +
+                                         `Vous pouvez également taper *#* à tout moment pour revenir au menu principal.`;
+                            
+                            // Garder l'état de paiement en attente
+                            this.stateManager.updateOrderData(phoneNumber, { 
+                                pendingPayment: true,
+                                paymentId: paymentId,
+                                lastChecked: new Date()
+                            });
+                            
+                            return {
+                                type: 'PROMPT',
+                                message: message
+                            };
+                        } else {
+                            // Paiement échoué ou annulé
+                            let statusMessage;
+                            switch(transaction.status) {
+                                case 'FAILED':
+                                    statusMessage = "Votre paiement a échoué. Cela peut être dû à des fonds insuffisants ou à un problème de réseau.";
+                                    break;
+                                case 'CANCELLED':
+                                    statusMessage = "Votre paiement a été annulé.";
+                                    break;
+                                default:
+                                    statusMessage = `Statut du paiement: ${transaction.status}`;
+                            }
+                            
+                            const message = `❌ Le paiement n'a pas été validé.\n\n` +
+                            `${statusMessage}\n\n` +
+                            `Tapez * pour revenir en arrière, # pour revenir au menu principal.`;
+              
+                            // Réinitialiser l'état
+                            this.stateManager.resetOrder(phoneNumber);
+                            
+                            return {
+                                type: 'ERROR',
+                                message: message
+                            };
                         }
+                    } catch (error) {
+                        await logService.addLog(
+                            `Error verifying payment: ${error.message}`,
+                            'OrderHandler.handleMessage.verification',
+                            'error'
+                        );
                         
-                        const message = `❌ Le paiement n'a pas été validé.\n\n` +
-                                      `${statusMessage}\n\n` +
-                                      `Tapez * pour revenir en arrière, # pour revenir au menu principal.`;
+                        const message = `❌ Une erreur est survenue lors de la vérification du paiement.\n\n` +
+                                     `Vous pouvez réessayer ultérieurement ou contacter le support.`;
                         
-                        // Réinitialiser la commande
-                        this.stateManager.resetOrder(phoneNumber);
-                        
+                        // Ne pas réinitialiser l'état, permettre à l'utilisateur de réessayer
                         return {
                             type: 'ERROR',
-                            message: message
+                            message: message + `\n\nVous pouvez répondre *Oui* pour vérifier à nouveau, ou taper *#* pour revenir au menu principal.`
                         };
                     }
-                } catch (error) {
-                    // Erreur lors de la vérification
-                    await logService.addLog(
-                        `Error verifying payment: ${error.message}`,
-                        'OrderHandler.handleMessage.verification',
-                        'error'
-                    );
-                    
-                    const message = `❌ Une erreur est survenue lors de la vérification du paiement.\n\n` +
-                                  `Vous pouvez réessayer ultérieurement ou contacter le support.`;
-                    
-                    // Réinitialiser la commande
-                    this.stateManager.resetOrder(phoneNumber);
-                    
-                    return {
-                        type: 'ERROR',
-                        message: message
-                    };
                 }
             }
 
@@ -226,21 +255,84 @@ class OrderHandler {
         return `Étape ${step + 1}/${this.definition.steps.length}\n\n${message}${navigationHelp}`;
     }
 
+    async generateAndSendInvoice(client, user, plan, transaction, successMessage) {
+        try {
+            // Préparation des données pour la facture
+            const currentDate = moment().format('dddd D MMMM YYYY');
+            const currentTime = moment().format('HH:mm:ss');
+            const expire = moment().add(plan?.duration, 'days').format('dddd D MMMM YYYY');
+            
+            const invoiceData = {
+                date: currentDate,
+                pseudo: user?.pseudo,
+                forfait: plan?.name,
+                phonenumber: transaction.phoneNumber || user.phoneNumber,
+                heure: currentTime,
+                expire,
+                transaction_id: transaction.paymentId,
+                prix: plan?.price.toString(),
+                whatsapp: user.phoneNumber.toString()
+            };
+            
+            // Génération de la facture PDF
+            const pdfBufferInvoice = await fillPdfFields(pathInvoice, invoiceData);
+            const pdfBase64Invoice = pdfBufferInvoice.toString('base64');
+            const pdfNameInvoice = `Invoice_${user.phoneNumber}`;
+            const documentType = 'application/pdf';
+            
+            // Envoi de la facture au client
+            await sendMediaToNumber(
+                client, 
+                user.phoneNumber, 
+                documentType, 
+                pdfBase64Invoice, 
+                pdfNameInvoice, 
+                successMessage
+            );
+            
+            // Notification aux administrateurs
+            const { users: admins } = await userService.list("admin");
+            const adminMessage = 
+                `Un client (${user.pseudo || user.phoneNumber}) a effectué un achat de ${plan.price} XAF pour le forfait ${plan.name}. ` +
+                `Veuillez trouver la facture en pièce jointe.${NAVIGATION_SUFFIX}`;
+            
+            for (const admin of admins) {
+                await sendMediaToNumber(client, admin.phoneNumber, documentType, pdfBase64Invoice, pdfNameInvoice);
+                await sendMessageToNumber(client, admin.phoneNumber, adminMessage);
+            }
+            
+            await logService.addLog(
+                `Invoice generated and sent successfully for user ${user._id || user.phoneNumber}`,
+                'OrderHandler.generateAndSendInvoice',
+                'info'
+            );
+            
+        } catch (error) {
+            await logService.addLog(
+                `Error generating and sending invoice: ${error.message}`,
+                'OrderHandler.generateAndSendInvoice',
+                'error'
+            );
+            
+            // En cas d'erreur, envoyer quand même le message de succès au client
+            await sendMessageToNumber(client, user.phoneNumber, successMessage);
+        }
+    }
+
     async verifyPaymentManually(client, phoneNumber, paymentId) {
         try {
-            // Attendre 5 secondes avant d'envoyer le message
-            await new Promise(resolve => setTimeout(resolve, 8000));
+            // Attendre 16 secondes avant d'envoyer le message
+            await new Promise(resolve => setTimeout(resolve, 16000));
             
             // Envoyer un message pour demander la confirmation
             await sendMessageToNumber(client, phoneNumber, 
                 "Avez-vous payé le forfait? Répondez par *Oui* ou *Non*");
             
-            // Nous allons gérer la réponse dans une autre fonction
-            // La réponse sera traitée par handleMessage, mais nous allons
-            // stocker le paymentId dans l'état pour pouvoir le récupérer plus tard
+            // Mettre à jour l'état pour indiquer que nous avons un paiement en attente
             this.stateManager.updateOrderData(phoneNumber, { 
-                pendingVerification: true,
-                pendingPaymentId: paymentId 
+                pendingPayment: true,
+                paymentId: paymentId,
+                lastChecked: new Date()
             });
         } catch (error) {
             await logService.addLog(
@@ -292,7 +384,7 @@ class OrderHandler {
             // Planifier la vérification manuelle
             setTimeout(() => {
                 this.verifyPaymentManually(this.client, phoneNumber, paymentId);
-            }, 8000);
+            }, 16000);
             
             // Nous ne réinitialisons PAS la commande tout de suite
             // this.stateManager.resetOrder(phoneNumber);
@@ -309,13 +401,13 @@ class OrderHandler {
                 'error'
             );
             
-            let errorMessage = "❌ Le paiement n'a pas pu être effectué.\n\n "+error.message;
+            let errorMessage = "❌ Le paiement n'a pas pu être effectué.\n\n";
             
             // Si c'est une erreur Smobilpay, utiliser le message d'erreur convivial
             if (error.name === 'SmobilpayError' && error.responseData && error.responseData.usrMsg) {
                 errorMessage += `Message: ${error.responseData.usrMsg}\n`;
             } else {
-                errorMessage += "\n\nUne erreur technique s'est produite. Veuillez réessayer plus tard.";
+                errorMessage += "Une erreur technique s'est produite. Veuillez réessayer plus tard.";
             }
             
             // Réinitialiser la commande
