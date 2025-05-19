@@ -42,10 +42,15 @@ class OrderHandler {
                         // Paiement réussi
                         const plan = currentState.data.selectedPlan;
                         const message = `🎉 Félicitations! Votre paiement a été confirmé.\n\n` +
-                                      `✅ Votre forfait *${plan.name}* est maintenant actif.\n` +
-                                      `⏱️ Durée: ${plan.duration} jours\n` +
-                                      `💰 Montant payé: ${transaction.amount} ${transaction.currency}\n\n` +
-                                      `Vous allez maintenant recevoir nos pronostics VIP. Bonne chance!`;
+                        `✅ Votre forfait *${plan.name}* est maintenant actif.\n` +
+                        `⏱️ Durée: ${plan.duration} jours\n` +
+                        `💰 Montant payé: ${transaction.amount} ${transaction.currency}\n\n` +
+                        `Pour consulter vos pronostics VIP:\n` +
+                        `1️⃣ Tapez *#* pour revenir au menu principal\n` +
+                        `2️⃣ Puis tapez *1* pour accéder aux Prédictions du Jour\n` +
+                        `3️⃣ Enfin tapez *2* pour voir vos Prédictions VIP\n\n` +
+                        `Vous pouvez également ouvrir l'application et aller directement à la section VIP.\n\n` +
+                        `Bonne chance! 🍀`;
                         
                         // Réinitialiser la commande
                         this.stateManager.resetOrder(phoneNumber);
@@ -73,7 +78,7 @@ class OrderHandler {
                         
                         const message = `❌ Le paiement n'a pas été validé.\n\n` +
                                       `${statusMessage}\n\n` +
-                                      `Vous pouvez réessayer en sélectionnant à nouveau un forfait.`;
+                                      `Tapez * pour revenir en arrière, # pour revenir au menu principal.`;
                         
                         // Réinitialiser la commande
                         this.stateManager.resetOrder(phoneNumber);
@@ -224,7 +229,7 @@ class OrderHandler {
     async verifyPaymentManually(client, phoneNumber, paymentId) {
         try {
             // Attendre 5 secondes avant d'envoyer le message
-            await new Promise(resolve => setTimeout(resolve, 5000));
+            await new Promise(resolve => setTimeout(resolve, 8000));
             
             // Envoyer un message pour demander la confirmation
             await sendMessageToNumber(client, phoneNumber, 
@@ -287,7 +292,7 @@ class OrderHandler {
             // Planifier la vérification manuelle
             setTimeout(() => {
                 this.verifyPaymentManually(this.client, phoneNumber, paymentId);
-            }, 5000);
+            }, 8000);
             
             // Nous ne réinitialisons PAS la commande tout de suite
             // this.stateManager.resetOrder(phoneNumber);
@@ -304,13 +309,13 @@ class OrderHandler {
                 'error'
             );
             
-            let errorMessage = "❌ Le paiement n'a pas pu être effectué.\n\n";
+            let errorMessage = "❌ Le paiement n'a pas pu être effectué.\n\n "+error.message;
             
             // Si c'est une erreur Smobilpay, utiliser le message d'erreur convivial
             if (error.name === 'SmobilpayError' && error.responseData && error.responseData.usrMsg) {
                 errorMessage += `Message: ${error.responseData.usrMsg}\n`;
             } else {
-                errorMessage += "Une erreur technique s'est produite. Veuillez réessayer plus tard.";
+                errorMessage += "\n\nUne erreur technique s'est produite. Veuillez réessayer plus tard.";
             }
             
             // Réinitialiser la commande

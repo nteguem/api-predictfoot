@@ -12,7 +12,6 @@ const { listPredictions, listLastTenDaysPredictions } = require("../../services/
 const { generateImage } = require("../../services/generateImagePredict.service");
 const { verifyUserVip, listSubscriptions } = require("../../services/subscription.service");
 const { orderCommander, sendStepMessage } = require("./Order");
-const { requestPaiement } = require('../../services/monetbil.service');
 const {sendDeviceNotification} = require('../../services/notification.service');
 const moment = require("moment");
 const fetch = require('node-fetch');
@@ -349,18 +348,21 @@ const UserCommander = async (user, msg, client) => {
           switch (msg.body.toUpperCase()) {
             case "OUI":
               try {
-                const paymentResult = await requestPaiement(
-                  user.data,
-                  Steps[user.data.phoneNumber].pendingOrder.mobileMoneyPhone,
-                  Steps[user.data.phoneNumber].pendingOrder.plan,
-                  Steps[user.data.phoneNumber].pendingOrder.fcmToken,
-                );
-                await sendMessageToNumber(client, user.data.phoneNumber,
-                  paymentResult
-                );
-                reset(user);
+                // Stocker les informations nécessaires dans Steps pour que orderHandler les utilise
+                const orderData = Steps[user.data.phoneNumber].pendingOrder;
+                
+                // Configurer l'état pour le processus de commande
+                Steps[user.data.phoneNumber] = {
+                  currentMenu: "orderMenu",
+                  selectedPlan: orderData.plan,
+                  phoneNumber: orderData.mobileMoneyPhone,
+                  user: user.data
+                };
+                
+                // Rediriger vers orderCommander qui prendra le relais pour le processus de paiement
+                await sendStepMessage(client, user.data.phoneNumber);
               } catch (error) {
-                console.error('Error processing payment:', error);
+                console.error('Error redirecting to payment process:', error);
                 await sendMessageToNumber(client, user.data.phoneNumber,
                   "❌ Une erreur est survenue lors du traitement du paiement.\n" +
                   "Veuillez réessayer ou contacter le support.\n\n" +
