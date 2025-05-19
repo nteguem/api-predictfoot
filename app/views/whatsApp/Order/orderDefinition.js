@@ -73,6 +73,19 @@ function getOperatorDisplayName(service) {
     return extractedName;
 }
 
+// Fonction pour déterminer le code pays à partir du numéro de téléphone
+function getCountryCodeFromPhoneNumber(phoneNumber) {
+    // Si le numéro commence par +, l'enlever
+    let cleanNumber = phoneNumber;
+    if (cleanNumber.startsWith('+')) {
+        cleanNumber = cleanNumber.substring(1);
+    }
+    
+    // Vérifier les 3 premiers chiffres pour déterminer le pays
+    const prefix = cleanNumber.substring(0, 3);
+    return countryMapping[prefix] || null;
+}
+
 const OrderStepDefinition = {
     steps: [
         {
@@ -106,17 +119,15 @@ const OrderStepDefinition = {
             message: async (data) => {
                 // Déterminer le pays basé sur le numéro WhatsApp de l'utilisateur
                 let countryCode = null;
-                try {
-                    const phoneInfo = parsePhoneNumber(data.user.phoneNumber);
-                    if (phoneInfo && phoneInfo.country) {
-                        const dialCode = phoneInfo.countryCallingCode;
-                        countryCode = countryMapping[dialCode];
-                    }
-                } catch (error) {
-                    // Gérer silencieusement l'erreur
+                
+                // Utiliser directement les 3 premiers chiffres du numéro pour déterminer le pays
+                if (data.user && data.user.phoneNumber) {
+                    countryCode = getCountryCodeFromPhoneNumber(data.user.phoneNumber);
                 }
 
-                // Si le pays n'est pas pris en charge, proposer tous les opérateurs
+                console.log(`Détection pays: Numéro ${data.user.phoneNumber}, Code pays détecté: ${countryCode}`);
+                
+                // Récupérer les services pour ce pays spécifique
                 const services = await getServices(null, countryCode);
                 
                 if (services.length === 0) {
