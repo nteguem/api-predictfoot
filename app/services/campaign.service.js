@@ -12,7 +12,7 @@ const fetch = require('node-fetch');
 let tasks = {};
 async function createCampaign(campaignData, client) {
   try {
-    const hasDuplicates = new Set(campaignData.ref_groups).size !== campaignData.ref_groups.length;
+    const hasDuplicates = new Set(campaignData?.ref_groups).size !== campaignData?.ref_groups?.length;
     const newCampaign = new Campaign(campaignData);
     if(hasDuplicates)    
     {
