@@ -32,7 +32,7 @@ class NotificationController {
 
   static async sendTopicNotification(req, res, client) {
     const { topic, ...notificationData } = req.body;
-    const response = await NotificationService.sendTopicNotification(topic, notificationData, client);
+    const response = await NotificationService.sendTopicNotification(topic, notificationData);
     
     if (response.success) {
       return ResponseService.created(res, {
