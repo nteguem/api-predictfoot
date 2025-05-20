@@ -14,10 +14,7 @@ async function createCampaign(campaignData, client) {
   try {
     const hasDuplicates = new Set(campaignData?.ref_groups).size !== campaignData?.ref_groups?.length;
     const newCampaign = new Campaign(campaignData);
-    if(hasDuplicates)    
-    {
-        return { success: false, error: "La création d'une campagne avec des groupes identiques n'est pas autorisée." };
-    }
+   
     const resultSave =  await newCampaign.save();
     if(resultSave.type === "Instantly")
     {
