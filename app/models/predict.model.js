@@ -3,8 +3,8 @@ const NotificationService = require('../services/notification.service');
 
 const PredictSchema = new mongoose.Schema({
   country: {
-    logo: { 
-      type: String, 
+    logo: {
+      type: String,
       default: "https://media.api-sports.io/football/teams/24051.png",
       set: (v) => v || "https://media.api-sports.io/football/teams/24051.png"
     },
@@ -34,10 +34,10 @@ const PredictSchema = new mongoose.Schema({
       fulltime: { type: String, default: null }
     }
   },
-  iswin: { type: Boolean, default: false }, 
+  iswin: { type: Boolean, default: false },
   prediction: { type: Object, required: true },
   coast: { type: Number, required: true },
-  author: { type: String},
+  author: { type: String },
   isVisible: { type: Boolean, default: false },
   isWhatapp: { type: Boolean, default: false },
   isVip: { type: Boolean, default: false },
@@ -48,8 +48,8 @@ const PredictSchema = new mongoose.Schema({
 });
 
 // Fonction pour vérifier et définir isWin en fonction de la prédiction
-PredictSchema.post('findOneAndUpdate', async function(doc) {
-  const { fixture,prediction } = doc; // Obtenir le document mis à jour
+PredictSchema.post('findOneAndUpdate', async function (doc) {
+  const { fixture, prediction } = doc; // Obtenir le document mis à jour
   const { score } = fixture || {}; // Accéder à score et prediction
   if (!score || !score.fulltime) {
     return; // Si fulltime n'est pas défini, ne rien faire
@@ -141,13 +141,20 @@ PredictSchema.post('findOneAndUpdate', async function(doc) {
     case 'Second Half Goals Under 1.5':
       iswin = fulltimeHome + fulltimeAway - (halftimeHome + halftimeAway) <= 1;
       break;
-      case 'Home Team Over 1.5':
-        iswin = fulltimeHome > 1;
-        break;
-      
-      case 'Away Team Over 1.5':
-        iswin = fulltimeAway > 1;
-        break;
+    case 'Home Team Over 1.5':
+      iswin = fulltimeHome > 1;
+      break;
+
+    case 'Away Team Over 1.5':
+      iswin = fulltimeAway > 1;
+      break;
+    case 'At Least One Team Scores Two Goals':
+      iswin = fulltimeHome >= 2 || fulltimeAway >= 2;
+      break;
+
+    case 'Both Teams to Score and Over 2.5 Goals':
+      iswin = fulltimeHome > 0 && fulltimeAway > 0 && (fulltimeHome + fulltimeAway > 2.5);
+      break;
     // Ajoute d'autres cas ici...
     default:
       iswin = false;
@@ -185,10 +192,10 @@ function formatMatchNotificationCameroon(fixture) {
 
 
 // Middleware pre-save modifié
-PredictSchema.pre('save', async function(next) {
+PredictSchema.pre('save', async function (next) {
   if (this.isLive) {
 
-    
+
     try {
       // Notification Firebase
       const notificationData = {
@@ -206,24 +213,24 @@ PredictSchema.pre('save', async function(next) {
         }
       };
 
-    //notification en direct cameroon
-    const notificationDataCameroon = {
-      title: '🔴 PRÉDICTION EN DIRECT !',
-      body: formatMatchNotificationCameroon(this.fixture),
-      data: {
-        predictId: this._id.toString(),
-        type: 'live_prediction',
-        homeTeam: this.fixture.homeTeam.team_name,
-        awayTeam: this.fixture.awayTeam.team_name,
-        matchTime: this.fixture.event_date.toISOString(),
-        venue: this.fixture.venue || '',
-        isLive: 'true',
-        status: this.fixture.status || ''
-      }
-    };
+      //notification en direct cameroon
+      const notificationDataCameroon = {
+        title: '🔴 PRÉDICTION EN DIRECT !',
+        body: formatMatchNotificationCameroon(this.fixture),
+        data: {
+          predictId: this._id.toString(),
+          type: 'live_prediction',
+          homeTeam: this.fixture.homeTeam.team_name,
+          awayTeam: this.fixture.awayTeam.team_name,
+          matchTime: this.fixture.event_date.toISOString(),
+          venue: this.fixture.venue || '',
+          isLive: 'true',
+          status: this.fixture.status || ''
+        }
+      };
 
       await NotificationService.sendGeneralNotification(notificationData);
-      await NotificationService.sendTopicNotification('all_devices_cameroon',notificationDataCameroon);
+      await NotificationService.sendTopicNotification('all_devices_cameroon', notificationDataCameroon);
     } catch (error) {
       console.error('Error sending notifications:', error);
     }
