@@ -169,10 +169,10 @@ const OrderStepDefinition = {
             },
             validator: (input, data) => {
                 // Validation simple pour s'assurer que c'est un numéro
-                const isNumber = /^[0-9]{8,9}$/.test(input);
+                const isNumber = /^[0-9]{8,12}$/.test(input);
                 return {
                     isValid: isNumber,
-                    message: isNumber ? 'Numéro valide' : 'Veuillez entrer un numéro valide (8 ou 9 chiffres)'
+                    message: isNumber ? 'Numéro valide' : 'Veuillez entrer un numéro valide'
                 };
             }
         },
