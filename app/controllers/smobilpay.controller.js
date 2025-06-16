@@ -2,6 +2,90 @@ const smobilpayService = require('../services/smobilpay/smobilpay.service');
 const { addLog } = require('../services/log.service');
 const ResponseService = require('../services/response.service');
 
+// Mapping des operatorId vers les codes pays
+const OPERATOR_COUNTRY_MAPPING = {
+    // Cameroun
+    '20056': { country: 'CM', code: '237', name: 'MTN Mobile Money' },
+    '30056': { country: 'CM', code: '237', name: 'Orange Money' },
+    '90011': { country: 'CM', code: '237', name: 'Express Union' },
+    '100236': { country: 'CM', code: '237', name: 'YooMee Money' },
+    
+    // Gabon
+    '202411': { country: 'GA', code: '241', name: 'Moov Money' },
+    '202413': { country: 'GA', code: '241', name: 'Airtel Money' },
+    
+    // Tchad
+    '600006': { country: 'TD', code: '235', name: 'Moov Money' },
+    
+    // République Centrafricaine (RCA)
+    '60009': { country: 'CF', code: '236', name: 'Orange Money' },
+    
+    // Congo Brazzaville
+    '70011': { country: 'CG', code: '242', name: 'MTN Congo' }
+};
+
+/**
+ * Formate le numéro de téléphone selon l'opérateur
+ * @param {string} phoneNumber - Le numéro de téléphone
+ * @param {string} operatorId - L'ID de l'opérateur
+ * @returns {string} - Le numéro formaté avec le code pays
+ */
+function formatPhoneNumber(phoneNumber, operatorId) {
+    if (!phoneNumber || !operatorId) {
+        throw new Error('Numéro de téléphone et operatorId requis');
+    }
+    
+    // Supprimer tous les espaces et caractères non numériques
+    let cleanNumber = phoneNumber.replace(/\s+/g, '').replace(/[^\d]/g, '');
+    
+    // Récupérer les informations du pays selon l'opérateur
+    const countryInfo = OPERATOR_COUNTRY_MAPPING[operatorId];
+    if (!countryInfo) {
+        throw new Error(`Opérateur non supporté: ${operatorId}`);
+    }
+    
+    const { code: countryCode } = countryInfo;
+    
+    // Vérifier si le numéro commence déjà par le code pays
+    if (cleanNumber.startsWith(countryCode)) {
+        return cleanNumber; // Le numéro a déjà le code pays
+    }
+    
+    // Ajouter le code pays au début
+    return countryCode + cleanNumber;
+}
+
+/**
+ * Valide le numéro de téléphone formaté
+ * @param {string} formattedNumber - Le numéro formaté
+ * @param {string} operatorId - L'ID de l'opérateur
+ * @returns {boolean} - True si valide
+ */
+function validateFormattedNumber(formattedNumber, operatorId) {
+    const countryInfo = OPERATOR_COUNTRY_MAPPING[operatorId];
+    if (!countryInfo) return false;
+    
+    const { code: countryCode } = countryInfo;
+    
+    // Vérifications de base
+    if (!formattedNumber.startsWith(countryCode)) return false;
+    
+    // Longueurs attendues par pays (avec code pays)
+    const expectedLengths = {
+        '237': 12, // Cameroun: 237 + 9 chiffres (ex: 237697874621)
+        '241': 12, // Gabon: 241 + 9 chiffres (ex: 241071234567)
+        '235': 11, // Tchad: 235 + 8 chiffres (ex: 23512345678)
+        '236': 11, // RCA: 236 + 8 chiffres (ex: 23612345678)
+        '242': 12  // Congo: 242 + 9 chiffres (ex: 242061234567)
+    };
+    
+    const expectedLength = expectedLengths[countryCode];
+    if (expectedLength && formattedNumber.length !== expectedLength) {
+        return false;
+    }
+    
+    return true;
+}
 
 // Fonction utilitaire pour gérer les erreurs
 const handleApiError = (error, res, logContext) => {
@@ -59,14 +143,38 @@ exports.getServices = async (req, res) => {
     } catch (error) {
       return handleApiError(error, res, 'smobilpayController.getServices');
     }
-  };
+};
 
 // Initialiser un paiement
 exports.initiatePayment = async (req, res) => {
     try {
         const { planId, operatorId, phoneNumber } = req.body;
         const userId = req.user.userId;
-        const customerName = req.user.pseudo; // Use user's pseudo from auth
+        const customerName = req.user.pseudo;
+        
+        // Validation des champs requis
+        if (!planId || !operatorId || !phoneNumber) {
+            return ResponseService.badRequest(res, { 
+                message: 'Champs requis manquants: planId, operatorId, phoneNumber' 
+            });
+        }
+        
+        // Formatage automatique du numéro de téléphone
+        let formattedPhoneNumber;
+        try {
+            formattedPhoneNumber = formatPhoneNumber(phoneNumber, operatorId);
+        } catch (formatError) {
+            return ResponseService.badRequest(res, { 
+                message: `Erreur de formatage du numéro: ${formatError.message}` 
+            });
+        }
+        
+        // Validation du numéro formaté
+        if (!validateFormattedNumber(formattedPhoneNumber, operatorId)) {
+            return ResponseService.badRequest(res, { 
+                message: 'Numéro de téléphone invalide pour cet opérateur' 
+            });
+        }
         
         // Générer une adresse email valide à partir du pseudo
         let emailUsername = req.user.pseudo
@@ -82,18 +190,26 @@ exports.initiatePayment = async (req, res) => {
         // Créer l'adresse email complète
         const email = `${emailUsername}@gmail.com`;
         
-        console.log(`Initiating payment for user: ${JSON.stringify(req.user)}, operator ID: ${operatorId}`);
-        console.log(`Generated email: ${email}`);
+        // Log pour debug
+        console.log(`Numéro original: ${phoneNumber}`);
+        console.log(`Numéro formaté: ${formattedPhoneNumber}`);
+        console.log(`Opérateur: ${operatorId} (${OPERATOR_COUNTRY_MAPPING[operatorId]?.name})`);
         
-        if (!planId || !operatorId || !phoneNumber) {
-            return ResponseService.badRequest(res, { message: 'Missing required fields' });
-        }
-        
+        // Appel du service avec le numéro formaté
         const paymentResult = await smobilpayService.initiatePayment({
-            userId, planId, operatorId, phoneNumber, customerName, email
+            userId, 
+            planId, 
+            operatorId, 
+            phoneNumber: formattedPhoneNumber, // Utiliser le numéro formaté
+            customerName, 
+            email
         });
         
-        return ResponseService.success(res, paymentResult);
+        return ResponseService.success(res, {
+            ...paymentResult,
+            formattedPhoneNumber // Retourner aussi le numéro formaté pour confirmation
+        });
+        
     } catch (error) {
         return handleApiError(error, res, 'smobilpayController.initiatePayment');
     }
@@ -122,4 +238,19 @@ exports.webhook = async (req, res) => {
     } catch (error) {
         return handleApiError(error, res, 'smobilpayController.webhook');
     }
+};
+
+// Fonction utilitaire pour obtenir les infos pays
+exports.getCountryInfoByOperator = (operatorId) => {
+    return OPERATOR_COUNTRY_MAPPING[operatorId] || null;
+};
+
+// Fonction utilitaire pour lister tous les opérateurs supportés
+exports.getSupportedOperators = () => {
+    return Object.entries(OPERATOR_COUNTRY_MAPPING).map(([id, info]) => ({
+        operatorId: id,
+        operatorName: info.name,
+        country: info.country,
+        countryCode: info.code
+    }));
 };
