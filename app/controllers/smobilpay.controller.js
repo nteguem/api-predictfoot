@@ -35,8 +35,8 @@ function formatPhoneNumber(phoneNumber, operatorId) {
         throw new Error('Numéro de téléphone et operatorId requis');
     }
     
-    // Supprimer tous les espaces et caractères non numériques
-    let cleanNumber = phoneNumber.replace(/\s+/g, '').replace(/[^\d]/g, '');
+    // Supprimer tous les espaces, le signe + et autres caractères non numériques
+    let cleanNumber = phoneNumber.replace(/\s+/g, '').replace(/\+/g, '').replace(/[^\d]/g, '');
     
     // Récupérer les informations du pays selon l'opérateur
     const countryInfo = OPERATOR_COUNTRY_MAPPING[operatorId];
