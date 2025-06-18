@@ -46,6 +46,13 @@ function formatPhoneNumber(phoneNumber, operatorId) {
     
     const { code: countryCode } = countryInfo;
     
+    // TEMPORAIRE: Ne pas ajouter le code pays pour le Gabon (241)
+    // TODO: Retirer cette condition une fois le problème Gabon résolu
+    if (countryCode === '241') {
+        console.log(`GABON TEMPORAIRE: Numéro retourné sans code pays 241: ${cleanNumber}`);
+        return cleanNumber; // Retourner le numéro sans le code pays pour le Gabon
+    }
+    
     // Vérifier si le numéro commence déjà par le code pays
     if (cleanNumber.startsWith(countryCode)) {
         return cleanNumber; // Le numéro a déjà le code pays
@@ -67,13 +74,28 @@ function validateFormattedNumber(formattedNumber, operatorId) {
     
     const { code: countryCode } = countryInfo;
     
-    // Vérifications de base
+    // TEMPORAIRE: Validation spéciale pour le Gabon (241)
+    // TODO: Retirer cette condition une fois le problème Gabon résolu
+    if (countryCode === '241') {
+        // Pour le Gabon, on accepte les numéros sans code pays (9 chiffres)
+        if (formattedNumber.length === 9 && !formattedNumber.startsWith('241')) {
+            console.log(`GABON TEMPORAIRE: Validation OK pour numéro sans code pays: ${formattedNumber}`);
+            return true;
+        }
+        // On accepte aussi les numéros avec le code pays si déjà présent
+        if (formattedNumber.startsWith('241') && formattedNumber.length === 12) {
+            return true;
+        }
+        return false;
+    }
+    
+    // Vérifications de base pour les autres pays
     if (!formattedNumber.startsWith(countryCode)) return false;
     
     // Longueurs attendues par pays (avec code pays)
     const expectedLengths = {
         '237': 12, // Cameroun: 237 + 9 chiffres (ex: 237697874621)
-        '241': 12, // Gabon: 241 + 9 chiffres (ex: 241071234567)
+        '241': 12, // Gabon: 241 + 9 chiffres (ex: 241071234567) - normalement
         '235': 11, // Tchad: 235 + 8 chiffres (ex: 23512345678)
         '236': 11, // RCA: 236 + 8 chiffres (ex: 23612345678)
         '242': 12  // Congo: 242 + 9 chiffres (ex: 242061234567)
