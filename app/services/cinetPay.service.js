@@ -2,13 +2,13 @@ const axios = require('axios');
 const { v4: uuidv4 } = require('uuid');
 const crypto = require('crypto');
 const CinetpayTransaction = require('../models/CinetPayTransaction.model');
-const Plan = require('../../models/plan.model');
-const User = require('../../models/user.model');
-const { sendDeviceNotification } = require('../../services/notification.service');
+const Plan = require('../models/plan.model');
+const User = require('../models/user.model');
+const { sendDeviceNotification } = require('./notification.service');
 const moment = require('moment');  
-const Subscription = require('../../models/subscription.model');
-const Wallet = require('../../models/wallet.model');
-const { addLog } = require('../../services/log.service');
+const Subscription = require('../models/subscription.model');
+const Wallet = require('../models/wallet.model');
+const { addLog } = require('./log.service');
 
 // Configuration
 const API_URL = process.env.CINETPAY_API_URL
