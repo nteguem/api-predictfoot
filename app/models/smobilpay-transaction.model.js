@@ -1,4 +1,3 @@
-// models/smobilpay-transaction.model.js
 const mongoose = require('mongoose');
 
 const smobilpayTransactionSchema = new mongoose.Schema({
