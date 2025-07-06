@@ -1,7 +1,7 @@
 const axios = require('axios');
 const { v4: uuidv4 } = require('uuid');
 const crypto = require('crypto');
-const CinetpayTransaction = require('../../models/cinetpay-transaction.model');
+const CinetpayTransaction = require('../../models/CinetPayTransaction.model');
 const Plan = require('../../models/plan.model');
 const User = require('../../models/user.model');
 const { sendDeviceNotification } = require('../../services/notification.service');

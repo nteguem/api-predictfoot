@@ -1,4 +1,4 @@
-const cinetpayService = require('../services/cinetpay.service');
+const cinetpayService = require('../services/cinetPay.service');
 const { addLog } = require('../services/log.service');
 const ResponseService = require('../services/response.service');
 
