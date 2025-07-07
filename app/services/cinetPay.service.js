@@ -480,10 +480,7 @@ async function createSubscription(cinetpayTransaction) {
         let wallet = await Wallet.findOne({ operator: walletOperator });
         if (!wallet) {
             wallet = new Wallet({ operator: walletOperator, totalRevenue: 0 });
-        } else {
-            console.log(`✅ Wallet trouvé: ${wallet.operator}, Revenue actuel: ${wallet.totalRevenue}`);
-        }
-        
+        } 
         wallet.totalRevenue += plan.price;
         wallet.lastUpdated = Date.now();
         await wallet.save();
