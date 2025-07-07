@@ -474,44 +474,34 @@ async function createSubscription(cinetpayTransaction) {
     try {
         console.log(`🔄 Début création subscription pour transaction ${cinetpayTransaction._id}`);
         
-        const { user, plan, amount, paymentMethod } = cinetpayTransaction;
-        console.log(`📝 Données transaction - User: ${user}, Plan: ${plan}, Amount: ${amount}, PaymentMethod: ${paymentMethod}`);
-        
+        const { user, plan, paymentMethod } = cinetpayTransaction;        
         // Mettre à jour le portefeuille
-        const walletOperator = paymentMethod ? `${paymentMethod.toUpperCase().replace(/\s/g, '')}` : 'CINETPAY';
-        console.log(`💰 Recherche wallet pour opérateur: ${walletOperator}`);
-        
+        const walletOperator = paymentMethod ? `${paymentMethod.toUpperCase().replace(/\s/g, '')}` : 'CINETPAY';        
         let wallet = await Wallet.findOne({ operator: walletOperator });
         if (!wallet) {
-            console.log(`📝 Wallet non trouvé, création nouveau wallet pour ${walletOperator}`);
             wallet = new Wallet({ operator: walletOperator, totalRevenue: 0 });
         } else {
             console.log(`✅ Wallet trouvé: ${wallet.operator}, Revenue actuel: ${wallet.totalRevenue}`);
         }
         
-        wallet.totalRevenue += amount;
+        wallet.totalRevenue += plan.price;
         wallet.lastUpdated = Date.now();
         await wallet.save();
-        console.log(`✅ Wallet mis à jour: nouveau revenue = ${wallet.totalRevenue}`);
         
         // Récupérer le plan
-        console.log(`🔍 Recherche plan avec ID: ${plan}`);
         const planDoc = await Plan.findById(plan);
         if (!planDoc) {
             console.error(`❌ Plan non trouvé avec ID: ${plan}`);
             throw new Error('Plan not found');
         }
-        console.log(`✅ Plan trouvé: ${planDoc.name}, Durée: ${planDoc.duration} jours, Prix: ${planDoc.price}`);
         
         // Créer la période de souscription
         const startDate = new Date();
         const endDate = new Date(startDate);
         endDate.setDate(startDate.getDate() + planDoc.duration);
         
-        console.log(`📅 Période subscription: ${startDate.toISOString()} → ${endDate.toISOString()}`);
         
         // Créer la souscription avec la référence à la transaction CinetPay
-        console.log(`🔄 Création de la subscription en base...`);
         const subscription = new Subscription({
             user,
             plan,
@@ -521,19 +511,15 @@ async function createSubscription(cinetpayTransaction) {
         });
         
         await subscription.save();
-        console.log(`✅ Subscription créée avec succès ! ID: ${subscription._id}`);
         
         await addLog(
             `Subscription created for user ${user} with plan ${planDoc.name} via CinetPay`,
             'CinetpayService.createSubscription',
             'info'
         );
-        console.log(`📝 Log ajouté pour la création de subscription`);
         
         return subscription;
     } catch (error) {
-        console.error(`❌ ERREUR création subscription: ${error.message}`);
-        console.error(`❌ Stack trace:`, error.stack);
         await addLog(`Subscription creation failed: ${error.message}`, 'CinetpayService.createSubscription', 'error');
         throw error;
     }
