@@ -436,7 +436,7 @@ async function processWebhook(webhookData, receivedToken) {
                 console.error(`Error creating subscription: ${subscriptionError.message}`);
                 await addLog(`Error creating subscription: ${subscriptionError.message}`, 'CinetpayService.processWebhook', 'error');
             }
-        } else if (cmp_error_message === 'PAYMENT_FAILED' || cpm_error_message === 'TRANSACTION_CANCEL') {
+        } else if (cpm_error_message === 'PAYMENT_FAILED' || cpm_error_message === 'TRANSACTION_CANCEL') {
             // Envoyer notification d'échec
             await sendPaymentNotification(cinetpayTransaction, 'failed');
         }
