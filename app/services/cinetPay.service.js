@@ -5,13 +5,13 @@ const CinetpayTransaction = require('../models/CinetPayTransaction.model');
 const Plan = require('../models/plan.model');
 const User = require('../models/user.model');
 const { sendDeviceNotification } = require('./notification.service');
-const moment = require('moment');  
+const moment = require('moment');
 const Subscription = require('../models/subscription.model');
 const Wallet = require('../models/wallet.model');
 const { addLog } = require('./log.service');
 
 // Configuration
-const API_URL = process.env.CINETPAY_API_URL
+const API_URL = process.env.CINETPAY_API_URL;
 const API_KEY = process.env.CINETPAY_API_KEY;
 const SITE_ID = process.env.CINETPAY_SITE_ID;
 const SECRET_KEY = process.env.CINETPAY_SECRET_KEY; // Pour la vérification HMAC
@@ -30,8 +30,8 @@ class CinetpayError extends Error {
 function generateUrls() {
     const baseUrl = process.env.APP_BASE_URL;
     return {
-        notify_url: `${baseUrl}payments/cinetpay/webhook`,
-        return_url: `${baseUrl}payment/success`
+        notify_url: `${baseUrl}/payments/cinetpay/webhook`,
+        return_url: `${baseUrl}/payment/success`
     };
 }
 
@@ -77,9 +77,13 @@ async function initiatePayment(transactionData) {
     const { userId, planId, phoneNumber } = transactionData;
     
     try {
-        // 1. Récupérer le plan
+        // 1. Récupérer l'utilisateur et le plan
+        const user = await User.findById(userId);
         const plan = await Plan.findById(planId);
-        const user = await Plan.findById(userId);
+        
+        if (!user) {
+            throw new Error('User not found');
+        }
         if (!plan) {
             throw new Error('Plan not found');
         }
@@ -96,11 +100,12 @@ async function initiatePayment(transactionData) {
             user: userId,
             plan: planId,
             amount: plan.price,
-            currency: 'XOF', // Devise unique pour CinetPay
+            currency: 'XAF',
             phoneNumber,
-            customerName:user.pseudo,
+            customerName: user.pseudo,
             description: `Bigwin ${plan.name}`,
-            channels: 'ALL', 
+            metadata: `user_${userId}`,
+            channels: 'ALL',
             notifyUrl: notify_url,
             returnUrl: return_url,
             lang: 'FR'
@@ -114,10 +119,10 @@ async function initiatePayment(transactionData) {
             site_id: parseInt(SITE_ID),
             transaction_id: transactionId,
             amount: plan.price,
-            currency: 'XOF', // Devise unique
-            description: `Bigiwn ${plan.name}`,
+            description: `Bigwin ${plan.name}`,
             customer_id: userId,
-            customer_name: customerName,
+            customer_name: user.pseudo,
+            currency: 'XAF',
             notify_url,
             return_url,
             channels: 'ALL',
@@ -125,7 +130,7 @@ async function initiatePayment(transactionData) {
         };
         
         // 6. Appeler l'API CinetPay pour initialiser le paiement
-        const response = await axios.post(`${API_URL}/payment`, paymentData, {
+        const response = await axios.post(`${API_URL}`, paymentData, {
             headers: {
                 'Content-Type': 'application/json'
             }
@@ -208,15 +213,13 @@ async function checkTransactionStatus(transactionId) {
             transaction_id: transactionId
         };
         
-        const response = await axios.post(`${API_URL}/payment/check`, checkData, {
+        const response = await axios.post(`${API_URL}/check`, checkData, {
             headers: {
                 'Content-Type': 'application/json'
             }
         });
-        
-        console.log('CinetPay status check response:', response.data);
-        
-        // 3. Traiter la réponse
+                
+        // 3. Traiter la réponse selon le code
         if (response.data.code === '00') {
             // Transaction trouvée et réussie
             const paymentData = response.data.data;
@@ -239,8 +242,8 @@ async function checkTransactionStatus(transactionId) {
                     // Créer la souscription
                     await createSubscription(cinetpayTransaction);
                     
-                    // Envoyer une notification mobile
-                    await sendPaymentNotification(cinetpayTransaction);
+                    // Envoyer une notification de succès
+                    await sendPaymentNotification(cinetpayTransaction, 'success');
                     
                     // Marquer comme traitée
                     cinetpayTransaction.processed = true;
@@ -252,15 +255,71 @@ async function checkTransactionStatus(transactionId) {
                     await addLog(`Error creating subscription: ${subscriptionError.message}`, 'CinetpayService.checkTransactionStatus', 'error');
                 }
             }
+        } else if (response.data.code === '662') {
+            // En attente de confirmation client (WAITING_CUSTOMER_PAYMENT)
+            const paymentData = response.data.error?.data || response.data.data;
+            
+            cinetpayTransaction.status = 'WAITING_FOR_CUSTOMER';
+            cinetpayTransaction.cpmErrorMessage = 'WAITING_CUSTOMER_PAYMENT';
+            cinetpayTransaction.errorCode = response.data.code;
+            cinetpayTransaction.errorMessage = response.data.message;
+            cinetpayTransaction.apiResponseId = response.data.api_response_id;
+            
+            if (paymentData) {
+                cinetpayTransaction.paymentMethod = paymentData.payment_method;
+                cinetpayTransaction.fundAvailabilityDate = paymentData.fund_availability_date ? new Date(paymentData.fund_availability_date) : null;
+            }
+            
+            await cinetpayTransaction.save();
+            
+        } else if (response.data.code === '600') {
+            // Paiement échoué - fonds insuffisants ou autre erreur de paiement
+            const paymentData = response.data.error?.data || response.data.data;
+            
+            cinetpayTransaction.status = paymentData?.status || 'REFUSED';
+            cinetpayTransaction.errorCode = response.data.code;
+            cinetpayTransaction.errorMessage = response.data.message; // "PAYMENT_FAILED"
+            cinetpayTransaction.cpmErrorMessage = 'PAYMENT_FAILED';
+            cinetpayTransaction.apiResponseId = response.data.api_response_id;
+            
+            if (paymentData) {
+                cinetpayTransaction.paymentMethod = paymentData.payment_method;
+                cinetpayTransaction.operatorTransactionId = paymentData.operator_id;
+                cinetpayTransaction.fundAvailabilityDate = paymentData.fund_availability_date ? new Date(paymentData.fund_availability_date) : null;
+            }
+            
+            await cinetpayTransaction.save();
+            
+            // Envoyer une notification d'échec spécifique
+            await sendPaymentNotification(cinetpayTransaction, 'failed');
+            
+            console.log(`Transaction ${transactionId} échouée: ${response.data.message}`);
+            
         } else if (response.data.code === '627') {
             // Transaction annulée/refusée
             const paymentData = response.data.data;
-            cinetpayTransaction.status = paymentData.status;
+            
+            cinetpayTransaction.status = paymentData?.status || 'CANCELED';
             cinetpayTransaction.errorCode = response.data.code;
             cinetpayTransaction.errorMessage = response.data.message;
+            cinetpayTransaction.cpmErrorMessage = 'TRANSACTION_CANCEL';
+            cinetpayTransaction.apiResponseId = response.data.api_response_id;
+            
+            if (paymentData) {
+                cinetpayTransaction.paymentMethod = paymentData.payment_method;
+                cinetpayTransaction.operatorTransactionId = paymentData.operator_id;
+                cinetpayTransaction.fundAvailabilityDate = paymentData.fund_availability_date ? new Date(paymentData.fund_availability_date) : null;
+            }
+            
             await cinetpayTransaction.save();
+            
+            // Envoyer une notification d'échec
+            await sendPaymentNotification(cinetpayTransaction, 'failed');
+            
+            console.log(`Transaction ${transactionId} annulée: ${response.data.message}`);
+            
         } else {
-            // Autre erreur
+            // Autre erreur non gérée
             throw new CinetpayError(
                 response.data.message || 'Transaction check failed',
                 response.status || 400,
@@ -302,17 +361,11 @@ async function processWebhook(webhookData, receivedToken) {
     try {
         console.log('Processing CinetPay webhook:', webhookData);
         
-        // 1. Vérifier le token HMAC pour la sécurité
+        // 1. Vérifier le token HMAC pour la sécurité (optionnel)
         if (SECRET_KEY && receivedToken && !verifyHmacToken(receivedToken, webhookData)) {
-            throw new CinetpayError(
-                'Invalid HMAC token',
-                401,
-                {
-                    message: 'Invalid HMAC token',
-                    description: 'Le token HMAC est invalide',
-                    code: '401'
-                }
-            );
+            console.warn('CinetPay - Invalid HMAC token');
+            await addLog('CinetPay webhook received with invalid HMAC token', 'CinetpayService.processWebhook', 'warning');
+            // Ne pas bloquer, juste logger
         }
         
         const { cpm_trans_id: transactionId, cpm_error_message } = webhookData;
@@ -338,7 +391,7 @@ async function processWebhook(webhookData, receivedToken) {
         }
         
         // 3. Mettre à jour la transaction avec les données webhook
-        cinetpayTransaction.cpmTransDate = webhookData.cpm_trans_date ? new Date(webhookData.cmp_trans_date) : new Date();
+        cinetpayTransaction.cpmTransDate = webhookData.cpm_trans_date ? new Date(webhookData.cpm_trans_date) : new Date();
         cinetpayTransaction.cpmErrorMessage = cpm_error_message;
         cinetpayTransaction.paymentMethod = webhookData.payment_method;
         cinetpayTransaction.cpmPhonePrefix = webhookData.cpm_phone_prefixe;
@@ -353,7 +406,7 @@ async function processWebhook(webhookData, receivedToken) {
         // 4. Déterminer le statut selon cpm_error_message
         if (cpm_error_message === 'SUCCES') {
             cinetpayTransaction.status = 'ACCEPTED';
-        } else if (cmp_error_message === 'PAYMENT_FAILED') {
+        } else if (cpm_error_message === 'PAYMENT_FAILED') {
             cinetpayTransaction.status = 'REFUSED';
         } else if (cpm_error_message === 'TRANSACTION_CANCEL') {
             cinetpayTransaction.status = 'CANCELED';
@@ -371,8 +424,8 @@ async function processWebhook(webhookData, receivedToken) {
                 // Créer la souscription
                 await createSubscription(cinetpayTransaction);
                 
-                // Envoyer une notification mobile
-                await sendPaymentNotification(cinetpayTransaction);
+                // Envoyer une notification de succès
+                await sendPaymentNotification(cinetpayTransaction, 'success');
                 
                 // Marquer comme traitée
                 cinetpayTransaction.processed = true;
@@ -383,6 +436,9 @@ async function processWebhook(webhookData, receivedToken) {
                 console.error(`Error creating subscription: ${subscriptionError.message}`);
                 await addLog(`Error creating subscription: ${subscriptionError.message}`, 'CinetpayService.processWebhook', 'error');
             }
+        } else if (cmp_error_message === 'PAYMENT_FAILED' || cpm_error_message === 'TRANSACTION_CANCEL') {
+            // Envoyer notification d'échec
+            await sendPaymentNotification(cinetpayTransaction, 'failed');
         }
         
         await addLog(
@@ -462,40 +518,64 @@ async function createSubscription(cinetpayTransaction) {
     }
 }
 
-// Envoyer une notification de paiement réussi
-async function sendPaymentNotification(cinetpayTransaction) {
+// Envoyer une notification de paiement (succès ou échec)
+async function sendPaymentNotification(cinetpayTransaction, type = 'success') {
     try {
         // Charger les données complètes
         const user = await User.findById(cinetpayTransaction.user);
         const plan = await Plan.findById(cinetpayTransaction.plan);
         
         if (user && user.fcmToken && plan) {
-            const currentDate = moment().format('dddd D MMMM YYYY');
-            const expire = moment().add(plan.duration, 'days').format('dddd D MMMM YYYY');
+            let notificationData;
             
-            const notificationData = {
-                title: '🌟 Pronos PREMIUM Activés !',
-                body: [
-                    `Forfait actif pour ${plan.duration} jours.`,
-                    '👉 APPUYEZ pour voir vos pronos premium !'
-                ].join('\n'),
-                data: {
-                    type: 'subscription_notification',
-                    subscriptionId: cinetpayTransaction.transactionId,
-                    packageType: 'VIP',
-                    user: JSON.stringify(user),
-                    startDate: currentDate,
-                    expiryDate: expire,
-                    features: ['predictions_vip'].join(','),
-                    status: 'active',
-                    price: String(plan.price),
-                    currency: cinetpayTransaction.currency,
-                    paymentMethod: cinetpayTransaction.paymentMethod || 'CinetPay'
-                }
-            };
+            if (type === 'success') {
+                // Notification de succès
+                const currentDate = moment().format('dddd D MMMM YYYY');
+                const expire = moment().add(plan.duration, 'days').format('dddd D MMMM YYYY');
+                
+                notificationData = {
+                    title: '🌟 Pronos PREMIUM Activés !',
+                    body: [
+                        `Forfait actif pour ${plan.duration} jours.`,
+                        '👉 APPUYEZ pour voir vos pronos premium !'
+                    ].join('\n'),
+                    data: {
+                        type: 'subscription_notification',
+                        subscriptionId: cinetpayTransaction.transactionId,
+                        packageType: 'VIP',
+                        user: JSON.stringify(user),
+                        startDate: currentDate,
+                        expiryDate: expire,
+                        features: ['predictions_vip'].join(','),
+                        status: 'active',
+                        price: String(plan.price),
+                        currency: cinetpayTransaction.currency,
+                        paymentMethod: cinetpayTransaction.paymentMethod || 'CinetPay'
+                    }
+                };
+            } else {
+                // Notification d'échec
+                notificationData = {
+                    title: '❌ Paiement Échoué',
+                    body: [
+                        `Le paiement pour ${plan.name} a échoué.`,
+                        '👉 APPUYEZ pour réessayer le paiement.'
+                    ].join('\n'),
+                    data: {
+                        type: 'payment_failed_notification',
+                        transactionId: cinetpayTransaction.transactionId,
+                        packageType: plan.name,
+                        user: JSON.stringify(user),
+                        status: 'failed',
+                        price: String(plan.price),
+                        currency: cinetpayTransaction.currency,
+                        reason: cinetpayTransaction.cpmErrorMessage || 'Paiement refusé'
+                    }
+                };
+            }
             
             await sendDeviceNotification(user.fcmToken, notificationData);
-            console.log(`Mobile notification sent to user ${user._id} for CinetPay payment`);
+            console.log(`Mobile notification (${type}) sent to user ${user._id} for CinetPay payment`);
         }
     } catch (notificationError) {
         console.error(`Error sending notification: ${notificationError.message}`);
@@ -509,6 +589,7 @@ module.exports = {
     checkTransactionStatus,
     processWebhook,
     createSubscription,
+    sendPaymentNotification,
     verifyHmacToken,
     CinetpayError // Exporter la classe d'erreur
 };

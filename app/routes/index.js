@@ -60,6 +60,8 @@ const setupAppRoutes = (client) => {
     '/bot/disconnect',
     '/bot/reconnect',
     '/referrals/installation',
+    '/payments/cinetpay/webhook',
+    '/payments/cinetpay/success',
 ]));
 
   setupUserRoutes(app, client);

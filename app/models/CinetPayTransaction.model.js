@@ -28,10 +28,6 @@ const cinetpayTransactionSchema = new mongoose.Schema({
     operatorName: {
         type: String // Nom de l'opérateur (ex: Orange Money, MTN, etc.)
     },
-    amount: {
-        type: Number,
-        required: true
-    },
     currency: {
         type: String,
         default: 'XOF' // Devise unique pour CinetPay
@@ -42,14 +38,6 @@ const cinetpayTransactionSchema = new mongoose.Schema({
         default: 'PENDING'
     },
     phoneNumber: {
-        type: String,
-        required: true
-    },
-    email: {
-        type: String,
-        required: true
-    },
-    customerName: {
         type: String,
         required: true
     },
