@@ -31,7 +31,7 @@ function generateUrls() {
     const baseUrl = process.env.APP_BASE_URL;
     return {
         notify_url: `${baseUrl}payments/cinetpay/webhook`,
-        return_url: `${baseUrl}payment/success`
+        return_url: `${baseUrl}payments/cinetpay/success`
     };
 }
 

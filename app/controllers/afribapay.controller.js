@@ -50,20 +50,21 @@ exports.initiatePayment = async (req, res) => {
             phoneNumber,
             operator,
             country,
-            otpCode // Optionnel selon l'opérateur/pays
+            currency,
+            otpCode
         } = req.body;
         
         const userId = req.user.userId;
-        
+         
         // Validation des champs requis
-        if (!planId || !phoneNumber || !operator || !country) {
+        if (!planId || !phoneNumber || !operator || !country || !currency) {
             return ResponseService.badRequest(res, { 
-                message: 'planId, phoneNumber, operator et country sont requis' 
+                message: 'planId, phoneNumber, operator, country et currency sont requis' 
             });
         }
         
         console.log(`AfribaPay - Initiation paiement pour user ${userId}, plan ${planId}`);
-        console.log(`AfribaPay - Opérateur: ${operator}, Pays: ${country}, Téléphone: ${phoneNumber}`);
+        console.log(`AfribaPay - Opérateur: ${operator}, Pays: ${country}, Devise: ${currency}, Téléphone: ${phoneNumber}`);
         
         // Récupérer l'IP et User-Agent du client
         const clientIp = req.ip || req.connection.remoteAddress || req.socket.remoteAddress;
@@ -76,6 +77,7 @@ exports.initiatePayment = async (req, res) => {
             phoneNumber,
             operator,
             country,
+            currency,
             otpCode,
             clientIp,
             userAgent
