@@ -34,9 +34,9 @@ class AfribaPayError extends Error {
 function generateUrls() {
     const baseUrl = process.env.APP_BASE_URL;
     return {
-        notify_url: `${baseUrl}/payments/afribapay/webhook`,
-        return_url: `${baseUrl}/payments/afribapay/success`,
-        cancel_url: `${baseUrl}/payments/afribapay/cancel`
+        notify_url: `${baseUrl}payments/afribapay/webhook`,
+        return_url: `${baseUrl}payments/afribapay/success`,
+        cancel_url: `${baseUrl}payments/afribapay/cancel`
     };
 }
 
