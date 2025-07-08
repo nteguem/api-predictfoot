@@ -14,7 +14,7 @@ const setupCinetpayRoutes = (app) => {
     // Webhook pour les notifications de paiement CinetPay
     router.post('/webhook', cinetpayController.webhook);
       // Route additionnelle pour la page de succès (return_url)
-    app.get('/success', cinetpayController.paymentSuccess);
+    app.get('/payments/cinetpay/success', cinetpayController.paymentSuccess);
     app.post('/success', cinetpayController.paymentSuccess);
 };
 

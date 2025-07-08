@@ -21,6 +21,8 @@ const {setupInfluencerRoutes} = require('./influencer.routes');
 const {setupMonetbil} = require('./monetbil.route');
 const {setupSmobilpayRoutes} = require('./smobilpay.route');
 const { setupCinetpayRoutes } = require('./cinetpay.route');
+const { setupAfribaPayRoutes } = require('./afribapay.route'); // ✅ NOUVEAU
+
 /* GET home page. */
 // Define a route for the home page ('/') that renders the 'index' template with the title 'Predictfoot'.
 router.get('/', function (req, res, next) {
@@ -47,6 +49,7 @@ const globalAuthenticate = (excludedPaths = []) => {
  */
 const setupAppRoutes = (client) => {
   const app = router;
+  
   // Apply the global middleware to all routes with specified exclusions
   app.use(globalAuthenticate([
     '/user/login',
@@ -54,7 +57,8 @@ const setupAppRoutes = (client) => {
     '/user/add',
     '/predict/list',
     '/subscription/notification-payment',
-    '/plan/list','/subscription/is-vip',
+    '/plan/list',
+    '/subscription/is-vip',
     '/user/getOne',
     '/bot/info',
     '/bot/disconnect',
@@ -62,7 +66,10 @@ const setupAppRoutes = (client) => {
     '/referrals/installation',
     '/payments/cinetpay/webhook',
     '/payments/cinetpay/success',
-]));
+    '/payments/afribapay/webhook',
+    '/payments/afribapay/success',
+    '/payments/afribapay/cancel',
+  ]));
 
   setupUserRoutes(app, client);
   setupGroup(app, client);
@@ -72,6 +79,7 @@ const setupAppRoutes = (client) => {
   setupMonetbil(app);
   setupSmobilpayRoutes(app);
   setupCinetpayRoutes(app);
+  setupAfribaPayRoutes(app); 
   setupCampaign(app, client);
   setupEvent(app, client);
   setupSubscription(app, client);
@@ -83,6 +91,7 @@ const setupAppRoutes = (client) => {
   setupBotRoutes(app, client);
   setupInfluencerRoutes(app);
   setupReferralRoutes(app);
+  
   return app;
 };
 
