@@ -136,9 +136,7 @@ exports.paymentSuccess = async (req, res) => {
     try {
         // CinetPay envoie token et transaction_id en paramètres (GET ou POST)
         const { token, transaction_id } = req.method === 'GET' ? req.query : req.body;
-        
-        console.log(`CinetPay - Return URL appelée avec token: ${token}, transaction_id: ${transaction_id}`);
-        
+                
         if (!transaction_id) {
             return res.status(400).send(`
                 <html>
@@ -156,7 +154,6 @@ exports.paymentSuccess = async (req, res) => {
                         <div class="container">
                             <h1 class="error">❌ Erreur</h1>
                             <p>Paramètres de transaction manquants.</p>
-                            <p><a href="#" onclick="window.close()">Fermer cette page</a></p>
                         </div>
                     </body>
                 </html>
@@ -277,17 +274,6 @@ exports.paymentSuccess = async (req, res) => {
                             <h1 class="error">❌ Paiement Échoué</h1>
                             <p><strong>${failureReason}</strong></p>
                             <p>${failureDetails}</p>
-                            
-                            <div class="details">
-                                <p><strong>Transaction:</strong> ${transaction_id}</p>
-                                <p><strong>Plan:</strong> ${transactionStatus.plan?.name || 'N/A'}</p>
-                                <p><strong>Montant:</strong> ${transactionStatus.amount || 'N/A'} ${transactionStatus.currency}</p>
-                                <p><strong>Code erreur:</strong> ${transactionStatus.errorCode || 'N/A'}</p>
-                            </div>
-                            
-                            <p>Vous pouvez réessayer le paiement avec une autre méthode ou vérifier votre solde.</p>
-                            
-                            <a href="#" class="btn" onclick="window.close()">Réessayer</a>
                         </div>
                     </body>
                 </html>
@@ -318,10 +304,7 @@ exports.paymentSuccess = async (req, res) => {
                                 <p>Une notification de paiement a été envoyée à votre numéro <strong>${transactionStatus.phoneNumber}</strong></p>
                                 <p>Composez votre code PIN pour confirmer le paiement.</p>
                             </div>
-                            
-                            <p><strong>Transaction:</strong> ${transaction_id}</p>
-                            <p>Vous recevrez une notification dès que le paiement sera confirmé.</p>
-                            <a href="#" class="btn" onclick="window.close()">Fermer</a>
+                                                        <p>Vous recevrez une notification dès que le paiement sera confirmé.</p>
                         </div>
                     </body>
                 </html>
@@ -345,9 +328,6 @@ exports.paymentSuccess = async (req, res) => {
                         <div class="container">
                             <h1 class="pending">⏳ Paiement En Attente</h1>
                             <p>Votre paiement est en cours de traitement.</p>
-                            <p><strong>Transaction:</strong> ${transaction_id}</p>
-                            <p>Vous recevrez une notification dès que le paiement sera confirmé.</p>
-                            <a href="#" class="btn" onclick="window.close()">Fermer</a>
                         </div>
                     </body>
                 </html>
@@ -377,7 +357,7 @@ exports.paymentSuccess = async (req, res) => {
                         <h1 class="error">❌ Erreur Système</h1>
                         <p>Une erreur est survenue lors de la vérification de votre paiement.</p>
                         <p>Veuillez contacter le support si le problème persiste.</p>
-                        <p><a href="#" onclick="window.close()">Fermer</a></p>
+                   
                     </div>
                 </body>
             </html>
