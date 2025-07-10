@@ -65,7 +65,7 @@ async function handlePaymentMonetbilSuccess(req, res, client) {
           ].join(','),
           status: 'active',
           price: String(plan?.price),
-          currency: 'XAF'
+          currency: 'XOF'
         }
       };
       await sendDeviceNotification(fcmToken, notificationData);
