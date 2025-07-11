@@ -151,7 +151,6 @@ async function initiatePayment(transactionData) {
         // Récupérer utilisateur et plan
         const user = await User.findById(userId);
         const plan = await Plan.findById(planId);
-        
         if (!user) throw new Error('User not found');
         if (!plan) throw new Error('Plan not found');
 
@@ -226,7 +225,6 @@ async function initiatePayment(transactionData) {
         if (!response.data.data) {
             throw new AfribaPayError('Payment initialization failed', response.status || 400, response.data);
         }
-        
         // Mettre à jour transaction
         const responseData = response.data.data;
         afribaPayTransaction.providerId = responseData.provider_id;

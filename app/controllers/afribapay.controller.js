@@ -53,23 +53,17 @@ exports.initiatePayment = async (req, res) => {
             currency,
             otpCode
         } = req.body;
-        
         const userId = req.user.userId;
-         
+
         // Validation des champs requis
         if (!planId || !phoneNumber || !operator || !country || !currency) {
             return ResponseService.badRequest(res, { 
                 message: 'planId, phoneNumber, operator, country et currency sont requis' 
             });
         }
-        
-        console.log(`AfribaPay - Initiation paiement pour user ${userId}, plan ${planId}`);
-        console.log(`AfribaPay - Opérateur: ${operator}, Pays: ${country}, Devise: ${currency}, Téléphone: ${phoneNumber}`);
-        
         // Récupérer l'IP et User-Agent du client
         const clientIp = req.ip || req.connection.remoteAddress || req.socket.remoteAddress;
         const userAgent = req.get('User-Agent');
-        
         // Appel du service AfribaPay
         const paymentResult = await afribaPayService.initiatePayment({
             userId, 
@@ -114,7 +108,6 @@ exports.checkStatus = async (req, res) => {
 exports.webhook = async (req, res) => {
     try {
         console.log('AfribaPay - Webhook reçu:', JSON.stringify(req.body, null, 2));
-        console.log('AfribaPay - Headers webhook:', JSON.stringify(req.headers, null, 2));
         
         // Récupérer la signature HMAC depuis les headers
         const receivedSignature = req.headers['afribapay-sign'] || req.headers['x-afribapay-sign'];
