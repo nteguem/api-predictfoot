@@ -149,6 +149,7 @@ function verifyHmacToken(receivedSignature, payload) {
 
 // Initialiser un paiement
 async function initiatePayment(transactionData) {
+    console.log("Initiating AfribaPay payment with data:", transactionData);
     const { userId, planId, phoneNumber, operator, country, currency, otpCode } = transactionData;
     
     try {

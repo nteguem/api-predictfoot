@@ -54,7 +54,7 @@ exports.initiatePayment = async (req, res) => {
             otpCode
         } = req.body;
         const userId = req.user.userId;
-
+         
         // Validation des champs requis
         if (!planId || !phoneNumber || !operator || !country || !currency) {
             return ResponseService.badRequest(res, { 
