@@ -149,7 +149,6 @@ function verifyHmacToken(receivedSignature, payload) {
 
 // Initialiser un paiement
 async function initiatePayment(transactionData) {
-    console.log("Initiating AfribaPay payment with data:", transactionData);
     const { userId, planId, phoneNumber, operator, country, currency, otpCode } = transactionData;
     
     try {
@@ -232,6 +231,8 @@ async function initiatePayment(transactionData) {
         }
         // Mettre à jour transaction
         const responseData = response.data.data;
+        console.log("Initiating AfribaPay payment with data:", responseData);
+
         afribaPayTransaction.providerId = responseData.provider_id;
         afribaPayTransaction.providerLink = responseData.provider_link;
         afribaPayTransaction.amount = responseData.amount;
