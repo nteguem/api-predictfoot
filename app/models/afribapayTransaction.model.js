@@ -65,7 +65,7 @@ const afribaPayTransactionSchema = new mongoose.Schema({
     currency: {
         type: String,
         required: true,
-        enum: ['XOF', 'XAF', 'GNF', 'CDF', 'USD']
+        enum: ['XOF', 'XAF', 'GNF', 'CDF', 'USD','GMD']
     },
     
     // Statut et état
