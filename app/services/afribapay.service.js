@@ -231,7 +231,6 @@ async function initiatePayment(transactionData) {
         }
         // Mettre à jour transaction
         const responseData = response.data.data;
-        console.log("Initiating AfribaPay payment with data:", responseData);
 
         afribaPayTransaction.providerId = responseData.provider_id;
         afribaPayTransaction.providerLink = responseData.provider_link;

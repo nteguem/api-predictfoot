@@ -28,8 +28,7 @@ const afribaPayTransactionSchema = new mongoose.Schema({
     // Données paiement de base
     operator: {
         type: String,
-        required: true, // orange, mtn, moov, wave, etc.
-        enum: ['orange', 'mtn', 'moov', 'wave', 'free', 'expresso', 'airtel', 'tmoney', 'mpesa', 'africell', 'wligdicash', 'celtiis', 'coris']
+        required: true,
     },
     country: {
         type: String,
