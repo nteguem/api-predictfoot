@@ -33,7 +33,6 @@ const afribaPayTransactionSchema = new mongoose.Schema({
     country: {
         type: String,
         required: true, // CI, SN, BF, CM, etc.
-        enum: ['CI', 'SN', 'BF', 'ML', 'CM', 'GN', 'CD', 'TG', 'BJ', 'NE', 'TD', 'CG', 'CF', 'GA']
     },
     phoneNumber: {
         type: String,
