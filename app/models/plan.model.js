@@ -1,13 +1,15 @@
 const mongoose = require('mongoose');
 
 const planSchema = new mongoose.Schema({
-  name: { type: String, required: true, unique: true },
+  name: { type: String, required: true },
   price: { type: Number, required: true },
-  duration: { type: Number, required: true }, // Duration in days
-  description: { type: String },
-  description_html: {type: String}
+  duration: { type: Number, required: true },
+  description: String,
+  description_html: String,
+  position: { type: Number, required: true },
+  currency: { type: String, required: true, default: 'XAF' }
 }, { timestamps: true });
 
-const Plan = mongoose.model('Plan', planSchema);
+planSchema.index({ name: 1, currency: 1 }, { unique: true });
 
-module.exports = Plan;
+module.exports = mongoose.model('Plan', planSchema);

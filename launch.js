@@ -15,7 +15,6 @@ const appRoutes = require('./app/routes');
 const { initializeWhatsAppClient } = require('./app/views/whatsApp/whatappsHandler');
 const setupSocketHandlers = require('./app/config/socket.handlers');
 const { ensureDefaultGroupsExist } = require('./app/services/group.service');
-const { ensureDefaultPlansExist } = require('./app/services/plan.service');
 const { scheduleAllTasks } = require('./app/services/schedule.service');
 const { scheduleCampaignTasks } = require('./app/services/campaign.service');
 const { corsOptions, socketConfig } = require('./app/config/server.config');
@@ -102,7 +101,6 @@ class Application {
     try {
       await Promise.all([
         ensureDefaultGroupsExist(),
-        ensureDefaultPlansExist(),
         scheduleAllTasks(this.whatsAppClient),
         scheduleCampaignTasks('start', this.whatsAppClient)
       ]);

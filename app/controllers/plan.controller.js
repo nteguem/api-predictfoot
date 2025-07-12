@@ -1,52 +1,45 @@
-const ResponseService = require('../services/response.service');
 const PlanService = require('../services/plan.service');
+const ResponseService = require('../services/response.service');
 
 async function getAllPlans(req, res) {
   try {
-    const plans = await PlanService.getAllPlans();
+    const currency = req.query.currency || 'XAF';
+    const plans = await PlanService.getAllPlans(currency);
     return ResponseService.success(res, { plans });
   } catch (error) {
-    console.log('Error fetching plans:', error);
+    console.error('Error fetching plans:', error);
     return ResponseService.internalServerError(res, { error: 'Error fetching plans' });
   }
 }
 
 async function createPlan(req, res) {
-  const planData = req.body;
   try {
-    const newPlan = await PlanService.createPlan(planData);
+    const newPlan = await PlanService.createPlan(req.body);
     return ResponseService.created(res, { message: 'Plan created successfully', plan: newPlan });
   } catch (error) {
-    console.log('Error creating plan:', error);
+    console.error('Error creating plan:', error);
     return ResponseService.internalServerError(res, { error: 'Error creating plan' });
   }
 }
 
 async function updatePlan(req, res) {
-  const planId = req.query.id;
-  const updatedData = req.body;
   try {
-    const updatedPlan = await PlanService.updatePlan(planId, updatedData);
-    if (!updatedPlan) {
-      return ResponseService.notFound(res, { message: 'Plan not found' });
-    }
+    const updatedPlan = await PlanService.updatePlan(req.query.id, req.body);
+    if (!updatedPlan) return ResponseService.notFound(res, { message: 'Plan not found' });
     return ResponseService.success(res, { message: 'Plan updated successfully', plan: updatedPlan });
   } catch (error) {
-    console.log('Error updating plan:', error);
+    console.error('Error updating plan:', error);
     return ResponseService.internalServerError(res, { error: 'Error updating plan' });
   }
 }
 
 async function deletePlan(req, res) {
-  const planId = req.query.id;
   try {
-    const deletedPlan = await PlanService.deletePlan(planId);
-    if (!deletedPlan) {
-      return ResponseService.notFound(res, { message: 'Plan not found' });
-    }
+    const deletedPlan = await PlanService.deletePlan(req.query.id);
+    if (!deletedPlan) return ResponseService.notFound(res, { message: 'Plan not found' });
     return ResponseService.success(res, { message: 'Plan deleted successfully' });
   } catch (error) {
-    console.log('Error deleting plan:', error);
+    console.error('Error deleting plan:', error);
     return ResponseService.internalServerError(res, { error: 'Error deleting plan' });
   }
 }

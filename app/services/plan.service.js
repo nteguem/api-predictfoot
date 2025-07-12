@@ -1,70 +1,30 @@
 const Plan = require('../models/plan.model');
-const {defaultPlans} = require("../data/defaultPlan");
 
-async function getAllPlans() {
-  try {
-    const plans = await Plan.find();
-    return plans;
-  } catch (error) {
-    console.log('Error fetching plans:', error);
-  }
+async function getAllPlans(currency = 'XAF') {
+  return await Plan.find({ currency }).sort({ position: 1 });
 }
 
-
 async function createPlan(planData) {
-  try {
-    const newPlan = new Plan(planData);
-    const savedPlan = await newPlan.save();
-    return savedPlan;
-  } catch (error) {
-    console.log('Error creating plan:', error);
-  }
+  const newPlan = new Plan(planData);
+  return await newPlan.save();
 }
 
 async function updatePlan(planId, updatedData) {
-  try {
-    const updatedPlan = await Plan.findByIdAndUpdate(planId, updatedData, { new: true });
-    return updatedPlan;
-  } catch (error) {
-    console.log('Error updating plan:', error);
-  }
+  return await Plan.findByIdAndUpdate(planId, updatedData, { new: true });
 }
 
 async function deletePlan(planId) {
-  try {
-    const deletedPlan = await Plan.findByIdAndDelete(planId);
-    return deletedPlan;
-  } catch (error) {
-    console.log('Error deleting plan:', error);
-  }
+  return await Plan.findByIdAndDelete(planId);
 }
 
-async function ensureDefaultPlansExist() {
-    try {
-      for (const defaultPlan of defaultPlans) {
-        const planExists = await Plan.findOne({ name: defaultPlan.name });
-        if (!planExists) {
-          await createPlan(defaultPlan);
-          console.log(`Default plan ${defaultPlan.name} created.`);
-        }
-      }
-    } catch (error) {
-      console.log('Error ensuring default plans exist:', error.message);
-    }
-  }
-
-  /**
- * Récupère un plan par son ID
- * @param {string} planId - L'ID du plan à récupérer
- * @returns {Promise<Object|null>} Le plan trouvé ou null si non trouvé
- */
 async function getPlanById(planId) {
-  try {
-    const plan = await Plan.findById(planId);
-    return plan;
-  } catch (error) {
-    console.log('Error fetching plan by ID:', error);
-    return null;
+  return await Plan.findById(planId);
+}
+
+async function ensureDefaultPlansExist(defaultPlans) {
+  for (const defaultPlan of defaultPlans) {
+    const exists = await Plan.findOne({ name: defaultPlan.name });
+    if (!exists) await createPlan(defaultPlan);
   }
 }
 
@@ -73,6 +33,6 @@ module.exports = {
   createPlan,
   updatePlan,
   deletePlan,
-  ensureDefaultPlansExist,
-  getPlanById
+  getPlanById,
+  ensureDefaultPlansExist
 };
