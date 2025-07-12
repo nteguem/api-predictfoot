@@ -102,7 +102,6 @@ class Application {
       await Promise.all([
         ensureDefaultGroupsExist(),
         scheduleAllTasks(this.whatsAppClient),
-        scheduleCampaignTasks('start', this.whatsAppClient)
       ]);
       console.log('Services initialized successfully');
     } catch (error) {

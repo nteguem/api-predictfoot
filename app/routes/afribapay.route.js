@@ -12,6 +12,8 @@ const setupAfribaPayRoutes = (app) => {
     // Vérifier le statut d'un paiement
     router.get('/status/:orderId', afribaPayController.checkStatus);
     
+    router.get('/countries', afribaPayController.getCountries);
+    
     // Webhook pour les notifications de paiement AfribaPay
     router.post('/webhook', afribaPayController.webhook);
     

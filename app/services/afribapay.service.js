@@ -9,6 +9,10 @@ const moment = require('moment');
 const Subscription = require('../models/subscription.model');
 const Wallet = require('../models/wallet.model');
 const { addLog } = require('./log.service');
+const fs = require('fs');
+const path = require('path');
+
+const COUNTRIES_DATA_PATH = path.join(__dirname, '../data/afribapayData.json');
 
 // Configuration
 const API_URL = process.env.AFRIBAPAY_API_URL || 'https://api-sandbox.afribapay.com';
@@ -512,6 +516,33 @@ async function sendPaymentNotification(afribaPayTransaction, type = 'success') {
     }
 }
 
+// Récupérer les données des pays depuis le fichier JSON
+async function getCountriesData(countryCode = null) {
+    try {
+        // Lire le fichier JSON
+        const fileContent = fs.readFileSync(COUNTRIES_DATA_PATH, 'utf8');
+        const countriesData = JSON.parse(fileContent);
+        
+        // Si un code pays spécifique est demandé
+        if (countryCode) {
+            const upperCountryCode = countryCode.toUpperCase();
+            const countryData = countriesData[upperCountryCode];
+            
+            if (!countryData) {
+                throw new AfribaPayError(`Country not found: ${countryCode}`, 404);
+            }
+            
+            return { country: countryData };
+        }
+        
+        // Retourner tous les pays
+        return { countries: countriesData };
+        
+    } catch (error) {
+        throw new AfribaPayError(`Error loading countries data: ${error.message}`, 500);
+    }
+}
+
 module.exports = {
     initiatePayment,
     checkTransactionStatus,
@@ -520,5 +551,6 @@ module.exports = {
     sendPaymentNotification,
     verifyHmacToken,
     getAccessToken,
+    getCountriesData,
     AfribaPayError
 };

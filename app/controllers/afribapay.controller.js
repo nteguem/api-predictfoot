@@ -430,3 +430,13 @@ exports.paymentCancel = async (req, res) => {
         `);
     }
 };
+
+exports.getCountries = async (req, res) => {
+    try {
+        const { country } = req.query; 
+        const result = await afribaPayService.getCountriesData(country);
+        return ResponseService.success(res, result);
+    } catch (error) {
+        return handleApiError(error, res, 'afribaPayController.getCountries');
+    }
+};
