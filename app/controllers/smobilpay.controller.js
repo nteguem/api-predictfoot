@@ -46,13 +46,19 @@ function formatPhoneNumber(phoneNumber, operatorId) {
     
     const { code: countryCode } = countryInfo;
     
-    // TEMPORAIRE: Ne pas ajouter le code pays pour le Gabon (241)
-    // TODO: Retirer cette condition une fois le problème Gabon résolu
+    // GABON: Toujours supprimer le code pays 241 s'il est présent
     if (countryCode === '241') {
-        console.log(`GABON TEMPORAIRE: Numéro retourné sans code pays 241: ${cleanNumber}`);
-        return cleanNumber; // Retourner le numéro sans le code pays pour le Gabon
+        // Si le numéro commence par 241, le supprimer
+        if (cleanNumber.startsWith('241')) {
+            cleanNumber = cleanNumber.substring(3); // Supprimer les 3 premiers chiffres (241)
+            console.log(`GABON: Code 241 supprimé → numéro final: ${cleanNumber}`);
+        } else {
+            console.log(`GABON: Numéro déjà sans code 241: ${cleanNumber}`);
+        }
+        return cleanNumber; // Toujours retourner sans le 241
     }
     
+    // Logique normale pour les autres pays
     // Vérifier si le numéro commence déjà par le code pays
     if (cleanNumber.startsWith(countryCode)) {
         return cleanNumber; // Le numéro a déjà le code pays
@@ -74,18 +80,16 @@ function validateFormattedNumber(formattedNumber, operatorId) {
     
     const { code: countryCode } = countryInfo;
     
-    // TEMPORAIRE: Validation spéciale pour le Gabon (241)
-    // TODO: Retirer cette condition une fois le problème Gabon résolu
+    // GABON: Accepter SEULEMENT les numéros à 9 chiffres SANS le code pays
     if (countryCode === '241') {
-        // Pour le Gabon, on accepte les numéros sans code pays (9 chiffres)
+        // Pour le Gabon, on accepte UNIQUEMENT les numéros sans code pays (9 chiffres)
         if (formattedNumber.length === 9 && !formattedNumber.startsWith('241')) {
-            console.log(`GABON TEMPORAIRE: Validation OK pour numéro sans code pays: ${formattedNumber}`);
+            console.log(`GABON: Validation OK pour numéro sans code pays: ${formattedNumber}`);
             return true;
         }
-        // On accepte aussi les numéros avec le code pays si déjà présent
-        if (formattedNumber.startsWith('241') && formattedNumber.length === 12) {
-            return true;
-        }
+        
+        // Rejeter tout numéro qui commence par 241 ou qui n'a pas 9 chiffres
+        console.log(`GABON: Validation échoue - Longueur: ${formattedNumber.length}, Commence par 241: ${formattedNumber.startsWith('241')}`);
         return false;
     }
     
@@ -95,10 +99,10 @@ function validateFormattedNumber(formattedNumber, operatorId) {
     // Longueurs attendues par pays (avec code pays)
     const expectedLengths = {
         '237': 12, // Cameroun: 237 + 9 chiffres (ex: 237697874621)
-        '241': 12, // Gabon: 241 + 9 chiffres (ex: 241071234567) - normalement
         '235': 11, // Tchad: 235 + 8 chiffres (ex: 23512345678)
         '236': 11, // RCA: 236 + 8 chiffres (ex: 23612345678)
         '242': 12  // Congo: 242 + 9 chiffres (ex: 242061234567)
+        // Note: Gabon (241) géré séparément ci-dessus
     };
     
     const expectedLength = expectedLengths[countryCode];
