@@ -176,7 +176,7 @@ exports.initiatePayment = async (req, res) => {
     try {
         const { planId, operatorId, phoneNumber } = req.body;
         const userId = req.user.userId;
-        const customerName = req.user.pseudo;
+        const customerName = req.user.pseudo && req.user.pseudo.trim().length > 0 ? req.user.pseudo : `User ${userId}`;
         
         // Validation des champs requis
         if (!planId || !operatorId || !phoneNumber) {
@@ -203,10 +203,15 @@ exports.initiatePayment = async (req, res) => {
         }
         
         // Générer une adresse email valide à partir du pseudo
-        let emailUsername = req.user.pseudo
-            .toLowerCase()
-            .replace(/\s+/g, '.') // Remplacer les espaces par des points
-            .replace(/[^\w.-]/g, ''); // Supprimer tous les caractères spéciaux
+        let emailUsername;
+        
+        // Vérifier si le pseudo existe et n'est pas vide
+        if (req.user.pseudo && req.user.pseudo.trim().length > 0) {
+            emailUsername = req.user.pseudo
+                .toLowerCase()
+                .replace(/\s+/g, '.') // Remplacer les espaces par des points
+                .replace(/[^\w.-]/g, ''); // Supprimer tous les caractères spéciaux
+        }
         
         // S'assurer qu'il y a au moins un caractère dans le nom d'utilisateur
         if (!emailUsername || emailUsername.length === 0) {
